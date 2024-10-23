@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        pretendard: ["var(--font-pretendard)"],
+        BMJUA: ["var(--font-bmjua)"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
