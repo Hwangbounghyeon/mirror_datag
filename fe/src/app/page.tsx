@@ -23,7 +23,7 @@ export default function Home() {
           <div className="mt-16">
             <div className="relative w-full h-[400px] rounded-lg shadow-2xl overflow-hidden group">
               <Image
-                src="/dashboard-preview.jpg"
+                src="https://picsum.photos/1080/920"
                 alt="AI-powered image analysis dashboard"
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
