@@ -13,7 +13,7 @@ export default function Home() {
 
           <div className="mt-8 flex justify-center">
             <Link
-              href="/upload"
+              href="/login"
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 hover:scale-105 transform"
             >
               Get Start

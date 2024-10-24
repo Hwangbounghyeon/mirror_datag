@@ -13,8 +13,8 @@ const Layout = ({ children }: LayoutProps) => {
           <Image
             src={"https://picsum.photos/1080/920"}
             alt={"auth-background"}
-            priority
             fill
+            priority
           />
         </section>
         <section className="w-full lg:w-1/2 h-full">{children}</section>
