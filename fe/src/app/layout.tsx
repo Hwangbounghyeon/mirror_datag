@@ -27,12 +27,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${pretendard.variable} ${BMJUA.variable}`}>
       <body>
-        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+        <div>
+          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              {children}
+            </ThemeProvider>
+          </AppRouterCacheProvider>
+        </div>
+        <div id="modal-root"></div>
       </body>
     </html>
   );
