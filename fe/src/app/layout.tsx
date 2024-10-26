@@ -1,10 +1,5 @@
 import "./globals.css";
-import { ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import localFont from "next/font/local";
-import theme from "./../theme";
-
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
   display: "swap",
@@ -27,14 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${pretendard.variable} ${BMJUA.variable}`}>
       <body>
-        <div>
-          <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-            <ThemeProvider theme={theme}>
-              <CssBaseline />
-              {children}
-            </ThemeProvider>
-          </AppRouterCacheProvider>
-        </div>
+        <div>{children}</div>
         <div id="modal-root"></div>
       </body>
     </html>
