@@ -3,10 +3,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
+from configs.mongodb import get_database_mongodb
 import uuid
 
 app = FastAPI()
 
+@app.on_event("startup")
+async def startup_db_client():
+    get_database_mongodb()
 
 # DB 연결 확인 엔드포인트
 @app.get("/check-db-connection")

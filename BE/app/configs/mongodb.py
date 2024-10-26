@@ -1,8 +1,8 @@
-from motor.motor_asyncio import AsyncIOMotorClinet
+from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os
 
-client = AsyncIOMotorClinet(os.getenv("MONGO_URL"))
+client = AsyncIOMotorClient(os.getenv("MONGO_URL"))
 
 def get_database_mongodb():
     try:
@@ -10,3 +10,4 @@ def get_database_mongodb():
         print("Successfully connected to MongoDB")
     except Exception as e:
         print(e)
+        
