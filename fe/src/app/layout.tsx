@@ -27,7 +27,7 @@ export default function RootLayout({
       lang="en"
       className={` ${pretendard.variable} ${BMJUA.variable}`}
     >
-      <body>
+      <body id="root">
         <ThemeProvider attribute="class">
           <div>{children}</div>
           <div id="modal-root"></div>
