@@ -36,7 +36,7 @@ const BatchList = () => {
 
     return (
         <Box w="full" h="full" overflowY="auto">
-            <VStack padding={4} align="stretch">
+            <VStack padding={6} align="stretch">
                 {batches.map((batch) => (
                     <Box
                         key={batch.id}
