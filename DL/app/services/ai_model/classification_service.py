@@ -9,19 +9,22 @@ import numpy as np
 import torch.nn as nn
 import time
 
-from dto.model_dto import PredictionRequest, ClassificationPredictionResult
-from services.database_service import DatabaseService
-from services.preprocess_service import PreprocessService
+from dto.ai_model_dto import AIModelRequest, ClassificationPredictionResult
+from models.mongodb_cls import AiResultData
+from services.ai_model.preprocess_service import PreprocessService
+from services.mongodb.classification_metadata_service import ClassificationMetadataService
+
+CIFAR10_CLASSES = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 class ClassificationService:
-    def __init__(self, database_service: DatabaseService, preprocess_service: PreprocessService):
-        self.database_service = database_service
-        self.preprocess_service = preprocess_service
+    def __init__(self):
+        self.preprocess_service = PreprocessService()
+        self.classification_metadata_service = ClassificationMetadataService()
         self.model_list = ["vgg19_bn", "mobilenetv2_x1_4", "repvgg_a2"]
         self.features = None
         self.conf_threshold = 0.7
 
-    def classify_images(self, request: PredictionRequest):
+    async def classify_images(self, request: AIModelRequest):
         try:
             # 모델리스트에 없으면 에러
             if request.model_name == "vgg19_bn":
@@ -47,6 +50,23 @@ class ClassificationService:
 
                 if model_prediction_result is None:
                     continue
+
+                metadata = self.classification_metadata_service.create_classification_result_data(
+                    request.user_id,
+                    request.is_private,
+                    model_prediction_result.used_model,
+                    model_prediction_result.predict_class,
+                    model_prediction_result.predict_confidence,
+                    model_prediction_result.elapsed_time
+                )
+                
+                metadata_id = await self.classification_metadata_service.upload_ai_result(metadata)
+
+                features = self.classification_metadata_service.create_feature(model_prediction_result.features)
+
+                features_id = await self.classification_metadata_service.upload_feature(features)
+
+                print(metadata_id, features_id)
 
                 # 메타데이터 및 DB 저장로직이 이후에 들어오면됨
                 temp_result.append(model_prediction_result)
@@ -112,13 +132,12 @@ class ClassificationService:
             end_time = time.time()
             # 실행 시간 계산
             elapsed_time = end_time - start_time
-            
+
             model_results = {
                 "used_model": model_name,
-                "task": "cls",
-                "predict_class": str(predicted_class.item()),
+                "predict_class": CIFAR10_CLASSES[int(predicted_class.item())],
                 "predict_confidence": float(conf.item()) * 0.1,
-                "features": self.features.view(-1).tolist(),
+                "features": self.features.view(self.features.size(0), -1).tolist(),
                 "elapsed_time": elapsed_time
             }
             return ClassificationPredictionResult(**model_results)

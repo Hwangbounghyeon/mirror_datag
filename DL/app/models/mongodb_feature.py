@@ -4,4 +4,4 @@ from datetime import datetime
 
 class Feature(BaseModel):
   createdAt: datetime
-  feature: List[str]
+  feature: List[List[float]]
