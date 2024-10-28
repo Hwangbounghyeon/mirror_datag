@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
+from routers import cls_router, det_router
 from services.mongodb.create_cls_metadata_service import Create_cls_metadata
 from configs.mongodb import mongo_url
 import traceback
@@ -15,6 +17,8 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
+app.include_router(cls_router.router)
+app.include_router(det_router.router)
 
 @app.on_event("startup")
 async def startup_db_client():
