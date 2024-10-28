@@ -9,22 +9,22 @@ import numpy as np
 import torch.nn as nn
 import time
 
-from dto.model_dto import PredictionRequest, ObjectDetectionPredictionResult
-from services.database_service import DatabaseService
-from services.preprocess_service import PreprocessService
+from dto.ai_model_dto import AIModelRequest, ObjectDetectionPredictionResult
+from services.ai_model.preprocess_service import PreprocessService
+from services.mongodb.detection_metadata_service import ObjectDetectionMetadataService
 
-YOLOModel = type[YOLO]
+YOLOMODEL = type[YOLO]
 
 class ObjectDetectionService:
-    def __init__(self, database_service: DatabaseService, preprocess_service: PreprocessService):
-        self.database_service = database_service
-        self.preprocess_service = preprocess_service
+    def __init__(self):
+        self.preprocess_service = PreprocessService()
+        self.detection_metadata_service = ObjectDetectionMetadataService()
         self.model_list = ["yolov5n", "yolov8n", "yolo11n"]
         self.features = None
         self.conf_threshold = 0.7
 
     # 객체 탐지 실행 (나중에 반환타입 명시하기)
-    def detect_images(self, request: PredictionRequest):
+    async def detect_images(self, request: AIModelRequest):
         try:
             # 모델리스트에 없으면 에러
             if request.model_name not in self.model_list:
@@ -47,6 +47,25 @@ class ObjectDetectionService:
                 if model_prediction_result is None:
                     continue
 
+                metadata = self.detection_metadata_service.create_object_detection_result_data(
+                    request.user_id,
+                    request.is_private,
+                    model_prediction_result.used_model,
+                    model_prediction_result.elapsed_time,
+                    model_prediction_result.predict_classes,
+                    model_prediction_result.predict_confidences,
+                    model_prediction_result.threshold,
+                    model_prediction_result.bboxes
+                )
+                
+                metadata_id = await self.detection_metadata_service.upload_ai_result(metadata)
+
+                features = self.detection_metadata_service.create_feature(model_prediction_result.features)
+
+                features_id = await self.detection_metadata_service.upload_feature(features)
+
+                print(metadata_id, features_id)
+
                 # 메타데이터 및 DB 저장로직이 이후에 들어오면됨
                 temp_result.append(model_prediction_result)
 
@@ -60,7 +79,7 @@ class ObjectDetectionService:
             )
 
     # 모델 정의
-    def _set_model_YOLO(self, model_name: str) -> YOLOModel:
+    def _set_model_YOLO(self, model_name: str) -> YOLOMODEL:
         model = YOLO(f"{model_name}.pt")
         model.verbose = False
 
@@ -71,10 +90,11 @@ class ObjectDetectionService:
         return model
 
     # 모델 예측
-    def _predict_model_YOLO(self, model: YOLOModel, model_name: str, image_tensor: torch.Tensor) -> ObjectDetectionPredictionResult:
+    def _predict_model_YOLO(self, model: YOLOMODEL, model_name: str, image_tensor: torch.Tensor) -> ObjectDetectionPredictionResult:
         labels = []
         confidences = []
         features = []
+        bboxes = []
         try:
             # 시작 시간
             start_time = time.time()
@@ -116,6 +136,7 @@ class ObjectDetectionService:
 
                 features.append(output_global.view((self.features.size(0), -1)))
                 labels.append(class_name)
+                bboxes.append([x1, y1, x2, y2])
 
             # 종료 시간
             end_time = time.time()
@@ -129,10 +150,10 @@ class ObjectDetectionService:
 
             model_results = {
                 "used_model": model_name,
-                "task": "det",
                 "threshold": self.conf_threshold,
                 "predict_classes": labels,
                 "predict_confidences": confidences,
+                "bboxes": bboxes,
                 "features": all_features.tolist(),
                 "elapsed_time": elapsed_time
             }
