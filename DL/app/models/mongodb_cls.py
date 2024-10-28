@@ -17,7 +17,7 @@ class AiResult(BaseModel):
     predictions: List[Prediction]
 
 class AccessControl(BaseModel):
-    users: List[str]
+    users: List[int]
     departments: List[str]
     projects: List[str]
 
@@ -26,7 +26,7 @@ class Metadata(BaseModel):
     process: str
     location: str
     equipmentId: str
-    uploader: str
+    uploader: int
     isPrivate: bool
     accessControl: AccessControl
     createdAt: datetime
