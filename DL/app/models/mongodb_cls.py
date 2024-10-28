@@ -6,7 +6,6 @@ class Prediction(BaseModel):
     fileIndex: int
     prediction: str
     confidence: float
-    threshold: float
     inferenceStartedAt: datetime
     elapsedTime: float
     tags: List[str]
