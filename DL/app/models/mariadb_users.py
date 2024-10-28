@@ -1,19 +1,19 @@
 from configs.mariadb import Base
 from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, DateTime, TEXT
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import func
 
 
 class Users(Base):
-    __table__ = "users"
+    __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     email = Column(VARCHAR(255), nullable=False)
     password = Column(VARCHAR(255), nullable=False)
     duty = Column(VARCHAR(255), nullable=False)
     location = Column(VARCHAR(255), nullable=False)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
     department = Column(Integer,ForeignKey("departments.department_id"), nullable=True)
 
     departments = relationship("Departments", back_populates="users")
@@ -23,7 +23,7 @@ class Users(Base):
 
 
 class Departments(Base):
-    __table__ = "departments"
+    __tablename__ = "departments"
 
     department_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     department_name = Column(VARCHAR(255), nullable=False)
@@ -34,7 +34,7 @@ class Departments(Base):
 
 
 class Project(Base):
-    __table__ = "project"
+    __tablename__ = "project"
 
     project_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
@@ -42,8 +42,8 @@ class Project(Base):
     is_private = Column(Integer, default=0)
     name = Column(VARCHAR(255))
     description = Column(TEXT, nullable=True)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
 
     users = relationship("Users", back_populates="projects")
     project_image = relationship("DatasetImage", back_populates="projects")
@@ -52,7 +52,7 @@ class Project(Base):
 
 
 class ProjectImage(Base):
-    __table__ = "project_image"
+    __tablename__ = "project_image"
 
     project_image = Column(Integer, primary_key=True, index=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey("projects.project_id"))
@@ -64,7 +64,7 @@ class ProjectImage(Base):
 
 
 class Histories(Base):
-    __table__ = "histories"
+    __tablename__ = "histories"
 
     history_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
@@ -72,8 +72,8 @@ class Histories(Base):
     history_name = Column(VARCHAR(255), nullable=False)
     history_obj_id = Column(VARCHAR(255))
     is_private = Column(Integer, nullable=False)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
 
     users = relationship("Users", back_populates="histories")
     projects = relationship("Projects", back_populates="histories")
