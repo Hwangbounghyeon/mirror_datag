@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from services.create_cls_metadata_service import create_ai_result_data, upload_ai_result
+from services.mongodb.create_cls_metadata_service import Create_cls_metadata
 from configs.mongodb import mongo_url
 import traceback
 from configs.mongodb import get_database_mongodb
@@ -32,10 +32,10 @@ async def upload_ai_result_endpoint(
 ):
     try:
         # ai_result_data 생성
-        ai_result_data = create_ai_result_data(user, isPrivate, aimodel, prediction, confidence, threshold, elapsedTime)
+        ai_result_data = Create_cls_metadata.create_ai_result_data(user, isPrivate, aimodel, prediction, confidence, threshold, elapsedTime)
         
         # MongoDB에 데이터 업로드
-        response = await upload_ai_result(ai_result_data)
+        response = await Create_cls_metadata.upload_ai_result(ai_result_data)
         return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
