@@ -8,6 +8,7 @@ from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
 import uuid
+from routers import analysis_router
 
 app = FastAPI()
 
@@ -19,15 +20,13 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
+app.include_router(analysis_router.router)
+
 @asynccontextmanager
 async def startup_db_client(app: FastAPI):
     get_database_mongodb()
     get_database_mariadb()
     yield
-
-
-    
-    
 
 # DB 연결 확인 엔드포인트
 @app.get("/check-db-connection")
