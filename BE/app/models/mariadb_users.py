@@ -1,7 +1,10 @@
 from configs.mariadb import Base
+from models.mariadb_image import Images
+
 from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, DateTime, TEXT
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 
 
 class Users(Base):
