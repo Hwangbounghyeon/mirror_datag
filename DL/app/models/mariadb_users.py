@@ -8,6 +8,7 @@ class Users(Base):
     __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(VARCHAR(50), nullable=False)
     email = Column(VARCHAR(255), nullable=False)
     password = Column(VARCHAR(255), nullable=False)
     duty = Column(VARCHAR(255), nullable=False)
@@ -17,7 +18,7 @@ class Users(Base):
     department = Column(Integer,ForeignKey("departments.department_id"), nullable=True)
 
     departments = relationship("Departments", back_populates="users")
-    datasets = relationship("Datasets", back_populates="users")
+    projects = relationship("Project", back_populates="users")
     histories = relationship("Histories", back_populates="users")
 
 
@@ -29,7 +30,6 @@ class Departments(Base):
     department_name = Column(VARCHAR(255), nullable=False)
 
     users = relationship("Users", back_populates="departments")
-    history_permission = relationship("HistoryPermission", back_populates="departments")
 
 
 
@@ -46,7 +46,7 @@ class Project(Base):
     updated_at = Column(DateTime, onupdate=func.now())
 
     users = relationship("Users", back_populates="projects")
-    project_image = relationship("DatasetImage", back_populates="projects")
+    project_image = relationship("ProjectImage", back_populates="projects")
     histories = relationship("Histories", back_populates="projects")
 
 
@@ -55,7 +55,7 @@ class ProjectImage(Base):
     __tablename__ = "project_image"
 
     project_image = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("projects.project_id"))
+    project_id = Column(Integer, ForeignKey("project.project_id"))
     image_id = Column(Integer, ForeignKey("images.image_id"))
 
     projects = relationship("Project", back_populates="project_image")
@@ -68,7 +68,7 @@ class Histories(Base):
 
     history_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    project_id = Column(Integer, ForeignKey("projects.project_id"))
+    project_id = Column(Integer, ForeignKey("project.project_id"))
     history_name = Column(VARCHAR(255), nullable=False)
     history_obj_id = Column(VARCHAR(255))
     is_private = Column(Integer, nullable=False)
@@ -76,4 +76,4 @@ class Histories(Base):
     updated_at = Column(DateTime, onupdate=func.now())
 
     users = relationship("Users", back_populates="histories")
-    projects = relationship("Projects", back_populates="histories")
+    projects = relationship("Project", back_populates="histories")

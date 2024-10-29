@@ -12,6 +12,7 @@ class TagType(Enum):
     BRANCH = "BRANCH"
     LOCATION = "LOCATION"
     EQUIPMENT = "EQUIPMENT"
+    PREDICTION = "PREDICTION"
     USER = "USER"
 
 # 이미지 테이블
@@ -25,7 +26,7 @@ class Images(Base):
     updated_at = Column(DateTime, onupdate=func.now())
 
     image_tag = relationship("ImageTag", back_populates="images")
-    dataset_image = relationship("DatasetImage", back_populates="images")
+    project_image = relationship("ProjectImage", back_populates="images")
 
 
 # 태그 테이블

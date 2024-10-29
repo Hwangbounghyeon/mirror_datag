@@ -7,6 +7,7 @@ class AIModelRequest(BaseModel):
     image_urls: List[str]
     model_name: str
     user_id: int
+    project_id: int
     is_private: bool
 
     model_config = {
