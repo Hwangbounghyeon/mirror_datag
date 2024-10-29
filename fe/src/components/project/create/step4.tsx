@@ -18,6 +18,7 @@ export default function DepartmentSearch() {
   );
   const searchRef = useRef<HTMLDivElement>(null);
 
+  // departments를 컴포넌트 외부로 이동하거나 useMemo를 사용하여 최적화할 수 있습니다
   const departments = [
     { id: 1, name: "Department A", selected: false },
     { id: 2, name: "Department B", selected: false },
@@ -26,13 +27,16 @@ export default function DepartmentSearch() {
     { id: 5, name: "Sales Department", selected: false },
   ];
 
-  useEffect(() => {
-    if (searchTerm) {
-      // 이미 선택된 부서를 제외한 결과 필터링
+  // 검색어 변경 핸들러
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+
+    // 검색어가 있을 때만 필터링
+    if (value.trim()) {
       const filtered = departments
         .filter(
           (dept) =>
-            dept.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            dept.name.toLowerCase().includes(value.toLowerCase()) &&
             !selectedDepartment.some((selected) => selected.id === dept.id)
         )
         .slice(0, 5);
@@ -42,8 +46,9 @@ export default function DepartmentSearch() {
       setSearchResults([]);
       setIsSearching(false);
     }
-  }, [searchTerm, selectedDepartment]); // selectedDepartment 의존성 추가
+  };
 
+  // 외부 클릭 감지
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -60,6 +65,7 @@ export default function DepartmentSearch() {
   const handleDepartmentSelect = (dept: Department) => {
     setSelectedDepartment((prev) => [dept, ...prev]);
     setSearchTerm("");
+    setSearchResults([]);
     setIsSearching(false);
   };
 
@@ -69,15 +75,16 @@ export default function DepartmentSearch() {
         추가적으로 프로젝트에 접근 허용할 부서를 골라 주세요
       </h1>
       <div className="relative" ref={searchRef}>
-        <div className="min-w-[400px] w">
+        <div className="min-w-[400px]">
           <Input
-            onChange={(e) => setSearchTerm(e.target.value)}
             value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => setIsSearching(true)}
             label="Search"
             isClearable
             radius="lg"
             classNames={{
-              base: "w-w-full",
+              base: "w-full",
               label: "text-black/50 dark:text-white/90",
               input: [
                 "bg-transparent",
