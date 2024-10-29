@@ -23,6 +23,10 @@ body {
   background: var(--background);
 }
 
+button {
+  @apply px-2 rounded-md disabled:scale-100 disabled:opacity-50 hover:scale-105 active:scale-95 transition-transform;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

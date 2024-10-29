@@ -1,5 +1,9 @@
-// components/StepIndicator.tsx
-const StepIndicator = ({ currentStep }: { currentStep: number }) => {
+interface StepIndicatorProps {
+  currentStep: number;
+  handleMove: (stepNumber: number) => void;
+}
+
+const StepIndicator = ({ currentStep, handleMove }: StepIndicatorProps) => {
   const steps = [
     { id: 1, title: "주제 선택" },
     { id: 2, title: "모델 선택" },
@@ -13,7 +17,13 @@ const StepIndicator = ({ currentStep }: { currentStep: number }) => {
         {steps.map((step) => (
           <div
             key={step.id}
-            className="flex flex-col w-full justify-center items-center"
+            className={`flex flex-col w-full justify-center items-center ${
+              currentStep < step.id ? "cursor-not-allowed" : "cursor-pointer"
+            }`}
+            onClick={() => {
+              if (currentStep < step.id) return;
+              handleMove(step.id);
+            }}
           >
             <div
               className={`w-14 h-14 rounded-full flex items-center justify-center
