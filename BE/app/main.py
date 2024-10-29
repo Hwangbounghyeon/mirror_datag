@@ -6,6 +6,7 @@ from sqlalchemy import text
 from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
+from contextlib import asynccontextmanager
 import uuid
 
 app = FastAPI()
@@ -18,9 +19,13 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
-@app.on_event("startup")
-async def startup_db_client():
+@asynccontextmanager
+async def startup_db_client(app: FastAPI):
     get_database_mongodb()
+    get_database_mariadb()
+    yield
+
+
     
     
 
