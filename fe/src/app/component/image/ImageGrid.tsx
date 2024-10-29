@@ -1,12 +1,5 @@
-import ImageCard from "./ImageCard";
-
-interface ImageGridProps {
-    images: Array<{
-        src: string;
-        name: string;
-    }>;
-    onDeleteImage: (index: number) => void;
-}
+import { ImageGridProps } from "@/app/types/upload";
+import { ImageCard } from "./ImageCard";
 
 const ImageGrid = ({ images, onDeleteImage }: ImageGridProps) => {
     return (
