@@ -3,19 +3,18 @@ from typing import List
 
 from dto.ai_model_dto import AIModelRequest
 from services.ai_model.detection_service import ObjectDetectionService
+from configs.mariadb import get_database_mariadb
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/det", tags=["object_detection"])
-
-# 의존성 주입
-def get_object_detection_service():
-    return ObjectDetectionService()
 
 @router.post("/")
 async def detect_objects(
     request: AIModelRequest,
-    detection_service: ObjectDetectionService = Depends(get_object_detection_service)
+    db : Session = Depends(get_database_mariadb)
 ):
     try:
+        detection_service = ObjectDetectionService(db)
         result = await detection_service.detect_images(request)
         return result
     except HTTPException as http_err:

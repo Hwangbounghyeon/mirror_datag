@@ -3,19 +3,18 @@ from typing import List
 
 from dto.ai_model_dto import AIModelRequest
 from services.ai_model.classification_service import ClassificationService
+from configs.mariadb import get_database_mariadb
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/cls", tags=["classification"])
-
-# 의존성 주입
-def get_classification_service():
-    return ClassificationService()
 
 @router.post("/")
 async def classify_objects(
     request: AIModelRequest,
-    classification_service: ClassificationService = Depends(get_classification_service)
+    db : Session = Depends(get_database_mariadb)
 ):
     try:
+        classification_service = ClassificationService(db)
         result = await classification_service.classify_images(request)
         return result
     except HTTPException as http_err:

@@ -13,14 +13,15 @@ from dto.ai_model_dto import AIModelRequest, ObjectDetectionPredictionResult
 from services.ai_model.preprocess_service import PreprocessService
 from services.mongodb.detection_metadata_service import ObjectDetectionMetadataService
 from services.mariadb.image_service import ImageService
+from sqlalchemy.orm import Session
 
 YOLOMODEL = type[YOLO]
 
 class ObjectDetectionService:
-    def __init__(self):
+    def __init__(self, db: Session):
         self.preprocess_service = PreprocessService()
         self.detection_metadata_service = ObjectDetectionMetadataService()
-        self.image_service = ImageService()
+        self.image_service = ImageService(db)
         self.model_list = ["yolov5n", "yolov8n", "yolo11n"]
         self.features = None
         self.conf_threshold = 0.7
