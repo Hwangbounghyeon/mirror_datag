@@ -7,8 +7,10 @@ from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
+from routers.uploads import router as upload_router
 import uuid
 from routers import analysis_router
+import logging
 
 app = FastAPI()
 
@@ -21,12 +23,17 @@ app.add_middleware(
 )
 
 app.include_router(analysis_router.router)
+app.include_router(upload_router)
 
 @asynccontextmanager
 async def startup_db_client(app: FastAPI):
     get_database_mongodb()
     get_database_mariadb()
     yield
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # DB 연결 확인 엔드포인트
 @app.get("/check-db-connection")
