@@ -8,11 +8,12 @@ import { useImageUpload } from "./useImageUpload";
 
 export default function UploadPage() {
     const {
-        hasImages,
+        images,
         handlePrevious,
+        handleFileUpload,
         handleMoveToLoadImages,
-        handleSelectFiles,
-        handleSelectFolder,
+        handleDeleteImage,
+        handleDeleteAllImages,
     } = useImageUpload();
 
     return (
@@ -21,13 +22,14 @@ export default function UploadPage() {
                 <PageHeader
                     title="Upload Image"
                     rightButtonText="Move To Dataset"
-                    onPrevious={handlePrevious}
                     onRightButtonClick={handleMoveToLoadImages}
+                    onPrevious={handlePrevious}
                 />
                 <UploadContent
-                    hasImages={hasImages}
-                    onSelectFiles={handleSelectFiles}
-                    onSelectFolder={handleSelectFolder}
+                    images={images}
+                    onFileUpload={handleFileUpload}
+                    onDeleteImage={handleDeleteImage}
+                    onDeleteAllImages={handleDeleteAllImages}
                 />
             </PageContainer>
         </Provider>

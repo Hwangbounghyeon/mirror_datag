@@ -1,25 +1,50 @@
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+
+interface ImageFile {
+    src: string;
+    name: string;
+}
 
 export const useImageUpload = () => {
     const router = useRouter();
-    const [hasImages, setHasImages] = useState(false);
+    const [images, setImages] = useState<ImageFile[]>([]);
 
-    const handlePrevious = () => {};
+    const handlePrevious = useCallback(() => {
+        router.back();
+    }, [router]);
 
-    const handleMoveToLoadImages = () => {
+    const handleFileUpload = useCallback((files: File[]) => {
+        const newImages = files.map((file) => ({
+            src: URL.createObjectURL(file),
+            name: file.name,
+        }));
+
+        setImages((prev) => [...prev, ...newImages]);
+    }, []);
+
+    const handleMoveToLoadImages = useCallback(() => {
         router.push("/loadimage");
-    };
+    }, [router]);
 
-    const handleSelectFiles = () => {};
+    const handleDeleteImage = useCallback((index: number) => {
+        setImages((prev) => {
+            const newImages = [...prev];
+            newImages.splice(index, 1);
+            return newImages;
+        });
+    }, []);
 
-    const handleSelectFolder = () => {};
+    const handleDeleteAllImages = useCallback(() => {
+        setImages([]);
+    }, []);
 
     return {
-        hasImages,
+        images,
         handlePrevious,
+        handleFileUpload,
         handleMoveToLoadImages,
-        handleSelectFiles,
-        handleSelectFolder,
+        handleDeleteImage,
+        handleDeleteAllImages,
     };
 };
