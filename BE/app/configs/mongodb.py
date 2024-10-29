@@ -7,7 +7,9 @@ load_dotenv()
 mongo_url = os.getenv("MONGO_URL")
 client = AsyncIOMotorClient(mongo_url)
 database = client.get_database("S11P31S108")
-collection = database.get_collection("ai_results")
+collection_metadata = database.get_collection("metadata")
+collection_features = database.get_collection("features")
+collection_histories = database.get_collection("histories")
 
 def get_database_mongodb():
     try:
@@ -15,4 +17,3 @@ def get_database_mongodb():
         print("Successfully connected to MongoDB")
     except Exception as e:
         print(e)
-        
