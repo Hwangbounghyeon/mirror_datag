@@ -13,7 +13,7 @@ export const UploadContent = ({
     onSelectFiles,
     onSelectFolder,
 }: UploadContentProps) => (
-    <Box flex={1}>
+    <Box flex={1} px={8} pb={8}>
         <Box
             h="full"
             border="1px"
