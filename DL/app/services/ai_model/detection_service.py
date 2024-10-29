@@ -12,6 +12,7 @@ import time
 from dto.ai_model_dto import AIModelRequest, ObjectDetectionPredictionResult
 from services.ai_model.preprocess_service import PreprocessService
 from services.mongodb.detection_metadata_service import ObjectDetectionMetadataService
+from services.mariadb.image_service import ImageService
 
 YOLOMODEL = type[YOLO]
 
@@ -19,6 +20,7 @@ class ObjectDetectionService:
     def __init__(self):
         self.preprocess_service = PreprocessService()
         self.detection_metadata_service = ObjectDetectionMetadataService()
+        self.image_service = ImageService()
         self.model_list = ["yolov5n", "yolov8n", "yolo11n"]
         self.features = None
         self.conf_threshold = 0.7
@@ -63,6 +65,14 @@ class ObjectDetectionService:
                 features = self.detection_metadata_service.create_feature(model_prediction_result.features)
 
                 features_id = await self.detection_metadata_service.upload_feature(features)
+
+                image_id = await self.image_service.create_image(metadata_id, features_id)
+
+                tag_ids = await self.image_service.create_tags(metadata.aiResults[0].predictions[0].tags)
+
+                await self.image_service.create_image_tags(image_id, tag_ids)
+
+                project_image_id = await self.image_service.create_project_image(request.project_id, image_id)
 
                 print(metadata_id, features_id)
 
