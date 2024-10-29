@@ -1,4 +1,12 @@
-const ImageUploader = () => {
+interface ImageUploaderProps {
+    onSelectFiles: (e: React.MouseEvent) => void;
+    onSelectFolder: (e: React.MouseEvent) => void;
+}
+
+const ImageUploader = ({
+    onSelectFiles,
+    onSelectFolder,
+}: ImageUploaderProps) => {
     return (
         <div className="w-full h-full flex flex-col items-center justify-center">
             <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mb-4">
@@ -21,10 +29,16 @@ const ImageUploader = () => {
             </p>
             <p className="text-lg text-gray-500 mb-4">or...</p>
             <div className="flex gap-48">
-                <button className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100">
+                <button
+                    className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100"
+                    onClick={onSelectFiles}
+                >
                     Select Files
                 </button>
-                <button className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100">
+                <button
+                    className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100"
+                    onClick={onSelectFolder}
+                >
                     Select Folder
                 </button>
             </div>
