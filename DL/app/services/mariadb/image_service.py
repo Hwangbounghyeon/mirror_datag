@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 class ImageService:
-    def __init__(self, db: Session = next(get_database_mariadb())):
+    def __init__(self, db: Session):
         self.db = db
 
     async def create_image(self, metadata_idx: str, feature_idx: str) -> int:
@@ -49,7 +49,6 @@ class ImageService:
 
         for tag_name in tag_names:
             tag_type = get_tag_type(tag_name)
-            print("tag type : ", tag_type.value )
             existing_tag = self.db.execute(select(Tags).filter_by(tag_name=tag_name))
             existing_tag = existing_tag.scalar_one_or_none()
             

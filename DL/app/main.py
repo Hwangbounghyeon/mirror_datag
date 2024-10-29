@@ -47,3 +47,8 @@ async def startup_db_client():
 #     except Exception as e:
 #         traceback.print_exc()
 #         raise HTTPException(status_code=500, detail="An error occurred while saving data")
+
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run(app, port=8080)

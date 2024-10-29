@@ -14,14 +14,15 @@ from models.mongodb_cls import AiResultData
 from services.ai_model.preprocess_service import PreprocessService
 from services.mongodb.classification_metadata_service import ClassificationMetadataService
 from services.mariadb.image_service import ImageService
+from sqlalchemy.orm import Session
 
 CIFAR10_CLASSES = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 class ClassificationService:
-    def __init__(self):
+    def __init__(self, db: Session):
         self.preprocess_service = PreprocessService()
         self.classification_metadata_service = ClassificationMetadataService()
-        self.image_service = ImageService()
+        self.image_service = ImageService(db)
         self.model_list = ["vgg19_bn", "mobilenetv2_x1_4", "repvgg_a2"]
         self.features = None
         self.conf_threshold = 0.7

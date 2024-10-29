@@ -20,6 +20,7 @@ class Users(Base):
     departments = relationship("Departments", back_populates="users")
     projects = relationship("Project", back_populates="users")
     histories = relationship("Histories", back_populates="users")
+    upload_batch = relationship("UploadBatch", back_populates="users")
 
 
 
@@ -48,6 +49,7 @@ class Project(Base):
     users = relationship("Users", back_populates="projects")
     project_image = relationship("ProjectImage", back_populates="projects")
     histories = relationship("Histories", back_populates="projects")
+    upload_batch = relationship("UploadBatch", back_populates="projects")
 
 
 
@@ -72,8 +74,23 @@ class Histories(Base):
     history_name = Column(VARCHAR(255), nullable=False)
     history_obj_id = Column(VARCHAR(255))
     is_private = Column(Integer, nullable=False)
+    is_done = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 
     users = relationship("Users", back_populates="histories")
     projects = relationship("Project", back_populates="histories")
+
+class UploadBatch(Base):
+    __tablename__ = "upload_batch"
+    upload_batch_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("project.project_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    is_done = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    projects = relationship("Project", back_populates="upload_batch")
+    users = relationship("Users", back_populates="upload_batch")
+
+    

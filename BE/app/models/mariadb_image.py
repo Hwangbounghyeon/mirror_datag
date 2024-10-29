@@ -3,7 +3,6 @@ from sqlalchemy import Column, ForeignKey, Integer, VARCHAR, DateTime, Enum as S
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from enum import Enum, unique
-from models.mariadb_users import ProjectImage
 
 @unique
 class TagType(Enum):
@@ -27,7 +26,7 @@ class Images(Base):
     updated_at = Column(DateTime, onupdate=func.now())
 
     image_tag = relationship("ImageTag", back_populates="images")
-    project_image = relationship(ProjectImage, back_populates="images")
+    project_image = relationship("ProjectImage", back_populates="images")
 
 
 # 태그 테이블
