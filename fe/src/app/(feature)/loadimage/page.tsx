@@ -44,7 +44,7 @@ export default function LoadImagesPage() {
             />
 
             <ContentContainer>
-                <div className="flex-[7.5] h-[80vh]">
+                <div className="flex-[7.5] min-h-[80vh]">
                     <div className="h-full border border-solid border-gray-300 rounded-lg p-6">
                         <ImageGrid images={[]} onDeleteImage={() => {}} />
                     </div>
