@@ -1,11 +1,5 @@
-import { Flex } from "@chakra-ui/react";
-
 export const ContentContainer = ({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
-}) => (
-    <Flex flex={1} w="full" px={8} pb={8} gap={6}>
-        {children}
-    </Flex>
-);
+  children: React.ReactNode;
+}) => <div className="flex flex-1 w-full px-8 pb-8 gap-6">{children}</div>;
