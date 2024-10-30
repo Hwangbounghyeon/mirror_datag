@@ -10,6 +10,7 @@ database = client.get_database("S11P31S108")
 collection_metadata = database.get_collection("metadata")
 collection_features = database.get_collection("features")
 collection_histories = database.get_collection("histories")
+collection_permissions = database.get_collection("permissions")
 
 def get_database_mongodb():
     try:
