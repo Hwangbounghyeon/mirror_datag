@@ -29,12 +29,15 @@ const SelectCard = ({
         flex 
         flex-col 
         bg-white
+        dark:bg-slate-700
         rounded-lg
         shadow-sm
         transition-all
         cursor-pointer
-        ${selected ? "border-2 border-blue-500" : "border border-gray-200"}
-        hover:shadow-md
+      
+        ${selected ? "border-[6px] border-blue-500" : "border-none"}
+        hover:scale-[101%]
+        active:scale-[99%]
       `}
     >
       <div className="relative w-full pt-[60%]">
@@ -42,13 +45,15 @@ const SelectCard = ({
           src={imgUrl}
           alt={imgAlt || "img"}
           fill
-          className="absolute top-0 left-0 w-full h-full object-cover rounded-t-lg"
+          className="absolute top-0 left-0 w-full h-full object-cover "
         />
       </div>
 
       <div className="flex flex-col flex-grow p-6">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-2">with YOLO v5, v8, v11</p>
+        <p className="text-sm text-gray-600 dark:text-gray-100 mb-2">
+          with YOLO v5, v8, v11
+        </p>
         <p className="text-gray-700">{description}</p>
       </div>
     </div>
