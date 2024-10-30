@@ -7,19 +7,27 @@ from datetime import datetime, timezone
 class ProjectService:
     def __init__(self, db: Session):
         self.db = db
-        
+    
+    # Project 생성
     async def create_project(self, request: ProjectRequest):
         # MongoDB permission 저장
         permission_request = {
-            "users" : request.accesscontrol.users,
-            "departments" : request.accesscontrol.departments
+            "users" : {
+                "view": request.accesscontrol.view_users,
+                "edit": request.accesscontrol.edit_users
+            },
+            "department" : {
+                "view" : request.accesscontrol.view_departments,
+                "edit" : request.accesscontrol.edit_departments
+            }
         }
         
         permission = await collection_permissions.insert_one(permission_request)
         
         # MariaDB project 저장
         project_request = ProjectRequest(
-            name = request.name,
+            project_name = request.project_name,
+            model_name = request.model_name,
             description = request.description,
             accesscontrol_id = str(permission.inserted_id),
             user_id = request.user_id,

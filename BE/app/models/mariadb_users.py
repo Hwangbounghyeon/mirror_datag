@@ -12,7 +12,7 @@ class Users(Base):
 
     user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(VARCHAR(50), nullable=False)
-    email = Column(VARCHAR(255), nullable=False)
+    email = Column(VARCHAR(255), nullable=False, unique=True)
     password = Column(VARCHAR(255), nullable=False)
     duty = Column(VARCHAR(255), nullable=False)
     location = Column(VARCHAR(255), nullable=False)
@@ -44,7 +44,8 @@ class Project(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     permission_id = Column(VARCHAR(255), nullable=False)
     is_private = Column(Integer, default=0)
-    name = Column(VARCHAR(255))
+    project_name = Column(VARCHAR(255), nullable=False)
+    model_name = Column(VARCHAR(255), nullable=False)
     description = Column(TEXT, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
