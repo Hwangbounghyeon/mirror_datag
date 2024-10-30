@@ -1,58 +1,40 @@
 import { StepProps } from "@/types/projectType";
-import { Input } from "@nextui-org/react";
+import { Input, Textarea } from "@nextui-org/react";
 import { memo } from "react";
 
 const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
   return (
-    <div className="flex flex-col item-center  w-full flex-wrap md:flex-nowrap ">
-      <div className="w-full mb-6">
-        <Input
-          isRequired
-          defaultValue={`${
-            projectItem.name || `Project_${new Date().toUTCString()}`
-          }`}
-          type="text"
-          name="name"
-          label="Project Name"
-          className="w-full"
-          radius="md"
-          size="md"
-          onChange={(e) => {
-            setProjectItem((prev) => ({ ...prev, name: e.target.value || "" }));
-          }}
-        />
-      </div>
+    <div className="flex flex-col item-center max-w-[700px] w-[90%] flex-wrap md:flex-nowrap ">
+      <Input
+        isRequired
+        defaultValue={`${projectItem.name || ""}`}
+        type="text"
+        name="name"
+        className="mb-5"
+        label="Project Name"
+        radius="md"
+        size="md"
+        onChange={(e) => {
+          setProjectItem((prev) => ({ ...prev, name: e.target.value || "" }));
+        }}
+      />
 
-      <div className="mb-6">
-        <Input
-          isRequired
-          defaultValue={`${
-            projectItem.description || `Project_${new Date().toUTCString()}`
-          }`}
-          type="text"
-          label="Project Name"
-          className="w-full"
-          radius="md"
-          size="md"
-          name="description"
-          onChange={(e) => {
-            setProjectItem((prev) => ({
-              ...prev,
-              description: e.target.value || "",
-            }));
-          }}
-        />
-      </div>
-
-      <div className="mb-6">
-        <label className="block text-sm font-bold mb-2">
-          Department / Manager
-        </label>
-        <div className="flex gap-4">
-          <Input placeholder="Department A" className="w-full" size="lg" />
-          <Input placeholder="Manager 01" className="w-full" size="lg" />
-        </div>
-      </div>
+      <Textarea
+        isRequired
+        minRows={2}
+        className="mb-5"
+        defaultValue={`${projectItem.name || ""}`}
+        label="Project Description"
+        radius="md"
+        size="md"
+        name="description"
+        onChange={(e) => {
+          setProjectItem((prev) => ({
+            ...prev,
+            description: e.target.value || "",
+          }));
+        }}
+      />
 
       <button
         disabled={
