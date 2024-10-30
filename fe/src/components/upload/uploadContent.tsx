@@ -7,52 +7,52 @@ import { useFileValidation } from "@/hooks/useFileValidation";
 import { useFileSelection } from "@/hooks/useFileSelection";
 
 export const UploadContent = ({
-  images,
-  onFileUpload,
-  onDeleteImage,
-  onDeleteAllImages,
-}: UploadContentProps) => {
-  const { uploadType, handleFileValidation } = useFileValidation({
     images,
-    onValidFiles: onFileUpload,
-  });
+    onFileUpload,
+    onDeleteImage,
+    onDeleteAllImages,
+}: UploadContentProps) => {
+    const { uploadType, handleFileValidation } = useFileValidation({
+        images,
+        onValidFiles: onFileUpload,
+    });
 
-  const { handleSelectFiles, handleSelectFolder } =
-    useFileSelection(handleFileValidation);
+    const { handleSelectFiles, handleSelectFolder } =
+        useFileSelection(handleFileValidation);
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop: handleFileValidation as <T extends File>(
-      acceptedFiles: T[],
-      fileRejections: FileRejection[],
-      event: DropEvent
-    ) => void,
-    accept: ACCEPTED_FILE_TYPES,
-    noClick: true,
-    noKeyboard: true,
-  });
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop: handleFileValidation as <T extends File>(
+            acceptedFiles: T[],
+            fileRejections: FileRejection[],
+            event: DropEvent
+        ) => void,
+        accept: ACCEPTED_FILE_TYPES,
+        noClick: true,
+        noKeyboard: true,
+    });
 
-  return (
-    <div className="flex-1">
-      <div
-        {...getRootProps()}
-        className="h-full border border-solid border-gray-300 rounded-lg p-6"
-      >
-        <input {...getInputProps()} />
-        {images.length > 0 ? (
-          <UploadedContent
-            images={images}
-            onDeleteAllImages={onDeleteAllImages}
-            onDeleteImage={onDeleteImage}
-            onSelectFiles={handleSelectFiles}
-            onSelectFolder={handleSelectFolder}
-          />
-        ) : (
-          <ImageUploader
-            onSelectFiles={handleSelectFiles}
-            onSelectFolder={handleSelectFolder}
-          />
-        )}
-      </div>
-    </div>
-  );
+    return (
+        <div className="flex-1 mx-8 h-full mb-8">
+            <div
+                {...getRootProps()}
+                className="min-h-[80vh] border border-solid border-gray-300 rounded-lg p-6"
+            >
+                <input {...getInputProps()} />
+                {images.length > 0 ? (
+                    <UploadedContent
+                        images={images}
+                        onDeleteAllImages={onDeleteAllImages}
+                        onDeleteImage={onDeleteImage}
+                        onSelectFiles={handleSelectFiles}
+                        onSelectFolder={handleSelectFolder}
+                    />
+                ) : (
+                    <ImageUploader
+                        onSelectFiles={handleSelectFiles}
+                        onSelectFolder={handleSelectFolder}
+                    />
+                )}
+            </div>
+        </div>
+    );
 };
