@@ -9,6 +9,7 @@ CREATE TABLE `departments` (
 -- 2. users 테이블 생성
 CREATE TABLE `users` (
   `user_id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL ,
   `email` VARCHAR(255) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   `duty` VARCHAR(255) NOT NULL,

@@ -183,3 +183,105 @@ class EmailValidate:
                 detail=error_msg
             )
 
+## 3. JWT
+class JWTManage:
+    def __init__(self, db: Session):
+        self.db = db
+        self.secret_key = os.getenv('JWT_SECRET_KEY')
+        self.access_token_expire_minutes = 30
+        self.refresh_token_expire_days = 7
+        self.algorithm = "HS256"
+        
+    def create_access_token(self, data: dict):
+        to_encode = data.copy()
+        to_encode.update({"exp": datetime.now() + timedelta(minutes=30)})
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        
+    def create_token(self, data: dict, is_refresh: bool = False):
+        to_encode = data.copy()
+        
+        if is_refresh:
+            # Refresh 토큰 생성
+            expire = datetime.now() + timedelta(days=self.refresh_token_expire_days)
+            to_encode.update({"token_type": "refresh"})
+        else:
+            # Access 토큰 생성
+            expire = datetime.now() + timedelta(minutes=self.access_token_expire_minutes)
+            to_encode.update({"token_type": "access"})
+            
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+    
+    # access token 생성
+    def create_access_token(self, data: dict):
+        return self.create_token(data, is_refresh=False)
+    
+    # refresh token 생성
+    def create_refresh_token(self, data: dict):
+        return self.create_token(data, is_refresh=True)
+        
+    def verify_token(self, token: str):
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="토큰이 만료되었습니다.")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="옳지 않은 토큰입니다.")
+
+## 4. 로그인
+class UserLogin:
+    def __init__(self, db: Session, jwt_manage: JWTManage):
+        self.db = db
+        self.jwt_manage = jwt_manage
+        self.pwd_context = CryptContext(schemes=["bcrypt"])
+
+    async def login(self, login_data: UserLoginDTO):
+        # 이메일 검증
+        user = self.db.query(Users).filter(Users.email == login_data.email).first()
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="존재하지 않거나 틀린 사용자입니다."
+            )
+        # 비밀번호 검증
+        if not self.pwd_context.verify(login_data.password, user.password):
+            raise HTTPException(
+                status_code=401,
+                detail="비밀번호가 틀렸습니다."
+            )
+
+        # 토큰에 포함될 데이터
+        token_data = {
+            "user_id": user.user_id,
+            "name": user.name,
+            "email": user.email,
+            "department": user.department,
+            "is_supervised": user.is_supervised
+        }
+        
+        access_token = self.jwt_manage.create_access_token(token_data)
+        refresh_token = self.jwt_manage.create_refresh_token({"user_id": user.user_id})
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "user": token_data
+        }
+
+## 5. 로그아웃
+class UserLogout:
+    def __init__(self, db: Session):
+        self.db = db
+        
+    async def logout(self):
+        return {"message": "성공적으로 로그아웃이 되었습니다"}
+    
+
+# 부가 기능
+## 1. 프로필 화면
+
+## 2. 프로필 수정(이미지, 비밀번호) / (고도화 - 부서, 직급 수정은 관리자만)
+
+## 3. 비밀번호 분실 시 이메일로 재발급
