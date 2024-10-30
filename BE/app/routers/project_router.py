@@ -1,5 +1,5 @@
 from configs.mariadb import get_database_mariadb
-from dto.project_dto import ProjectRequest
+from dto.project_dto import ProjectRequest, ShowProjectList
 from services.project_service import ProjectService
 
 from fastapi import APIRouter, Depends
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/project", tags=["project"])
 
-@router.post('/', description="프로젝트 생성")
+@router.post('', description="프로젝트 생성")
 async def project(
     project_request: ProjectRequest,
     db : Session = Depends(get_database_mariadb)
@@ -33,3 +33,21 @@ async def project(
     response = await project_service.create_project(request)
 
     return response
+
+@router.get("/list")
+async def project_list(
+    project_list : ShowProjectList,
+    db : Session = Depends(get_database_mariadb)
+):
+    project_service = ProjectService(db)
+
+    request = {
+        "user_id": 1,
+        "department_id": 1,
+        "select_department": "department1",
+        "selelct_model_name": "vgg19_bn"
+    }
+
+    project_service.get_project_list(request)
+
+    return
