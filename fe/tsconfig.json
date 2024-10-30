@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -16,8 +15,7 @@
     "plugins": [
       {
         "name": "next"
-      },
-      { "name": "typescript-plugin-css-modules" }
+      }
     ],
     "paths": {
       "@/*": ["./src/*"]

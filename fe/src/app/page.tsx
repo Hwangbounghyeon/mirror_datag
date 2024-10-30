@@ -10,7 +10,6 @@ export default function Home() {
             <span className="block">Everything MLOps System</span>
             <span className="block text-indigo-600 mt-2">is HERE</span>
           </h1>
-
           <div className="mt-8 flex justify-center">
             <Link
               href="/login"
