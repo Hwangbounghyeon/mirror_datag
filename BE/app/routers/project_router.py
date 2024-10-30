@@ -18,11 +18,14 @@ async def project(
     
     request = {
     "user_id": 1,
-    "name": "New Project",
+    "project_name": "New Project",
+    "model_name" : "vgg19_bn",
     "description": "This is a description of the new project.",
     "accesscontrol": {
-        "users": ["user1", "user2", "user3"],
-        "departments": ["department1", "department2"]
+        "view_users": ["user1", "user2", "user3"],
+        "edit_users": ["user6", "user7", "user10"],
+        "view_departments": ["department1", "department2"],
+        "edit_departments": ["department3", "department4"]
     },
     "is_private": 0
     }
