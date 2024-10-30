@@ -1,16 +1,22 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
+import logging
+import platform
+import uuid
 from configs.mongodb import mongo_url
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
 from routers.uploads import router as upload_router
-import uuid
 from routers import analysis_router
-import logging
+
+import asyncio
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
+
+if platform.system() == 'Windows':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI()
 
