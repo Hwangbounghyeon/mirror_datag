@@ -12,13 +12,13 @@ const Layout = ({ children }: LayoutProps) => {
         <h1 className="text-[30px] font-bold p-0">Projects</h1>
 
         <Link
-          href={"create"}
-          className="bg-blue-300 font-bold text-[24px] text-white border-none"
+          href={"../create"}
+          className="bg-blue-300 font-bold text-[24px] text-white border-none rounded-md px-2 py-1"
         >
           Create Project
         </Link>
       </header>
-      <div className="flex-1">{children}</div>
+      <div className="w-full mt-5">{children}</div>
     </div>
   );
 };
