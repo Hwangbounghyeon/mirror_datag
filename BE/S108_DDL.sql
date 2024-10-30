@@ -34,7 +34,8 @@ CREATE TABLE `projects` (
   `project_id` INTEGER PRIMARY KEY AUTO_INCREMENT,
   `user_id` INTEGER,
   `permission_id` VARCHAR(255), -- MongoDB 참조
-  `name` VARCHAR(255) NOT NULL ,
+  `project_name` VARCHAR(255) NOT NULL ,
+  `model_name` VARCHAR(255) NOT NULL,
   `description` TEXT,
   `is_private` TINYINT NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
