@@ -28,7 +28,7 @@ const SelectCard = ({
         max-w-[400px]
         flex 
         flex-col 
-        bg-white
+        bg-gray-100
         dark:bg-slate-700
         rounded-lg
         shadow-sm
