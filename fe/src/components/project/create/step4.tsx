@@ -70,12 +70,12 @@ export default function DepartmentSearch() {
   };
 
   return (
-    <div className="max-w-[700px] w-full flex flex-col justify-center">
+    <div className="max-w-[700px] w-full flex flex-col items-center justify-center">
       <h1 className="text-[20px] mb-3">
         추가적으로 프로젝트에 접근 허용할 부서를 골라 주세요
       </h1>
-      <div className="relative" ref={searchRef}>
-        <div className="min-w-[400px]">
+      <div className="relative w-full" ref={searchRef}>
+        <div className="w-full">
           <Input
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
