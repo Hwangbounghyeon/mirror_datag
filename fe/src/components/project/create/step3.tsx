@@ -7,15 +7,18 @@ const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
     <div className="flex flex-col item-center max-w-[700px] w-[90%] flex-wrap md:flex-nowrap ">
       <Input
         isRequired
-        defaultValue={`${projectItem.name || ""}`}
+        defaultValue={`${projectItem.project_name || ""}`}
         type="text"
-        name="name"
+        name="project_name"
         className="mb-5"
         label="Project Name"
         radius="md"
         size="md"
         onChange={(e) => {
-          setProjectItem((prev) => ({ ...prev, name: e.target.value || "" }));
+          setProjectItem((prev) => ({
+            ...prev,
+            project_name: e.target.value || "",
+          }));
         }}
       />
 
@@ -23,7 +26,7 @@ const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
         isRequired
         minRows={2}
         className="mb-5"
-        defaultValue={`${projectItem.name || ""}`}
+        defaultValue={`${projectItem.description || ""}`}
         label="Project Description"
         radius="md"
         size="md"
@@ -38,7 +41,8 @@ const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
 
       <button
         disabled={
-          projectItem.name.length === 0 || projectItem.description.length === 0
+          projectItem.project_name.length === 0 ||
+          projectItem.description.length === 0
         }
         onClick={() => {
           if (handleMove) {
