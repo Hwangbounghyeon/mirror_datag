@@ -16,7 +16,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <Flex
         justifyContent="space-between"
         align="center"
-        px={8}
+        px={6}
         py={8}
         position="relative"
     >
@@ -46,6 +46,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
         <Button
             px={6}
+            mx={2}
             py={2}
             bg="blue.500"
             color="white"
