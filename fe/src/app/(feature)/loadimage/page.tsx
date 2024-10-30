@@ -53,13 +53,13 @@ export default function LoadImagesPage() {
                 <div className="min-h-[80vh] flex flex-[2.5] flex-col gap-4">
                     <div
                         ref={filterBoxRef}
-                        className="relative h-[8%] border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
+                        className="relative h-[8%] flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
                         onClick={(e) => {
                             e.stopPropagation();
                             setIsFilterOpen(!isFilterOpen);
                         }}
                     >
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center w-full">
                             필터링
                             <div
                                 className={`transform transition-transform duration-200 ${
