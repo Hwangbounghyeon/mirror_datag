@@ -6,8 +6,9 @@ from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
+from routers.analysis_router import router as analysis_router
 from routers.uploads import router as upload_router
-from routers import analysis_router
+from routers.users_router import router as users_router
 
 import asyncio
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
@@ -28,8 +29,9 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
-app.include_router(analysis_router.router)
+app.include_router(analysis_router)
 app.include_router(upload_router)
+app.include_router(users_router)
 
 @asynccontextmanager
 async def startup_db_client(app: FastAPI):
