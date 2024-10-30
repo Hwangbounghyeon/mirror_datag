@@ -15,3 +15,9 @@ class ProjectRequest(BaseModel):
     description: str
     accesscontrol: AccessControl
     is_private: int
+
+class ShowProjectList(BaseModel):
+    user_id: int
+    department_id: int
+    select_department: str = None
+    selelct_model_name: str = None
