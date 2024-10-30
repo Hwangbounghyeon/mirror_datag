@@ -22,7 +22,7 @@ class Users(Base):
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(VARCHAR(255), nullable=False)
-    email = Column(VARCHAR(255), nullable=False)
+    email = Column(VARCHAR(255), unique=True, nullable=False)
     password = Column(VARCHAR(255), nullable=False)
     duty = Column(VARCHAR(255), nullable=False)
     location = Column(VARCHAR(255), nullable=False)
