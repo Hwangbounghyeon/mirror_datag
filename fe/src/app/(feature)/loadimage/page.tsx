@@ -8,10 +8,10 @@ import FilterComponent from "@/components/loadimage/filterBox";
 import BatchList from "@/components/image/BatchList";
 import ImageGrid from "@/components/image/ImageGrid";
 import { useEffect, useRef, useState } from "react";
+import { IoFilter } from "react-icons/io5";
 
 export default function LoadImagesPage() {
-    const { handlePrevious, handleLoadImage, handleFilterClick } =
-        useLoadImages();
+    const { handlePrevious, handleLoadImage } = useLoadImages();
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const filterBoxRef = useRef<HTMLDivElement>(null);
 
@@ -53,21 +53,15 @@ export default function LoadImagesPage() {
                 <div className="min-h-[80vh] flex flex-[2.5] flex-col gap-4">
                     <div
                         ref={filterBoxRef}
-                        className="relative h-[8%] flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
+                        className="relative h-[8%] hover:bg-gray-100 flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
                         onClick={(e) => {
                             e.stopPropagation();
                             setIsFilterOpen(!isFilterOpen);
                         }}
                     >
-                        <div className="flex justify-between items-center w-full">
+                        <div className="flex justify-between items-center min-w-full">
                             필터링
-                            <div
-                                className={`transform transition-transform duration-200 ${
-                                    isFilterOpen ? "rotate-180" : "rotate-0"
-                                }`}
-                            >
-                                ▼
-                            </div>
+                            <IoFilter />
                         </div>
                         {isFilterOpen && (
                             <div
