@@ -1,12 +1,7 @@
-import ImageCard from "./ImageCard";
+import { ImageGridProps } from "@/app/types/upload";
+import { ImageCard } from "./ImageCard";
 
-const ImageGrid = () => {
-    const images = [
-        { src: "/images/yolo-v5.png", name: "000001.jpg" },
-        { src: "/images/yolo-v8.png", name: "000002.jpg" },
-        { src: "/images/yolo-v11.png", name: "000003.jpg" },
-    ];
-
+const ImageGrid = ({ images, onDeleteImage }: ImageGridProps) => {
     return (
         <div className="grid grid-cols-6 gap-4">
             {images.map((image, index) => (
@@ -15,6 +10,7 @@ const ImageGrid = () => {
                     src={image.src}
                     name={image.name}
                     index={index + 1}
+                    onDelete={() => onDeleteImage(index)}
                 />
             ))}
         </div>

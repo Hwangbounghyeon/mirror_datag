@@ -4,16 +4,19 @@ import { Provider } from "@/components/ui/provider";
 import { PageContainer } from "@/components/common/pageContainer";
 import { PageHeader } from "@/components/common/pageHeader";
 import { UploadContent } from "./uploadContent";
-import { useImageUpload } from "./useImageUpload";
+import { useImageState } from "./useImageState";
+import { useNavigation } from "./useNavigation";
+import { useFileValidation } from "./useFileValidation";
 
 export default function UploadPage() {
-    const {
-        hasImages,
-        handlePrevious,
-        handleMoveToLoadImages,
-        handleSelectFiles,
-        handleSelectFolder,
-    } = useImageUpload();
+    const { images, addImages, deleteImage, deleteAllImages } = useImageState();
+
+    const { goBack, goToLoadImages } = useNavigation();
+
+    const { handleFileValidation } = useFileValidation({
+        images,
+        onValidFiles: addImages,
+    });
 
     return (
         <Provider>
@@ -21,13 +24,14 @@ export default function UploadPage() {
                 <PageHeader
                     title="Upload Image"
                     rightButtonText="Move To Dataset"
-                    onPrevious={handlePrevious}
-                    onRightButtonClick={handleMoveToLoadImages}
+                    onRightButtonClick={goToLoadImages}
+                    onPrevious={goBack}
                 />
                 <UploadContent
-                    hasImages={hasImages}
-                    onSelectFiles={handleSelectFiles}
-                    onSelectFolder={handleSelectFolder}
+                    images={images}
+                    onFileUpload={handleFileValidation}
+                    onDeleteImage={deleteImage}
+                    onDeleteAllImages={deleteAllImages}
                 />
             </PageContainer>
         </Provider>
