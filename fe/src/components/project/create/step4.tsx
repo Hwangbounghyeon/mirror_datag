@@ -25,6 +25,8 @@ export default function DepartmentSearch() {
     { id: 3, name: "Department C", selected: false },
     { id: 4, name: "Marketing Department", selected: false },
     { id: 5, name: "Sales Department", selected: false },
+    { id: 6, name: "Zoo", selected: false },
+    { id: 7, name: "ABCDEFG", selected: false },
   ];
 
   // 검색어 변경 핸들러
@@ -33,13 +35,11 @@ export default function DepartmentSearch() {
 
     // 검색어가 있을 때만 필터링
     if (value.trim()) {
-      const filtered = departments
-        .filter(
-          (dept) =>
-            dept.name.toLowerCase().includes(value.toLowerCase()) &&
-            !selectedDepartment.some((selected) => selected.id === dept.id)
-        )
-        .slice(0, 5);
+      const filtered = departments.filter(
+        (dept) =>
+          dept.name.toLowerCase().includes(value.toLowerCase()) &&
+          !selectedDepartment.some((selected) => selected.id === dept.id)
+      );
       setSearchResults(filtered);
       setIsSearching(true);
     } else {
@@ -70,7 +70,7 @@ export default function DepartmentSearch() {
   };
 
   return (
-    <div className="w-full flex flex-col justify-center">
+    <div className="max-w-[700px] w-full flex flex-col justify-center">
       <h1 className="text-[20px] mb-3">
         추가적으로 프로젝트에 접근 허용할 부서를 골라 주세요
       </h1>
@@ -111,7 +111,10 @@ export default function DepartmentSearch() {
         </div>
 
         {isSearching && searchResults.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-600 border border-gray-300 dark:border-gray-800 rounded-lg shadow-lg">
+          <div
+            style={{ maxHeight: "200px", overflowY: "auto" }}
+            className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-600 border border-gray-300 dark:border-gray-800 rounded-lg shadow-lg"
+          >
             {searchResults.map((dept) => (
               <div
                 key={dept.id}
