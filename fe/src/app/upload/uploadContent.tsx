@@ -1,62 +1,66 @@
-import { Box, Button, Flex } from "@chakra-ui/react";
-import ImageGrid from "../component/image/ImageGrid";
-import ImageUploader from "../component/image/ImageUploader";
+"use client";
 
-interface UploadContentProps {
-    hasImages: boolean;
-    onSelectFiles?: () => void;
-    onSelectFolder?: () => void;
-}
+import { Box } from "@chakra-ui/react";
+import { useDropzone, FileRejection, DropEvent } from "react-dropzone";
+import ImageUploader from "../component/image/ImageUploader";
+import { UploadContentProps } from "../types/upload";
+import { ACCEPTED_FILE_TYPES } from "../lib/constants/upload";
+import { UploadedContent } from "./uploadedContent";
+import { useFileValidation } from "./useFileValidation";
+import { useFileSelection } from "./useFileSelection";
 
 export const UploadContent = ({
-    hasImages,
-    onSelectFiles,
-    onSelectFolder,
-}: UploadContentProps) => (
-    <Box flex={1} px={8} pb={8}>
-        <Box
-            h="full"
-            border="1px"
-            borderStyle="solid"
-            borderColor="gray.300"
-            borderRadius="lg"
-            p={6}
-        >
-            {hasImages ? (
-                <Flex h="full" flexDir="column">
-                    <Flex justify="flex-end" gap={4} mb={4}>
-                        <Button
-                            px={6}
-                            py={2}
-                            borderWidth={2}
-                            borderStyle="dashed"
-                            borderColor="gray.300"
-                            borderRadius="lg"
-                            color="gray.600"
-                            _hover={{ bg: "gray.100" }}
-                            onClick={onSelectFiles}
-                        >
-                            Select Files
-                        </Button>
-                        <Button
-                            px={6}
-                            py={2}
-                            borderWidth={2}
-                            borderStyle="dashed"
-                            borderColor="gray.300"
-                            borderRadius="lg"
-                            color="gray.600"
-                            _hover={{ bg: "gray.50" }}
-                            onClick={onSelectFolder}
-                        >
-                            Select Folder
-                        </Button>
-                    </Flex>
-                    <ImageGrid />
-                </Flex>
-            ) : (
-                <ImageUploader />
-            )}
+    images,
+    onFileUpload,
+    onDeleteImage,
+    onDeleteAllImages,
+}: UploadContentProps) => {
+    const { uploadType, handleFileValidation } = useFileValidation({
+        images,
+        onValidFiles: onFileUpload,
+    });
+
+    const { handleSelectFiles, handleSelectFolder } =
+        useFileSelection(handleFileValidation);
+
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop: handleFileValidation as <T extends File>(
+            acceptedFiles: T[],
+            fileRejections: FileRejection[],
+            event: DropEvent
+        ) => void,
+        accept: ACCEPTED_FILE_TYPES,
+        noClick: true,
+        noKeyboard: true,
+    });
+
+    return (
+        <Box flex={1}>
+            <Box
+                {...getRootProps()}
+                h="full"
+                border="1px"
+                borderStyle="solid"
+                borderColor="gray.300"
+                borderRadius="lg"
+                p={6}
+            >
+                <input {...getInputProps()} />
+                {images.length > 0 ? (
+                    <UploadedContent
+                        images={images}
+                        onDeleteAllImages={onDeleteAllImages}
+                        onDeleteImage={onDeleteImage}
+                        onSelectFiles={handleSelectFiles}
+                        onSelectFolder={handleSelectFolder}
+                    />
+                ) : (
+                    <ImageUploader
+                        onSelectFiles={handleSelectFiles}
+                        onSelectFolder={handleSelectFolder}
+                    />
+                )}
+            </Box>
         </Box>
-    </Box>
-);
+    );
+};
