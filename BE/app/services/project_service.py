@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
 from configs.mongodb import collection_permissions
-from models.mariadb_users import Projects, Users, Departments
+from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from typing import List
 
 # 1. 프로젝트 생성, 삭제 및 불러오기
@@ -57,15 +57,15 @@ class ProjectService:
             "$or": [
                 {"users.view": {"$in": [str(request.user_id)]}},
             {"users.edit": {"$in": [str(request.user_id)]}},
-            {"department.view": {"$in": [user_department]}},
-            {"department.edit": {"$in": [user_department]}}
+            {"department.view": {"$in": [user_department_name]}},
+            {"department.edit": {"$in": [user_department_name]}}
             ]
         }
     
         permissions_cursor = collection_permissions.find(query)
         permissions_cursor_list = await permissions_cursor.to_list()
         permissions = [str(permission["_id"]) for permission in permissions_cursor_list]
-    
+
         # MariaDB에서 해당 permissions에 맞는 프로젝트 조회
         projects = self.db.query(Projects).filter(Projects.permission_id.in_(permissions)).all()
 
@@ -92,17 +92,18 @@ class ProjectService:
         # user_name, data_count 수정 필요
         for project in project_list:
             user = self.db.query(Users).filter(Users.user_id == project.user_id).first()
+            project_image_count = self.db.query(ProjectImage).filter(ProjectImage.project_id == project.project_id).count()
             project_response = ProjectListResponse(
                 project_id=project.project_id,
                 project_name=project.project_name,
                 model_name=project.model_name,
                 description=project.description,
-                user_name=user.username if user else "Unknown",
+                user_name=user.name if user else "Unknown",
                 department_name=user_department_name,
                 is_private=project.is_private,
                 create_at=project.created_at,
                 updated_at=project.updated_at,
-                data_count=1
+                data_count=project_image_count
             )
             project_list_response.append(project_response)
 
