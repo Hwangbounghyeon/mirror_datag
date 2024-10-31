@@ -16,7 +16,6 @@ export type ProjectType = {
   project_name: string;
   model_name: string;
   description: string;
-  permission_id: string;
   user_name: string; // 생성한 사람 이름
   department_name: string; // 생성한 사람의 부서 이름
   is_private: number; // 0 : 공개, 1 : 비공개
