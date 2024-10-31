@@ -1,26 +1,34 @@
-import { Authority } from "@/hooks/imageDetail/useItemManager";
 import React from "react";
+import { BiPlus } from "react-icons/bi";
 import { MdOutlineClear } from "react-icons/md";
+import AuthModal from "./modal/authModal";
+import { useDisclosure } from "@nextui-org/react";
+import { Authority } from "@/types/auth";
 
 interface AuthorityPanelProps {
     authorities: Authority[];
     onRemove: (index: number) => void;
-    onAdd: (authority: Authority) => void;
+    onAdd: (newAuthorities: Authority[]) => void;
 }
 
 function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
     return (
         <div className="h-full flex flex-col">
-            <div className="p-4 pb-2">
+            <div className="flex p-2 pb-2 justify-between items-center">
                 <h2 className="text-lg font-semibold">AUTHORITY</h2>
+                <BiPlus className="ms-2 cursor-pointer" onClick={onOpen}>
+                    Add Authority
+                </BiPlus>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto px-4">
+            <div className="flex-1 min-h-0 overflow-y-auto px-1 py-1">
                 <div className="flex flex-col gap-2">
                     {authorities.map((authority, index) => (
                         <div
-                            key={index}
-                            className="flex items-center justify-between px-3 py-2 rounded-full border border-blue-400"
+                            key={`auth-${authority.id}-${index}`}
+                            className="flex items-center justify-between ps-3 py-1 rounded-full border border-blue-400"
                         >
                             <span className="text-sm text-blue-400">
                                 {authority.name} / {authority.department}
@@ -35,6 +43,12 @@ function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
                     ))}
                 </div>
             </div>
+            <AuthModal
+                isOpen={isOpen}
+                onClose={onClose}
+                onAdd={onAdd}
+                existingAuthorities={authorities}
+            />
         </div>
     );
 }
