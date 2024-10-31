@@ -3,42 +3,42 @@ import { ImageFile } from "@/types/upload";
 import { validateFiles } from "./fileUtils";
 
 interface UseFileValidationResult {
-  uploadType: "zip" | "images" | null;
-  handleFileValidation: (files: File[]) => void;
+    uploadType: "zip" | "images" | null;
+    handleFileValidation: (files: File[]) => void;
 }
 
 export const useFileValidation = ({
-  images,
-  onValidFiles,
+    images,
+    onValidFiles,
 }: {
-  images: ImageFile[];
-  onValidFiles: (files: File[]) => void;
+    images: ImageFile[];
+    onValidFiles: (files: File[]) => void;
 }): UseFileValidationResult => {
-  const [uploadType, setUploadType] = useState<"zip" | "images" | null>(null);
+    const [uploadType, setUploadType] = useState<"zip" | "images" | null>(null);
 
-  useEffect(() => {
-    if (images.length === 0) {
-      setUploadType(null);
-    }
-  }, [images]);
+    useEffect(() => {
+        if (images.length === 0) {
+            setUploadType(null);
+        }
+    }, [images]);
 
-  const handleFileValidation = useCallback(
-    (files: File[]) => {
-      const validation = validateFiles(files, images, uploadType);
+    const handleFileValidation = useCallback(
+        (files: File[]) => {
+            const validation = validateFiles(files, images, uploadType);
 
-      if (!validation.isValid) {
-        alert(validation.error);
-        return;
-      }
+            if (!validation.isValid) {
+                alert(validation.error);
+                return;
+            }
 
-      setUploadType(validation.type);
-      onValidFiles(validation.files);
-    },
-    [images, uploadType, onValidFiles]
-  );
+            setUploadType(validation.type);
+            onValidFiles(validation.files);
+        },
+        [images, uploadType, onValidFiles]
+    );
 
-  return {
-    uploadType,
-    handleFileValidation,
-  };
+    return {
+        uploadType,
+        handleFileValidation,
+    };
 };

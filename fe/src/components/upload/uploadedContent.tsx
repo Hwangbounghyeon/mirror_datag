@@ -16,7 +16,7 @@ const UploadedContent: React.FC<UploadedContentProps> = ({
     onSelectFiles,
     onSelectFolder,
 }) => (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col justify-center">
         <div className="flex justify-end gap-4 mb-4">
             <button
                 className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-gray-100"

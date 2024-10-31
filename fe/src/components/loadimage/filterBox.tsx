@@ -154,7 +154,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                                                 }}
                                                 className="hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center"
                                             >
-                                                <span className="text-gray-400">
+                                                <span className="text-gray-400 me-1">
                                                     ×
                                                 </span>
                                             </button>
