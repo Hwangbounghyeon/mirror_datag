@@ -1,26 +1,24 @@
-"use client";
-
 import { useState } from "react";
 
-export interface Authority {
-    name: string;
-    department: string;
-}
-
-export function useItemManager<T>(initialItems: T[]) {
+export function useItemManager<T extends { id: number }>(initialItems: T[]) {
     const [items, setItems] = useState<T[]>(initialItems);
 
     const removeItem = (index: number) => {
-        setItems(items.filter((_, i) => i !== index));
+        setItems((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const addItem = (
-        newItem: T,
-        checkDuplicate?: (items: T[], newItem: T) => boolean
-    ) => {
-        if (!checkDuplicate || !checkDuplicate(items, newItem)) {
-            setItems([...items, newItem]);
-        }
+    const addItem = (newItem: T) => {
+        setItems((prev) => {
+            const exists = prev.some((item) => item.id === newItem.id);
+            if (!exists) {
+                return [...prev, newItem];
+            }
+            return prev;
+        });
+    };
+
+    const addItems = (newItems: T[]) => {
+        setItems((prev) => [...prev, ...newItems]);
     };
 
     return {
@@ -28,5 +26,6 @@ export function useItemManager<T>(initialItems: T[]) {
         setItems,
         removeItem,
         addItem,
+        addItems,
     };
 }
