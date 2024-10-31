@@ -1,6 +1,7 @@
 import "./globals.css";
 import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
+import Sidebar from "@/components/common/sidebar";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -29,9 +30,15 @@ export default function RootLayout({
     >
       <body id="root">
         <ThemeProvider attribute="class">
-          <div>{children}</div>
-          <div id="modal-root"></div>
+          <div className="min-h-screen min-w-screen flex">
+            <Sidebar />
+            <main className="flex-1">
+              <div className="px-5 ">{children}</div>
+            </main>
+          </div>
         </ThemeProvider>
+
+        <div id="modal-root"></div>
       </body>
     </html>
   );
