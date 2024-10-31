@@ -8,15 +8,15 @@ interface LayoutProps {
 
 const Layout = ({ options, children }: LayoutProps) => {
   return (
-    <div className="w-full min-h-[95vh] flex flex-col border border-red-600 items-center">
+    <div className="w-full h-screen flex flex-col items-center overflow-hidden">
       <header className="w-full flex flex-row justify-between align-middle items-center flex-wrap">
         <h1 className="text-[30px] font-bold p-0">Projects</h1>
 
         <Link
           href={"../create"}
-          className="bg-blue-300 font-bold text-[24px] text-white border-none rounded-md px-2 py-1"
+          className="bg-blue-800 font-bold text-[18px] text-white border-none rounded-md px-5 py-3"
         >
-          Create Project
+          + Create Project
         </Link>
       </header>
       <div className="w-full mt-5">{options}</div>
