@@ -1,8 +1,7 @@
 "use client";
 import StepIndicator from "@/components/project/create/step-indicator";
 import React, { useState } from "react";
-import { ProjectType } from "@/types/projectType";
-import { motion, AnimatePresence } from "framer-motion";
+import { CreateProjectType } from "@/types/projectType";
 
 import Step1 from "@/components/project/create/step1";
 import Step2 from "@/components/project/create/step2";
@@ -12,12 +11,13 @@ import Step4 from "@/components/project/create/step4";
 const Page = () => {
   const [step, setStep] = useState(1);
 
-  const [projectItem, setProjectItem] = useState<ProjectType>({
+  const [projectItem, setProjectItem] = useState<CreateProjectType>({
     category: null,
-    model: null,
-    name: "",
+    model_name: null,
+    project_name: "",
     description: "",
     additional_permission: [],
+    is_private: false,
   });
 
   const handleMove = (stepNumber: number) => {

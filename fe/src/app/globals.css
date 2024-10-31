@@ -32,3 +32,8 @@ button {
     text-wrap: balance;
   }
 }
+
+.remove_scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
