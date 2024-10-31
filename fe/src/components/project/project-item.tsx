@@ -1,6 +1,5 @@
 // components/ProjectCard.tsx
 import dayjs from "dayjs";
-import { ProjectListType } from "@/types/projectType";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import { PiNotebookFill } from "react-icons/pi"; // description logo
@@ -8,11 +7,12 @@ import { BsPersonLinesFill } from "react-icons/bs"; //department logo
 import { AiFillDatabase } from "react-icons/ai"; // data logo
 import { IoIosCube } from "react-icons/io"; // model logo
 import ProjectItemInfoCard from "./project-item-infocard";
+import { ProjectType } from "@/types/projectType";
 
 dayjs.extend(relativeTime);
 
 interface ProjectCardProps {
-  project: ProjectListType;
+  project: ProjectType;
 }
 
 export function ProjectItem({ project }: ProjectCardProps) {
@@ -35,9 +35,6 @@ export function ProjectItem({ project }: ProjectCardProps) {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Edit on {timeAgo}</span>
-          <button className="text-2xl text-yellow-400 hover:text-yellow-500">
-            ⭐
-          </button>
         </div>
       </div>
 
@@ -50,15 +47,15 @@ export function ProjectItem({ project }: ProjectCardProps) {
 
         <ProjectItemInfoCard
           title={"Department / Manager"}
-          description={`${project.department} ${
-            project.manager && `/ ${project.manager}`
-          }`}
+          description={`${project.department_name} / ${project.user_name}`}
           Icon={BsPersonLinesFill}
         />
 
         <ProjectItemInfoCard
           title={"Data"}
-          description={`${project.data?.images || "Emtpy"}`}
+          description={`${
+            project.data_count > 0 ? `${project.data_count}` : "Emtpy"
+          }`}
           Icon={AiFillDatabase}
         />
 
