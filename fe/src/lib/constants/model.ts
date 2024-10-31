@@ -1,3 +1,6 @@
+import { ModelType } from "@/types/modelType";
+import { delay } from "@/utils/delay";
+
 export const categories = [
   {
     id: "object-detection",
@@ -62,4 +65,12 @@ export const models = {
       releaseDate: "Released in 2023",
     },
   ],
+};
+
+export const getModels = async (): Promise<ModelType[]> => {
+  await delay(1000);
+  return [
+    { model_id: 1, model_name: "Model 1" },
+    { model_id: 2, model_name: "Model 2" },
+  ];
 };

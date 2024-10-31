@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const Layout = ({ options, children }: LayoutProps) => {
   return (
-    <div className="w-full h-screen flex flex-col items-center overflow-hidden">
+    <div className="w-full h-screen flex flex-col items-center overflow-hidden px-2">
       <header className="w-full flex flex-row justify-between align-middle items-center flex-wrap">
         <h1 className="text-[30px] font-bold p-0">Projects</h1>
 
