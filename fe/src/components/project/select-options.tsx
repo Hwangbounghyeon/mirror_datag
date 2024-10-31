@@ -1,30 +1,18 @@
 "use client";
 
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-import { DepartmentType } from "@/types/departmentType";
 import { Button, Select, SelectItem, Spinner } from "@nextui-org/react";
+import { DepartmentType } from "@/types/departmentType";
+import { ModelType } from "@/types/modelType";
 
-const mockDptsData: DepartmentType[] = [
-  { department_id: 1, department_name: "HR" },
-  { department_id: 2, department_name: "Finance" },
-  { department_id: 3, department_name: "Engineering" },
-  { department_id: 4, department_name: "Marketing" },
-  { department_id: 5, department_name: "Sales" },
-  { department_id: 6, department_name: "IT" },
-  { department_id: 7, department_name: "Customer Service" },
-  { department_id: 8, department_name: "Legal" },
-  { department_id: 9, department_name: "Operations" },
-  { department_id: 10, department_name: "R&D" },
-];
+interface SelectOptionsProps {
+  department_list: DepartmentType[];
+  model_list: ModelType[];
+}
 
-const mockModelsData = [
-  { model_id: 1, model_name: "Model 1" },
-  { model_id: 2, model_name: "Model 2" },
-];
-
-const SelectOptions = () => {
+const SelectOptions = ({ department_list, model_list }: SelectOptionsProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -104,7 +92,7 @@ const SelectOptions = () => {
               handleDepartmentChange(keys as Set<string>)
             }
           >
-            {mockDptsData.map((dpt) => (
+            {department_list.map((dpt) => (
               <SelectItem
                 key={dpt.department_id.toString()}
                 value={dpt.department_id}
@@ -121,7 +109,7 @@ const SelectOptions = () => {
             placeholder="Select a model"
             onSelectionChange={(keys) => handleModelChange(keys as Set<string>)}
           >
-            {mockModelsData.map((model) => (
+            {model_list.map((model) => (
               <SelectItem
                 key={model.model_id.toString()}
                 value={model.model_name}
