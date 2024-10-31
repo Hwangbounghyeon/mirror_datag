@@ -62,7 +62,7 @@ class ProjectImage(Base):
     __tablename__ = "project_image"
 
     project_image = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("project.project_id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), nullable=False)
     image_id = Column(Integer, ForeignKey("images.image_id", ondelete="CASCADE"), nullable=False)
 
     projects = relationship("Projects", back_populates="project_image")
@@ -75,7 +75,7 @@ class Histories(Base):
 
     history_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="SET NULL"))
-    project_id = Column(Integer, ForeignKey("project.project_id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), nullable=False)
     history_name = Column(VARCHAR(255), nullable=False)
     history_obj_id = Column(VARCHAR(255)) # MongoDB reference
     is_private = Column(Boolean, nullable=False)
@@ -89,7 +89,7 @@ class Histories(Base):
 class UploadBatches(Base):
     __tablename__ = "upload_batches"
     upload_batch_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    project_id = Column(Integer, ForeignKey("project.project_id", ondelete="CASCADE"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.project_id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="SET NULL"))
     is_done = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=func.now(), nullable=False)
