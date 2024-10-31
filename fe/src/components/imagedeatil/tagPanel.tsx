@@ -1,8 +1,10 @@
+import { Tag } from "@/types/auth";
+import { Input } from "@nextui-org/react";
 import React, { useState } from "react";
 import { MdOutlineClear } from "react-icons/md";
 
 interface TagPanelProps {
-    tags: string[];
+    tags: Tag[];
     onRemoveTag: (index: number) => void;
     onAddTag: (tag: string) => void;
 }
@@ -25,18 +27,20 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
 
     return (
         <div className="h-full flex flex-col">
-            <div className="p-4 pb-2">
+            <div className="p-2 pb-2">
                 <h2 className="text-lg font-semibold">TAGS</h2>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 max-h-[calc(100%-6rem)]">
+            <div className="flex-1 overflow-y-auto px-1 max-h-[calc(100%-6rem)]">
                 <div className="flex flex-wrap gap-2">
                     {tags.map((tag, index) => (
                         <div
                             key={index}
-                            className="flex items-center gap-2 px-3 py-1 rounded-full border border-blue-400"
+                            className="flex items-center ps-2 py-1 rounded-full border border-blue-400"
                         >
-                            <span className="text-sm text-blue-400">{tag}</span>
+                            <span className="text-sm text-blue-400">
+                                {tag.tag}
+                            </span>
                             <button
                                 onClick={() => onRemoveTag(index)}
                                 className="text-blue-400 hover:text-blue-300"
@@ -48,19 +52,19 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
                 </div>
             </div>
 
-            <div className="p-4">
-                <div className="flex h-10 rounded-full border border-blue-400 overflow-hidden">
-                    <input
+            <div className="p-2">
+                <div className="flex h-10 rounded-lg border justify-center border-blue-400 overflow-hidden">
+                    <Input
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        className="w-full px-4 bg-transparent text-white outline-none text-sm"
+                        className="w-full px-2 bg-transparent outline-none text-sm"
                         placeholder="Enter tag..."
                         onKeyDown={handleKeyDown}
                     />
                     <button
                         onClick={handleAddTag}
-                        className="px-6 bg-blue-400 text-black font-medium hover:bg-blue-500 transition-colors"
+                        className="px-5 rounded-none bg-blue-400 text-black font-medium hover:bg-blue-500 transition-colors"
                     >
                         Add
                     </button>
