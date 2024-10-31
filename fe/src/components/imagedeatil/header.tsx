@@ -21,7 +21,7 @@ function Header({
     const isLastPage = currentNumber === totalCount;
 
     return (
-        <div className="w-full flex items-center relative">
+        <div className="w-full flex items-center relative pb-2 bg-gray-50 dark:bg-gray-500">
             <div
                 className="flex flex-col px-2 cursor-pointer"
                 onClick={() => router.push("/dataset")}

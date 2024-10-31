@@ -27,20 +27,18 @@ function ClassPanel({ classes }: Classes) {
     };
 
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex-1 min-h-0 overflow-y-auto px-4">
+        <div className="flex flex-col">
+            <div className="flex-1 min-h-0 overflow-y-auto px-2">
                 <div className="flex flex-col gap-2">
                     {classes.map((className, index) => (
                         <div key={index} className="flex items-center gap-2">
                             <div
-                                className="w-3 h-3 rounded-full"
+                                className="w-2 h-2 rounded-full"
                                 style={{
                                     backgroundColor: getClassColor(index),
                                 }}
                             />
-                            <span className="text-sm text-white">
-                                {className}
-                            </span>
+                            <span className="text-md">{className}</span>
                         </div>
                     ))}
                 </div>

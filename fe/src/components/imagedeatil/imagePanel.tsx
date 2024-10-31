@@ -6,7 +6,7 @@ interface ImagePanelProps {
 
 function ImagePanel({ imageSrc }: ImagePanelProps) {
     return (
-        <div className="h-full flex items-center justify-center p-4">
+        <div className="h-full flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-600">
             <div className="relative w-full h-full flex items-center justify-center">
                 <img src={imageSrc} className="w-auto h-auto" />
             </div>
