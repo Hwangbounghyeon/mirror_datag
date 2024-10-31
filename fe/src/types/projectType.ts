@@ -10,7 +10,7 @@ export type CreateProjectType = {
   is_private: boolean; // 비공개 여부
 };
 
-export type PojectType = {
+export type ProjectType = {
   project_id: number;
   user_id: number;
   project_name: string;
