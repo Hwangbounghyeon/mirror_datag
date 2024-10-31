@@ -13,7 +13,7 @@ const Layout = ({ options, children }: LayoutProps) => {
         <h1 className="text-[30px] font-bold p-0">Projects</h1>
 
         <Link
-          href={"../create"}
+          href={"/project/create"}
           className="bg-blue-800 font-bold text-[18px] text-white border-none rounded-md px-5 py-3"
         >
           + Create Project
