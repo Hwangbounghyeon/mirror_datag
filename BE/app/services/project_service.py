@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from bson import ObjectId
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
+from dto.common_dto import ErrorResponse
 from configs.mongodb import collection_permissions
 from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from typing import List
@@ -113,27 +114,27 @@ class ProjectService:
     async def delete_project(self, project_id: int) -> str:
             # MariaDB에서 project 조회 및 삭제
             project = self.db.query(Projects).filter(Projects.project_id == project_id).first()
-            # if not project:
-            #     return CommonResponse(
-            #         status=404,
-            #         error=ErrorResponse(
-            #             code="PROJECT_NOT_FOUND",
-            #             message="해당 프로젝트를 찾을 수 없습니다."
-            #         )
-            #     )
+            if not project:
+                raise HTTPException(
+                    status_code=404,
+                    detail=ErrorResponse(
+                        code="PROJECT_NOT_FOUND",
+                        message="해당 프로젝트를 찾을 수 없습니다."
+                    )
+                )
 
-            # # MongoDB에서 관련 permission 삭제
-            # permission_id = project.permission_id
-            # result = await collection_permissions.delete_one({"_id": ObjectId(permission_id)})
+            # MongoDB에서 관련 permission 삭제
+            permission_id = project.permission_id
+            result = await collection_permissions.delete_one({"_id": ObjectId(permission_id)})
             
-            # if result.deleted_count == 0:
-            #     return CommonResponse(
-            #         status=404,
-            #         error=ErrorResponse(
-            #             code="PERMISSION_NOT_FOUND",
-            #             message="MongoDB에서 해당 권한을 찾을 수 없습니다."
-            #         )
-            #     )
+            if result.deleted_count == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail=ErrorResponse(
+                        code="PERMISSION_NOT_FOUND",
+                        message="MongoDB에서 해당 권한을 찾을 수 없습니다."
+                    )
+                )
 
             # MariaDB에서 project 삭제
             self.db.delete(project)
