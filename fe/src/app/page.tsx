@@ -6,7 +6,7 @@ export default function Home() {
     <main className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-200 sm:text-5xl md:text-6xl">
             <span className="block">Everything MLOps System</span>
             <span className="block text-indigo-600 mt-2">is HERE</span>
           </h1>
