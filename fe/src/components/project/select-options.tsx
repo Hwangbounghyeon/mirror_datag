@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 import { DepartmentType } from "@/types/departmentType";
-import { Select, SelectItem } from "@nextui-org/react";
+import { Button, Select, SelectItem, Spinner } from "@nextui-org/react";
 
 const mockDptsData: DepartmentType[] = [
   { department_id: 1, department_name: "HR" },
@@ -29,6 +29,8 @@ const SelectOptions = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [isLoading, setIsLoading] = useState(true);
+
   const [selectDepartment, setSelectDepartment] = useState<Set<string>>(
     new Set([])
   );
@@ -52,18 +54,20 @@ const SelectOptions = () => {
     } else {
       setSelectModel(new Set([]));
     }
+
+    setIsLoading(false);
   }, [searchParams]);
 
   // Select 변경 시 URL 업데이트
-  const updateURL = (departments: Set<string>, models: Set<string>) => {
+  const updateURL = () => {
     const params = new URLSearchParams();
 
-    if (departments.size > 0) {
-      params.set("department", Array.from(departments).join(","));
+    if (selectDepartment.size > 0) {
+      params.set("department", Array.from(selectDepartment).join(","));
     }
 
-    if (models.size > 0) {
-      params.set("model", Array.from(models).join(","));
+    if (selectModel.size > 0) {
+      params.set("model", Array.from(selectModel).join(","));
     }
 
     const query = params.toString();
@@ -72,12 +76,10 @@ const SelectOptions = () => {
 
   const handleDepartmentChange = (keys: Set<string>) => {
     setSelectDepartment(keys);
-    updateURL(keys, selectModel);
   };
 
   const handleModelChange = (keys: Set<string>) => {
     setSelectModel(keys);
-    updateURL(selectDepartment, keys);
   };
 
   const reset = () => {
@@ -88,51 +90,55 @@ const SelectOptions = () => {
 
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          defaultSelectedKeys={selectDepartment}
-          selectedKeys={selectDepartment}
-          className="w-[200px]"
-          label="Department"
-          placeholder="Select a department"
-          onSelectionChange={(keys) =>
-            handleDepartmentChange(keys as Set<string>)
-          }
-        >
-          {mockDptsData.map((dpt) => (
-            <SelectItem
-              key={dpt.department_id.toString()}
-              value={dpt.department_id}
-            >
-              {dpt.department_name}
-            </SelectItem>
-          ))}
-        </Select>
-        <Select
-          defaultSelectedKeys={selectModel}
-          selectedKeys={selectModel}
-          className="w-[200px]"
-          label="Model"
-          placeholder="Select a model"
-          onSelectionChange={(keys) => handleModelChange(keys as Set<string>)}
-        >
-          {mockModelsData.map((model) => (
-            <SelectItem
-              key={model.model_id.toString()}
-              value={model.model_name}
-            >
-              {model.model_name}
-            </SelectItem>
-          ))}
-        </Select>
-      </div>
+      {isLoading ? (
+        <Spinner color="primary" />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Select
+            defaultSelectedKeys={selectDepartment}
+            selectedKeys={selectDepartment}
+            className="w-[200px]"
+            label="Department"
+            placeholder="Select a department"
+            onSelectionChange={(keys) =>
+              handleDepartmentChange(keys as Set<string>)
+            }
+          >
+            {mockDptsData.map((dpt) => (
+              <SelectItem
+                key={dpt.department_id.toString()}
+                value={dpt.department_id}
+              >
+                {dpt.department_name}
+              </SelectItem>
+            ))}
+          </Select>
+          <Select
+            defaultSelectedKeys={selectModel}
+            selectedKeys={selectModel}
+            className="w-[200px]"
+            label="Model"
+            placeholder="Select a model"
+            onSelectionChange={(keys) => handleModelChange(keys as Set<string>)}
+          >
+            {mockModelsData.map((model) => (
+              <SelectItem
+                key={model.model_id.toString()}
+                value={model.model_name}
+              >
+                {model.model_name}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
+      )}
       <div className="flex flex-row gap-3">
-        <button
-          onClick={reset}
-          className="bg-red-300 font-bold text-white text-[20px] px-4 py-2 rounded"
-        >
-          Reset Option
-        </button>
+        <Button isLoading={isLoading} onClick={updateURL} color="primary">
+          Search
+        </Button>
+        <Button isLoading={isLoading} onClick={reset} color="warning">
+          Reset
+        </Button>
       </div>
     </div>
   );
