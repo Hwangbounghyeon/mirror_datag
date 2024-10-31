@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
@@ -89,6 +89,8 @@ async def delete_project(project_id: int, db: Session = Depends(get_database_mar
                 status=200,
                 data={"message": "프로젝트가 성공적으로 삭제되었습니다."}
             )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
             return ErrorResponse(
                 code=500,
