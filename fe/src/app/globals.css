@@ -18,11 +18,6 @@
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-}
-
 button {
   @apply px-2 rounded-md disabled:scale-100 disabled:opacity-50 hover:scale-105 active:scale-95 transition-transform;
 }
@@ -36,4 +31,8 @@ button {
 .remove_scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+* {
+  box-sizing: border-box;
 }

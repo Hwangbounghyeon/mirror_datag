@@ -7,11 +7,11 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen min-w-screen flex flex-row ">
+    <div className="min-h-screen min-w-screen flex">
       <Sidebar />
-      <section style={{ flex: 1, marginLeft: "10px", marginRight: "10px" }}>
-        {children}
-      </section>
+      <main className="flex-1">
+        <div className="px-5 ">{children}</div>
+      </main>
     </div>
   );
 };
