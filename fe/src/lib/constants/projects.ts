@@ -1,13 +1,14 @@
 import { ProjectType } from "@/types/projectType";
+import { delay } from "@/utils/delay";
 
 export async function getProjects(): Promise<ProjectType[]> {
+  await delay(1000);
   return [
     {
       project_id: 1,
       project_name: "AI Vision Project",
       model_name: "vgg19_bn",
       description: "컴퓨터 비전 기반 이미지 분류 프로젝트",
-      permission_id: "672300eac37028dc1e1a4497",
       user_name: "김철수",
       department_name: "AI연구소",
       is_private: 0,
@@ -20,7 +21,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Object Detection",
       model_name: "resnet50",
       description: "실시간 객체 탐지 시스템 개발",
-      permission_id: "672300eac37028dc1e1a4498",
       user_name: "이영희",
       department_name: "비전팀",
       is_private: 1,
@@ -33,7 +33,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Medical Image Analysis",
       model_name: "densenet121",
       description: "의료 영상 분석 및 진단 보조",
-      permission_id: "672300eac37028dc1e1a4499",
       user_name: "박지민",
       department_name: "의료AI팀",
       is_private: 1,
@@ -46,7 +45,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Face Recognition",
       model_name: "efficientnet_b0",
       description: "얼굴 인식 시스템 구축",
-      permission_id: "672300eac37028dc1e1a4500",
       user_name: "정수민",
       department_name: "보안팀",
       is_private: 0,
@@ -59,7 +57,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Quality Control",
       model_name: "mobilenet_v2",
       description: "제품 품질 검사 자동화",
-      permission_id: "672300eac37028dc1e1a4501",
       user_name: "최동욱",
       department_name: "품질관리팀",
       is_private: 1,
@@ -72,7 +69,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Retail Analytics",
       model_name: "vgg16",
       description: "매장 내 고객 행동 분석",
-      permission_id: "672300eac37028dc1e1a4502",
       user_name: "한지연",
       department_name: "리테일팀",
       is_private: 0,
@@ -85,7 +81,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Smart Factory",
       model_name: "inception_v3",
       description: "스마트 팩토리 모니터링 시스템",
-      permission_id: "672300eac37028dc1e1a4503",
       user_name: "송민석",
       department_name: "제조혁신팀",
       is_private: 1,
@@ -98,7 +93,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Traffic Analysis",
       model_name: "resnet101",
       description: "교통 흐름 분석 및 예측",
-      permission_id: "672300eac37028dc1e1a4504",
       user_name: "임재현",
       department_name: "교통AI팀",
       is_private: 0,
@@ -111,7 +105,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Drone Vision",
       model_name: "vgg19_bn",
       description: "드론 영상 분석 시스템",
-      permission_id: "672300eac37028dc1e1a4505",
       user_name: "강동훈",
       department_name: "드론팀",
       is_private: 1,
@@ -124,7 +117,6 @@ export async function getProjects(): Promise<ProjectType[]> {
       project_name: "Security Camera",
       model_name: "efficientnet_b4",
       description: "지능형 CCTV 분석 시스템",
-      permission_id: "672300eac37028dc1e1a4506",
       user_name: "윤서연",
       department_name: "보안관제팀",
       is_private: 0,
