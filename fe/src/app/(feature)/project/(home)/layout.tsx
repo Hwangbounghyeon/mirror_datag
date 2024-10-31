@@ -2,13 +2,14 @@ import React from "react";
 import Link from "next/link";
 
 interface LayoutProps {
+  options: React.ReactNode;
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ options, children }: LayoutProps) => {
   return (
-    <div className="w-full h-full flex flex-col items-center px-2 py-2">
-      <header className="w-full flex flex-row justify-between align-middle items-center px-10 flex-wrap">
+    <div className="w-full min-h-[95vh] flex flex-col border border-red-600 items-center">
+      <header className="w-full flex flex-row justify-between align-middle items-center flex-wrap">
         <h1 className="text-[30px] font-bold p-0">Projects</h1>
 
         <Link
@@ -18,7 +19,8 @@ const Layout = ({ children }: LayoutProps) => {
           Create Project
         </Link>
       </header>
-      <div className="w-full mt-5">{children}</div>
+      <div className="w-full mt-5">{options}</div>
+      {children}
     </div>
   );
 };
