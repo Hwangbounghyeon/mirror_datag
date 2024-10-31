@@ -10,7 +10,7 @@ import json
 
 
 
-from models.mariadb_users import UploadBatch
+from models.mariadb_users import UploadBatches
 from dto.uploads import UploadBase
 from configs.s3 import upload_to_s3
 
@@ -30,7 +30,7 @@ class Upload:
     async def upload_image(self, upload_base: UploadBase, files: list):
 
         # 이미지 업로드 확인 Table 생성
-        batch_before = UploadBatch(
+        batch_before = UploadBatches(
             project_id = upload_base["project_id"],
             user_id = upload_base["user_id"],
             is_done = 0,
@@ -98,7 +98,7 @@ class Upload:
 
         requests.post(url, data = json_data, headers=headers)
 
-        batch_after = self.db.query(UploadBatch).filter(UploadBatch.upload_batch_id == batch_before.upload_batch_id)
+        batch_after = self.db.query(UploadBatches).filter(UploadBatches.upload_batch_id == batch_before.upload_batch_id)
         if batch_after:
             batch_after.is_done = 1
             batch_after.updated_at = datetime.now(timezone.utc)

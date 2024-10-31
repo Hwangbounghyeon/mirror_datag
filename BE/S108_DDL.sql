@@ -10,7 +10,7 @@ CREATE TABLE `departments` (
 CREATE TABLE `users` (
   `user_id` INTEGER PRIMARY KEY AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL ,
-  `email` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL UNIQUE ,
   `password` VARCHAR(255) NOT NULL,
   `duty` VARCHAR(255) NOT NULL,
   `location` VARCHAR(255) NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE  `project_image` (
 -- 6. tags 테이블 생성
 CREATE TABLE `tags` (
   `tag_id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-  `tag_name` VARCHAR(255),
+  `tag_name` VARCHAR(255) NOT NULL ,
   `tag_type` ENUM('DATE', 'MODEL', 'TASK', 'BRANCH', 'LOCATION', 'EQUIPMENT', 'USER', 'PREDICTION') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL NOT NULL ,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL
