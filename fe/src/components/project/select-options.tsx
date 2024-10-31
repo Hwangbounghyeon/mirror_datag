@@ -83,6 +83,7 @@ const SelectOptions = ({ department_list, model_list }: SelectOptionsProps) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
+            size={"sm"}
             defaultSelectedKeys={selectDepartment}
             selectedKeys={selectDepartment}
             className="w-[200px]"
@@ -102,6 +103,7 @@ const SelectOptions = ({ department_list, model_list }: SelectOptionsProps) => {
             ))}
           </Select>
           <Select
+            size={"sm"}
             defaultSelectedKeys={selectModel}
             selectedKeys={selectModel}
             className="w-[200px]"
