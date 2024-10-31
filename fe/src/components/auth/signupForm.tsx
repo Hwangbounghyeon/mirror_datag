@@ -5,6 +5,15 @@ import { DepartmentType } from "@/types/departmentType";
 import { Button, Input, Select, SelectItem } from "@nextui-org/react";
 import { useForm, Controller } from "react-hook-form";
 
+const inputStyles = {
+  input: ["bg-transparent"],
+  errorMessage: [
+    "font-bold",
+    "text-[13px]",
+    "dark:text-red-200", // 다크모드에서 에러 메시지 색상도 조정
+  ],
+};
+
 type SignFormDataType = {
   name: string;
   email: string;
@@ -36,6 +45,9 @@ export const SignForm = () => {
   });
 
   const onSubmit = (data: SignFormDataType) => {
+    data = { ...data, location: data.location.trim() };
+    data = { ...data, duty: data.duty.trim() };
+    data = { ...data, name: data.name.trim() };
     console.log(data);
     // 여기에 제출 로직 구현
   };
@@ -52,6 +64,12 @@ export const SignForm = () => {
               value: /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]+$/,
               message: "한글 또는 영문만 입력 가능합니다",
             },
+            validate: {
+              noTrim: (value) =>
+                value.trim() === value || "앞뒤 공백은 허용되지 않습니다",
+              noDoubleSpace: (value) =>
+                !value.includes("  ") || "연속된 공백은 허용되지 않습니다",
+            },
           }}
           render={({ field }) => (
             <Input
@@ -61,6 +79,7 @@ export const SignForm = () => {
               label="name"
               isInvalid={!!errors.name}
               errorMessage={errors.name?.message}
+              classNames={inputStyles}
             />
           )}
         />
@@ -83,6 +102,7 @@ export const SignForm = () => {
               label="email"
               isInvalid={!!errors.email}
               errorMessage={errors.email?.message}
+              classNames={inputStyles}
             />
           )}
         />
@@ -110,6 +130,7 @@ export const SignForm = () => {
               label="password"
               isInvalid={!!errors.password}
               errorMessage={errors.password?.message}
+              classNames={inputStyles}
             />
           )}
         />
@@ -127,6 +148,12 @@ export const SignForm = () => {
               value: /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]+$/,
               message: "한글 또는 영문만 입력 가능합니다",
             },
+            validate: {
+              noTrim: (value) =>
+                value.trim() === value || "앞뒤 공백은 허용되지 않습니다",
+              noDoubleSpace: (value) =>
+                !value.includes("  ") || "연속된 공백은 허용되지 않습니다",
+            },
           }}
           render={({ field }) => (
             <Input
@@ -136,6 +163,7 @@ export const SignForm = () => {
               label="duty"
               isInvalid={!!errors.duty}
               errorMessage={errors.duty?.message}
+              classNames={inputStyles}
             />
           )}
         />
@@ -153,6 +181,12 @@ export const SignForm = () => {
               value: /^[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\s]+$/,
               message: "한글 또는 영문만 입력 가능합니다",
             },
+            validate: {
+              noTrim: (value) =>
+                value.trim() === value || "앞뒤 공백은 허용되지 않습니다",
+              noDoubleSpace: (value) =>
+                !value.includes("  ") || "연속된 공백은 허용되지 않습니다",
+            },
           }}
           render={({ field }) => (
             <Input
@@ -162,6 +196,7 @@ export const SignForm = () => {
               label="location"
               isInvalid={!!errors.location}
               errorMessage={errors.location?.message}
+              classNames={inputStyles}
             />
           )}
         />
@@ -176,6 +211,7 @@ export const SignForm = () => {
               label="department"
               isInvalid={!!errors.department_id}
               errorMessage={errors.department_id?.message}
+              classNames={inputStyles}
             >
               {department_list.map((department) => (
                 <SelectItem
