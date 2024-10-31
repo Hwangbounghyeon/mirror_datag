@@ -1,6 +1,5 @@
 "use client";
 
-import { getDepartments } from "@/lib/constants/department";
 import { DepartmentType } from "@/types/departmentType";
 import { Button, Input, Select, SelectItem } from "@nextui-org/react";
 import { useForm, Controller } from "react-hook-form";
@@ -24,9 +23,11 @@ type SignFormDataType = {
   is_superuser: boolean;
 };
 
-export const SignForm = () => {
-  const department_list: DepartmentType[] = getDepartments();
+interface SignFormProps {
+  department_list: DepartmentType[];
+}
 
+export const SignForm = ({ department_list }: SignFormProps) => {
   const {
     control,
     handleSubmit,
@@ -53,7 +54,10 @@ export const SignForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="mt-8 min-h-[500px] space-y-6"
+    >
       <div className="space-y-4 rounded-md">
         <Controller
           name="name"
