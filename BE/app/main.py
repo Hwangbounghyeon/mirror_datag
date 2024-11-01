@@ -9,9 +9,10 @@ from contextlib import asynccontextmanager
 from routers.analysis_router import router as analysis_router
 from routers.uploads import router as upload_router
 from routers.users_router import router as users_router
+from routers.project_router import router as project_router
 
 import asyncio
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
@@ -21,6 +22,9 @@ if platform.system() == 'Windows':
 
 app = FastAPI()
 
+
+main_router = APIRouter(prefix="/BE/API")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins = [mongo_url, "http://localhost:3000"],
@@ -29,9 +33,12 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
-app.include_router(analysis_router)
-app.include_router(upload_router)
-app.include_router(users_router)
+main_router.include_router(analysis_router)
+main_router.include_router(upload_router)
+main_router.include_router(users_router)
+main_router.include_router(project_router)
+
+app.include_router(main_router)
 
 @asynccontextmanager
 async def startup_db_client(app: FastAPI):
