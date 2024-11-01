@@ -7,9 +7,10 @@ from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
 from routers.analysis_router import router as analysis_router
-from routers.uploads import router as upload_router
+from routers.uploads_router import router as upload_router
 from routers.users_router import router as users_router
 from routers.project_router import router as project_router
+from routers.download_router import router as download_router
 
 import asyncio
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, UploadFile, File
@@ -23,7 +24,7 @@ if platform.system() == 'Windows':
 app = FastAPI()
 
 
-main_router = APIRouter(prefix="/BE/API")
+main_router = APIRouter(prefix="/be/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +38,7 @@ main_router.include_router(analysis_router)
 main_router.include_router(upload_router)
 main_router.include_router(users_router)
 main_router.include_router(project_router)
+main_router.include_router(download_router)
 
 app.include_router(main_router)
 

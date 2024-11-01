@@ -249,7 +249,7 @@ class UserLogin:
             "user_id": user.user_id,
             "name": user.name,
             "email": user.email,
-            "department": user.department,
+            "department_id": user.department_id,
             "is_supervised": user.is_supervised
         }
         

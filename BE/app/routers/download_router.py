@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import ErrorResponse
 from dto.download_dto import DownloadRequest
 from configs.mariadb import get_database_mariadb
 from services.download_service import DownloadService
