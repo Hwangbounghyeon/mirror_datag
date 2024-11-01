@@ -12,7 +12,7 @@ export const UploadContent = ({
     onDeleteImage,
     onDeleteAllImages,
 }: UploadContentProps) => {
-    const { uploadType, handleFileValidation } = useFileValidation({
+    const { handleFileValidation } = useFileValidation({
         images,
         onValidFiles: onFileUpload,
     });

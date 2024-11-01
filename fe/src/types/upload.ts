@@ -1,6 +1,7 @@
 export interface ImageFile {
     src: string;
     name: string;
+    data: File;
 }
 
 export type UploadType = "zip" | "images" | null;
