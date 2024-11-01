@@ -7,7 +7,8 @@ from models.mariadb_users import ProjectImage
 
 @unique
 class TagType(Enum):
-    DATE = "DATE"
+    YEAR = "YEAR"
+    MONTH = "MONTH"
     MODEL = "MODEL"
     TASK = "TASK"
     BRANCH = "BRANCH"

@@ -19,22 +19,8 @@ async def project(
     ):
     try:
         project_service = ProjectService(db)
-        
-        request = ProjectRequest(**{
-        "user_id": 1,
-        "project_name": "New Project",
-        "project_model_name": "vgg19_bn",
-        "description": "This is a description of the new project.",
-        "accesscontrol": {
-            "view_users": ["user1", "user2", "user3"],
-            "edit_users": ["1","user6", "user7", "user10"],
-            "view_departments": ["department1", "department2"],
-            "edit_departments": ["department3", "department4"]
-        },
-        "is_private": 0
-    })
-        
-        response = await project_service.create_project(request)
+
+        response = await project_service.create_project(project_request)
 
         return CommonResponse(
             status=200,
@@ -58,18 +44,11 @@ async def project_list(
     try:
         project_service = ProjectService(db)
 
-        request = ProjectListRequest(**{
-            "user_id": 1,
-            "department_id": 1,
-            "select_department": None,
-            "select_model_name": None
-        })
-
-        project_list = await project_service.get_project_list(request)
+        projects_list = await project_service.get_project_list(project_list)
 
         return CommonResponse(
                 status=200,
-                data=project_list
+                data=projects_list
             )
 
     except Exception as e:

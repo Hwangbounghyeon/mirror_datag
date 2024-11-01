@@ -52,13 +52,16 @@ class ObjectDetectionService:
 
                 metadata = self.detection_metadata_service.create_object_detection_result_data(
                     request.user_id,
+                    request.project_id,
                     request.is_private,
                     model_prediction_result.used_model,
                     model_prediction_result.elapsed_time,
                     model_prediction_result.predict_classes,
                     model_prediction_result.predict_confidences,
                     model_prediction_result.threshold,
-                    model_prediction_result.bboxes
+                    model_prediction_result.bboxes,
+                    url,
+                    request.department_name
                 )
                 
                 metadata_id = await self.detection_metadata_service.upload_ai_result(metadata)
