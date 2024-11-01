@@ -6,6 +6,7 @@ import numpy as np
 class AIModelRequest(BaseModel):
     image_urls: List[str]
     model_name: str
+    department_name: Optional[str] = None
     user_id: int
     project_id: int
     is_private: bool
