@@ -32,10 +32,10 @@ class ImageService:
                 return TagType.MODEL
             elif tag_name in ["Classification", "Object Detection"]:
                 return TagType.TASK
-            elif tag_name.isdigit() and int(tag_name) in range(1900, datetime.now().year):  # 연도 체크
-                return TagType.DATE
+            elif tag_name.isdigit() and int(tag_name) in range(1900, datetime.now().year+1):  # 연도 체크
+                return TagType.YEAR
             elif tag_name.isdigit() and 1 <= int(tag_name) <= 12:  # 월 체크
-                return TagType.DATE
+                return TagType.MONTH
             elif tag_name in ["Seoul", "Gumi", "Daejeon", "Gwangju", "Busan"]:
                 return TagType.BRANCH
             elif tag_name in ["Zone A", "Zone B", "Zone C", "Zone D", "Zone E"]:
