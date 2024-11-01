@@ -1,4 +1,4 @@
-// components/ProjectCard.tsx
+"use client";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -8,6 +8,7 @@ import { AiFillDatabase } from "react-icons/ai"; // data logo
 import { IoIosCube } from "react-icons/io"; // model logo
 import ProjectItemInfoCard from "./project-item-infocard";
 import { ProjectType } from "@/types/projectType";
+import { useRouter } from "next/navigation";
 
 dayjs.extend(relativeTime);
 
@@ -16,10 +17,16 @@ interface ProjectCardProps {
 }
 
 export function ProjectItem({ project }: ProjectCardProps) {
+  const router = useRouter();
   const timeAgo = dayjs(project.updated_at).fromNow();
 
   return (
-    <div className="rounded-lg w-full bg-slate-200 dark:bg-slate-800 my-3 p-6 shadow-sm">
+    <div
+      onClick={() => router.push(`/project/${project.project_id}`)}
+      className="
+      hover:shadow-md cursor-pointer hover:scale-[101%] transition-all active:scale-[99%] duration-100
+      rounded-lg w-full bg-slate-200 dark:bg-slate-800 my-3 p-6 shadow-sm "
+    >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold">{project.project_name}</h2>

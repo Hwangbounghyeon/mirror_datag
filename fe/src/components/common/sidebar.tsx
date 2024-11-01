@@ -3,10 +3,16 @@
 import { AiFillDatabase } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
 import { FaUser } from "react-icons/fa";
-import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
+import {
+  IoIosArrowForward,
+  IoIosArrowBack
+} from "react-icons/io";
 import SidebarItem from "./sidebar-item";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { RiLoader2Fill } from "react-icons/ri";
+import { MdCloudUpload } from "react-icons/md";
+
 
 const ThemeSelect = dynamic(() => import("@/components/common/theme-select"), {
   ssr: false,
@@ -28,6 +34,16 @@ const dummyItemList = [
     title: "Users",
     icon: FaUser,
     link: "/users",
+  },
+  {
+    title: "Load Image",
+    icon: RiLoader2Fill,
+    link: "/loadimage",
+  },
+  {
+    title: "Upload",
+    icon: MdCloudUpload,
+    link: "/upload",
   },
 ];
 
