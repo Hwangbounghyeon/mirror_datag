@@ -17,12 +17,16 @@ export default function UploadPage() {
         onValidFiles: addImages,
     });
 
+    const handleMoveToDataset = async () => {
+        await goToLoadImages(images);
+    };
+
     return (
         <PageContainer>
             <PageHeader
                 title="Upload Image"
                 rightButtonText="Move To Dataset"
-                onRightButtonClick={goToLoadImages}
+                onRightButtonClick={handleMoveToDataset}
                 onPrevious={goBack}
             />
             <UploadContent

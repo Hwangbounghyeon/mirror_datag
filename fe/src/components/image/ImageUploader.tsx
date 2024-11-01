@@ -44,10 +44,8 @@ const UploadIcon: FC = () => (
 
 const UploadInstructions: FC = () => (
     <>
-        <p className="text-xl text-gray-600 mb-2">
-            Drag and drop to file upload
-        </p>
-        <p className="text-lg text-gray-500 mb-4">or...</p>
+        <p className="text-xl mb-2">Drag and drop to file upload</p>
+        <p className="text-lg mb-4">or...</p>
     </>
 );
 
@@ -57,13 +55,13 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 }) => (
     <div className="flex gap-48">
         <button
-            className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100"
+            className="px-12 py-4 border border-dashed border-gray-500 rounded hover:bg-gray-100"
             onClick={onSelectFiles}
         >
             Select Files
         </button>
         <button
-            className="px-12 py-4 border border-dashed border-gray-500 rounded text-black hover:bg-gray-100"
+            className="px-12 py-4 border border-dashed border-gray-500 rounded hover:bg-gray-100"
             onClick={onSelectFolder}
         >
             Select Folder
@@ -72,5 +70,5 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 );
 
 const SupportedFormats: FC = () => (
-    <p className="text-base text-black mt-10">Supported Formats</p>
+    <p className="text-base mt-10">Supported Formats</p>
 );

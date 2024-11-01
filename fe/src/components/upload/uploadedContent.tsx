@@ -2,7 +2,7 @@ import React from "react";
 import ImageGrid from "@/components/image/ImageGrid";
 
 interface UploadedContentProps {
-    images: Array<{ src: string; name: string }>;
+    images: Array<{ src: string; name: string; data:File }>;
     onDeleteAllImages: () => void;
     onDeleteImage: (index: number) => void;
     onSelectFiles: () => void;
@@ -19,7 +19,7 @@ const UploadedContent: React.FC<UploadedContentProps> = ({
     <div className="flex h-full flex-col justify-center">
         <div className="flex justify-end gap-4 mb-4">
             <button
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-gray-100"
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 onClick={onDeleteAllImages}
             >
                 Delete All Files
