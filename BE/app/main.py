@@ -10,6 +10,7 @@ from routers.analysis_router import router as analysis_router
 from routers.uploads import router as upload_router
 from routers.users_router import router as users_router
 from routers.project_router import router as project_router
+from routers.tags_router import router as tags_router
 
 import asyncio
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, UploadFile, File
@@ -37,6 +38,7 @@ main_router.include_router(analysis_router)
 main_router.include_router(upload_router)
 main_router.include_router(users_router)
 main_router.include_router(project_router)
+main_router.include_router(tags_router)
 
 app.include_router(main_router)
 
