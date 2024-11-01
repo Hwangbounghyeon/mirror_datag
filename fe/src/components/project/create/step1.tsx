@@ -2,13 +2,12 @@ import React from "react";
 import SelectCard from "./select-card";
 
 import { StepProps } from "@/types/projectType";
-import { categoryType } from "@/types/projectType";
 
 const cards: {
   imgUrl: string;
   title: string;
   description: string;
-  value: categoryType;
+  value: string;
 }[] = [
   {
     imgUrl: "/images/object-detection.png",

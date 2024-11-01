@@ -1,13 +1,13 @@
 import React from "react";
 import SelectCard from "./select-card";
-import { modelType, StepProps } from "@/types/projectType";
+import { StepProps } from "@/types/projectType";
 import { memo } from "react";
 
 const cards: {
   imgUrl: string;
   title: string;
   description: string;
-  value: modelType;
+  value: string;
 }[] = [
   {
     imgUrl: "/images/yolo-v5.png",
