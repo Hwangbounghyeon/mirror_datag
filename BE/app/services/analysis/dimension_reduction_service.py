@@ -38,7 +38,7 @@ class DimensionReductionService:
 
         # mongodb 저장
         inserted_id = await self._save_history_mongodb(
-            "umap",
+            request.algorithm,
             request.selected_tags,
             request.image_ids,
             reduction_features

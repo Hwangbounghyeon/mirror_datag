@@ -191,12 +191,7 @@ class JWTManage:
         self.access_token_expire_minutes = 30
         self.refresh_token_expire_days = 7
         self.algorithm = "HS256"
-        
-    def create_access_token(self, data: dict):
-        to_encode = data.copy()
-        to_encode.update({"exp": datetime.now() + timedelta(minutes=30)})
-        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
-        
+    
     def create_token(self, data: dict, is_refresh: bool = False):
         to_encode = data.copy()
         
@@ -212,11 +207,9 @@ class JWTManage:
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
     
-    # access token 생성
     def create_access_token(self, data: dict):
         return self.create_token(data, is_refresh=False)
     
-    # refresh token 생성
     def create_refresh_token(self, data: dict):
         return self.create_token(data, is_refresh=True)
         
