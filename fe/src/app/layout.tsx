@@ -35,7 +35,7 @@ export default function RootLayout({
                     <div className="min-h-screen min-w-screen flex">
                         <Sidebar />
                         <main className="flex-1">
-                            <div className="px-5 ">{children}</div>
+                            <div className="ps-3 ">{children}</div>
                         </main>
                     </div>
                     <ToastContainer />
