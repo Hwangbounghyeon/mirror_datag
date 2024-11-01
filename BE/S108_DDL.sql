@@ -57,7 +57,7 @@ CREATE TABLE  `project_image` (
 CREATE TABLE `tags` (
   `tag_id` INTEGER PRIMARY KEY AUTO_INCREMENT,
   `tag_name` VARCHAR(255) NOT NULL ,
-  `tag_type` ENUM('DATE', 'MODEL', 'TASK', 'BRANCH', 'LOCATION', 'EQUIPMENT', 'USER', 'PREDICTION') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL NOT NULL ,
+  `tag_type` ENUM('YEAR', 'MONTH', 'MODEL', 'TASK', 'BRANCH', 'LOCATION', 'EQUIPMENT', 'USER', 'PREDICTION') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` TIMESTAMP NOT NULL,
   `updated_at` TIMESTAMP NOT NULL
 );
@@ -96,4 +96,4 @@ CREATE TABLE `upload_batches`(
   `updated_at` TIMESTAMP NOT NULL,
   CONSTRAINT `fk_upload_batches_user` FOREIGN KEY upload_batches (`user_id`) REFERENCES users (`user_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_upload_batches_project` FOREIGN KEY upload_batches (`project_id`) REFERENCES projects (`project_id`) ON DELETE CASCADE
-)
+);
