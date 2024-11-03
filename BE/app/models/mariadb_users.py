@@ -66,7 +66,7 @@ class ProjectImage(Base):
     image_id = Column(Integer, ForeignKey("images.image_id", ondelete="CASCADE"), nullable=False)
 
     projects = relationship("Projects", back_populates="project_image")
-    images = relationship("Images", back_populates="project_image")
+    images = relationship("Images", back_populates="project_images")
 
 
 
