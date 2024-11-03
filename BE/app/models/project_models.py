@@ -12,3 +12,7 @@ class Project(BaseModel):
     isPrivate: bool
     createdAt: datetime
     updatedAt: datetime
+
+    model_config = {
+        "protected_namespaces": ()
+    }
