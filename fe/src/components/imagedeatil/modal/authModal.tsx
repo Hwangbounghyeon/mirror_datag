@@ -15,7 +15,7 @@ import { Authority, Department, User } from "@/types/auth";
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (authorities: Authority[]) => void;
+    onAdd: (userIds: number[]) => void;
     existingAuthorities: Authority[];
 }
 
@@ -41,7 +41,7 @@ export default function AuthModal({
         if (!selectedDepartment) return;
         const newAuthority: Authority = {
             id: user.user_id,
-            name: user.nickname,
+            name: user.name,
             department: selectedDepartment.department_name,
         };
         setSelectedPeople([...selectedPeople, newAuthority]);
@@ -53,7 +53,8 @@ export default function AuthModal({
     };
 
     const handleConfirm = () => {
-        onAdd(selectedPeople);
+        const userIds = selectedPeople.map((person) => person.id);
+        onAdd(userIds);
         setSelectedPeople([]);
         setSelectedDepartment(null);
         setDepartmentSearch("");
