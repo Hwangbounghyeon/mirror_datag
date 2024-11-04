@@ -10,10 +10,9 @@ import torch.nn as nn
 import time
 
 from dto.ai_model_dto import AIModelRequest, ClassificationPredictionResult
-from models.mongodb_cls import AiResultData
 from services.ai_model.preprocess_service import PreprocessService
 from services.mongodb.classification_metadata_service import ClassificationMetadataService
-from services.mariadb.image_service import ImageService
+from services.mongodb.image_service import ImageService
 from sqlalchemy.orm import Session
 
 CIFAR10_CLASSES = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
@@ -22,7 +21,7 @@ class ClassificationService:
     def __init__(self, db: Session):
         self.preprocess_service = PreprocessService()
         self.classification_metadata_service = ClassificationMetadataService()
-        self.image_service = ImageService(db)
+        self.image_service = ImageService()
         self.model_list = ["vgg19_bn", "mobilenetv2_x1_4", "repvgg_a2"]
         self.features = None
         self.conf_threshold = 0.7
@@ -54,7 +53,7 @@ class ClassificationService:
                 if model_prediction_result is None:
                     continue
 
-                metadata = self.classification_metadata_service.create_classification_result_data(
+                metadata, tags = self.classification_metadata_service.create_classification_result_data(
                     request.user_id,
                     request.project_id,
                     request.is_private,
@@ -72,21 +71,14 @@ class ClassificationService:
 
                 features_id = await self.classification_metadata_service.upload_feature(features)
 
-                image_id = await self.image_service.create_image(metadata_id, features_id)
+                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id)
 
-                tag_ids = await self.image_service.create_tags(metadata.aiResults[0].predictions[0].tags)
+                for tag in tags:
+                    await self.classification_metadata_service.mapping_image_tags_mongodb(tag, image_id)
 
-                await self.image_service.create_image_tags(image_id, tag_ids)
+                await self.image_service.mapping_project_images_mongodb(request.project_id, image_id)
 
-                await self.image_service.create_project_image(request.project_id, image_id)
-                
-                print(metadata_id, features_id)
-
-                # 메타데이터 및 DB 저장로직이 이후에 들어오면됨
-                temp_result.append(model_prediction_result)
-
-            # 저장 끝나면 api 반환 dto에 맞게 객체 생성후 반환
-            return temp_result
+                await self.image_service.mapping_image_permissions_mongodb(request.user_id, request.department_name, request.project_id, image_id)
 
         except Exception as e:
             raise HTTPException(

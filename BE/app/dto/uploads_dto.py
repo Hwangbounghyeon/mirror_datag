@@ -6,7 +6,7 @@ class UploadRequest(BaseModel):
     department_id: Optional[int] = None
     task: str
     model_name: str
-    project_id: int
+    project_id: str
     is_private: bool
 
     model_config = {
