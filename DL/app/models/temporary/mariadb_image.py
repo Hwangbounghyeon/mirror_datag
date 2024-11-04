@@ -5,17 +5,7 @@ from sqlalchemy.sql import func
 from enum import Enum, unique
 from models.mariadb_users import ProjectImage
 
-@unique
-class TagType(Enum):
-    YEAR = "YEAR"
-    MONTH = "MONTH"
-    MODEL = "MODEL"
-    TASK = "TASK"
-    BRANCH = "BRANCH"
-    LOCATION = "LOCATION"
-    EQUIPMENT = "EQUIPMENT"
-    PREDICTION = "PREDICTION"
-    USER = "USER"
+
 
 # 이미지 테이블
 class Images(Base):

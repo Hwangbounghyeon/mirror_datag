@@ -12,7 +12,7 @@ import time
 from dto.ai_model_dto import AIModelRequest, ObjectDetectionPredictionResult
 from services.ai_model.preprocess_service import PreprocessService
 from services.mongodb.detection_metadata_service import ObjectDetectionMetadataService
-from services.mariadb.image_service import ImageService
+from services.mongodb.image_service import ImageService
 from sqlalchemy.orm import Session
 
 YOLOMODEL = type[YOLO]
@@ -21,7 +21,7 @@ class ObjectDetectionService:
     def __init__(self, db: Session):
         self.preprocess_service = PreprocessService()
         self.detection_metadata_service = ObjectDetectionMetadataService()
-        self.image_service = ImageService(db)
+        self.image_service = ImageService()
         self.model_list = ["yolov5n", "yolov8n", "yolo11n"]
         self.features = None
         self.conf_threshold = 0.7
@@ -50,7 +50,7 @@ class ObjectDetectionService:
                 if model_prediction_result is None:
                     continue
 
-                metadata = self.detection_metadata_service.create_object_detection_result_data(
+                metadata, tags = self.detection_metadata_service.create_object_detection_result_data(
                     request.user_id,
                     request.project_id,
                     request.is_private,
@@ -70,21 +70,14 @@ class ObjectDetectionService:
 
                 features_id = await self.detection_metadata_service.upload_feature(features)
 
-                image_id = await self.image_service.create_image(metadata_id, features_id)
+                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id)
 
-                tag_ids = await self.image_service.create_tags(metadata.aiResults[0].predictions[0].tags)
+                for tag in tags:
+                    await self.detection_metadata_service.mapping_image_tags_mongodb(tag, image_id)
 
-                await self.image_service.create_image_tags(image_id, tag_ids)
+                await self.image_service.mapping_project_images_mongodb(request.project_id, image_id)
 
-                project_image_id = await self.image_service.create_project_image(request.project_id, image_id)
-
-                print(metadata_id, features_id)
-
-                # 메타데이터 및 DB 저장로직이 이후에 들어오면됨
-                temp_result.append(model_prediction_result)
-
-            # 저장 끝나면 api 반환 dto에 맞게 객체 생성후 반환
-            return temp_result
+                await self.image_service.mapping_image_permissions_mongodb(request.user_id, request.department_name, request.project_id, image_id)
 
         except Exception as e:
             raise HTTPException(

@@ -8,7 +8,7 @@ class Parameters(BaseModel):
     selectedTags: List[List[str]]
 
 class ReductionResults(BaseModel):
-    imageIds: List[str]
+    imageIds: List[int]
     reductionFeatures: List[List[float]]
 
 class HistoryData(BaseModel):

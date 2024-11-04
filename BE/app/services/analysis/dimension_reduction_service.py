@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features, collection_project_history
+from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images
 from models.history_models import HistoryData, ReductionResults
 from models.mariadb_image import Images
 from models.mariadb_users import Histories
@@ -29,9 +29,11 @@ class DimensionReductionService:
             request.selected_tags,
         )
 
+        await self._mapping_project_histories_mongodb(request.project_id, inserted_id)
+
         # image_ids로 이미지 정보들 가져오기
         image_features = await self._get_image_features(request.image_ids)
-        
+
         # 차원축소 진행
         if request.algorithm == "tsne":
             reduction_features = self._dimension_reduction_TSNE(image_features)
@@ -41,8 +43,6 @@ class DimensionReductionService:
         # 작업 완료
         await self._save_history_completed_mongodb(request.project_id, inserted_id, request.image_ids, reduction_features)
 
-
-
         return DimensionReductionResponse(
             history_id=inserted_id,
             project_id=request.project_id,
@@ -50,18 +50,20 @@ class DimensionReductionService:
             history_name=request.history_name
         )
 
-    async def _get_image_features(self, image_ids: List[int]) -> List[List[float]]:
+    async def _get_image_features(self, image_ids: List[str]) -> List[List[float]]:
         # IN 절을 사용하여 한 번의 쿼리로 모든 이미지 정보 조회
-        images = self.db.query(Images).filter(Images.image_id.in_(image_ids)).all()
+        images = await collection_images.find(
+            {"_id": {"$in": [ObjectId(id) for id in image_ids]}}
+        ).to_list(length=None)
 
         if not images:
             raise HTTPException(
                 status_code=404,
                 detail="No images found with the provided IDs"
             )
-
-        # image_ids의 순서를 유지하기 위한 정렬
-        image_dict = {image.image_id: image.feature_id for image in images}
+        
+        # image_ids의 순서를 유지하기 위한 딕셔너리 생성
+        image_dict = {str(image["_id"]): image["featureId"] for image in images}
         features = []
 
         # MongoDB에서 feature 데이터 조회
@@ -122,7 +124,7 @@ class DimensionReductionService:
         history_name: str,
         selected_algorithm: str,
         selected_tags: List[List[str]],
-    ) -> dict:
+    ) -> HistoryData:
 
         # 필수 파라미터가 누락되었는지 확인
         required_params = {
@@ -189,7 +191,7 @@ class DimensionReductionService:
         self,
         project_id: str,
         history_id: str,
-        image_ids: List[int], 
+        image_ids: List[str], 
         reduction_features: List[List[float]]
     ):
         try:
@@ -209,8 +211,13 @@ class DimensionReductionService:
                 }
             )
 
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")
+
+    async def _mapping_project_histories_mongodb(self, project_id: str, history_id: str):
+        try:
             # 기존 document 확인
-            existing_doc = await collection_project_history.find_one()
+            existing_doc = await collection_project_histories.find_one()
 
             # project_id에 해당하는 배열이 있는지 확인
             current_histories = existing_doc.get("project", {}).get(str(project_id))
@@ -219,14 +226,14 @@ class DimensionReductionService:
                 current_histories = []
 
             # 새로운 image_id를 추가하고 중복 제거
-            updated_images = list(set(current_histories + [history_id]))
+            updated_histories = list(set(current_histories + [history_id]))
 
             # 업데이트 수행
-            await collection_project_history.update_one(
+            await collection_project_histories.update_one(
                 {},
                 {
                     "$set": {
-                        f"project.{str(project_id)}": updated_images
+                        f"project.{str(project_id)}": updated_histories
                     }
                 }
             )
