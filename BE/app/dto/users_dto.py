@@ -20,7 +20,7 @@ class UserCreateDTO(BaseModel):
     password: str
     duty: str
     location: str
-    department: int | None = None
+    department_id: int | None = None
     is_supervised: bool
 
     # @field_validator('email', 'password', 'duty', 'location', 'is_supervised')

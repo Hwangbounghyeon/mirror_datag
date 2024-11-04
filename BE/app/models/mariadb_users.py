@@ -26,7 +26,7 @@ class Users(Base):
     password = Column(VARCHAR(255), nullable=False)
     duty = Column(VARCHAR(255), nullable=False)
     location = Column(VARCHAR(255), nullable=False)
-    department = Column(Integer, ForeignKey('departments.department_id', ondelete="SET NULL"), nullable=True)
+    department_id = Column(Integer, ForeignKey('departments.department_id', ondelete="SET NULL"), nullable=True)
     is_supervised = Column(Boolean, nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.now(), nullable=False)
     updated_at = Column(TIMESTAMP, default=datetime.now(), onupdate=datetime.now(), nullable=False)
