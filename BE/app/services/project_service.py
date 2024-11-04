@@ -34,12 +34,15 @@ class ProjectService:
         }
         
         permission = await collection_permissions.insert_one(permission_request)
+
+        permission_id = str(permission.inserted_id)
         
         # MariaDB project 저장
         project = Projects(
             project_name=request.project_name,
             model_name=request.project_model_name,
             description=request.description,
+            permission_id=permission_id,
             user_id=request.user_id,
             is_private=request.is_private,
             created_at=datetime.now(timezone.utc),

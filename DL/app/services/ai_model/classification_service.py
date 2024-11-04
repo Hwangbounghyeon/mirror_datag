@@ -56,13 +56,16 @@ class ClassificationService:
 
                 metadata = self.classification_metadata_service.create_classification_result_data(
                     request.user_id,
+                    request.project_id,
                     request.is_private,
                     model_prediction_result.used_model,
                     model_prediction_result.predict_class,
                     model_prediction_result.predict_confidence,
-                    model_prediction_result.elapsed_time
+                    model_prediction_result.elapsed_time,
+                    url,
+                    request.department_name
                 )
-                
+
                 metadata_id = await self.classification_metadata_service.upload_ai_result(metadata)
 
                 features = self.classification_metadata_service.create_feature(model_prediction_result.features)

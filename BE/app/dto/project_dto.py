@@ -4,10 +4,10 @@ from typing import List, Optional
 
 # Project 생성 요청 DTO
 class AccessControl(BaseModel):
-    view_users: List[str]
-    edit_users: List[str]
-    view_departments: List[str]
-    edit_departments: List[str]
+    view_users: List[str] = None
+    edit_users: List[str] = None
+    view_departments: List[str] = None
+    edit_departments: List[str] = None
 
 class ProjectRequest(BaseModel):
     user_id: int
