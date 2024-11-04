@@ -4,10 +4,7 @@ from datetime import datetime
 from bson import ObjectId
 
 class ImageData(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
-    imageId: str
-    imageName: str
-    metadataId: Optional[ObjectId]
-    featureId: Optional[ObjectId]
+    metadataId: Optional[str]
+    featureId: Optional[str]
     createdAt: datetime
     updatedAt: datetime

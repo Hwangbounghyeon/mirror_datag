@@ -35,9 +35,7 @@ class AIResult(BaseModel):
     task: str
     predictions: List[Prediction]
 
-
 class Metadata(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
     schemaVersion: str
     fileList: List[str]
     metadata: MetadataDetails

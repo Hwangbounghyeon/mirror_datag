@@ -12,7 +12,6 @@ class ReductionResults(BaseModel):
     reductionFeatures: List[List[float]]
 
 class HistoryData(BaseModel):
-    # id: Optional[ObjectId] = Field(None, alias="_id")
     userId: int
     projectId: str
     isPrivate: bool
