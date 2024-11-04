@@ -42,7 +42,7 @@ export function PersonSelect({
         }
 
         return availableUsers.filter((user) =>
-            user.nickname.toLowerCase().includes(personSearch.toLowerCase())
+            user.name.toLowerCase().includes(personSearch.toLowerCase())
         );
     }, [
         selectedDepartment,
@@ -65,14 +65,14 @@ export function PersonSelect({
                 }}
             />
             {isFocused && filteredUsers.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 border rounded-lg shadow-lg max-h-48 overflow-auto">
                     <Listbox>
                         {filteredUsers.map((user) => (
                             <ListboxItem
                                 key={user.user_id}
                                 onClick={() => onSelect(user)}
                             >
-                                {user.nickname}
+                                {user.name}
                             </ListboxItem>
                         ))}
                     </Listbox>
