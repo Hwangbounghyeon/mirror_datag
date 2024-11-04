@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse, ErrorResponse
-from dto.project_dto import ProjectRequest, ProjectListRequest, DepartmentResponse, UserResponse
+from dto.project_dto import ProjectRequest, ProjectListRequest
 from services.project_service import ProjectService, ProjectSubService
 
 
@@ -60,7 +60,7 @@ async def project_list(
 
 # 3. Project 삭제
 @router.delete("/{project_id}")
-async def delete_project(project_id: int, db: Session = Depends(get_database_mariadb)):
+async def delete_project(project_id: str, db : Session = Depends(get_database_mariadb)):
     try:
         project_service = ProjectService(db)
         await project_service.delete_project(project_id)
@@ -72,7 +72,7 @@ async def delete_project(project_id: int, db: Session = Depends(get_database_mar
         raise http_exc
     except Exception as e:
             return ErrorResponse(
-                code=500,
+                code="Project Error",
                 message="프로젝트를 삭제하지 못하였습니다.",
                 detail=str(e)
             )

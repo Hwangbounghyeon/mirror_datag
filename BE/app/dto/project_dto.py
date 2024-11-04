@@ -1,3 +1,4 @@
+from fastapi import Query
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
@@ -19,13 +20,14 @@ class ProjectRequest(BaseModel):
 
 # project 응답 DTO
 class ProjectResponse(BaseModel):
-    project_id: int
+    project_id: str
     project_name: str
     model_name: str
-    description: str
-    permission_id: str
+    description: Optional[str] = ""
     user_id: int
-    is_private: int
+    department : Optional[str] = ""
+    imageCount : Optional[int] = 0
+    is_private: Optional[int] = 0
     created_at: datetime
     updated_at: datetime
 
@@ -36,9 +38,10 @@ class ProjectResponse(BaseModel):
 # Project list 조회 요청 DTO
 class ProjectListRequest(BaseModel):
     user_id: int
-    department_id: int
-    select_department: Optional[str] = None
-    select_model_name: Optional[str] = None
+    department: Optional[str] = None
+    model_name: Optional[str] = None
+    page: int = Query(1, ge=1)
+    limit: int = Query(10, ge=1, le=100)
     
 # Project list 응답 DTO
 class ProjectListResponse(BaseModel):
