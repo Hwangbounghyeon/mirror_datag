@@ -11,8 +11,15 @@ class DateFilterDTO(BaseModel):
     year: str | None = None
     month: str | None = None
 
+
+class ConditionDTO(BaseModel):
+    and_condition: List[str] = []
+    or_condition: List[str] = []
+    not_condition: List[str] = []
+
 class SearchConditionDTO(BaseModel):
-    conditions: List[Dict[str, List[str]]] | None = None
+    conditions: List[ConditionDTO] | None = None
+    
     
 """SearchConditionDTO Request Body 구조
     
