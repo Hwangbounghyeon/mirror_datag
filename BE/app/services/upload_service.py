@@ -87,9 +87,9 @@ class Upload:
                 file_urls.append(s3_url)
 
         if upload_request.task == "cls":
-            url = "http://127.0.0.1:8080/cls"
+            url = "http://127.0.0.1:8001/cls"
         else:
-            url = "http://127.0.0.1:8080/det"
+            url = "http://127.0.0.1:8001/det"
 
         if upload_request.department_id:
             department = self.db.query(Departments).filter(Departments.department_id == upload_request.department_id).first()
