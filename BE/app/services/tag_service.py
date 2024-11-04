@@ -57,30 +57,30 @@ class TagService:
                     current_query = self.db.query(Images.image_id).distinct()
 
                     # 하나의 condition 내의 조건들은 AND로 연결
-                    if condition["and_condition"]:
+                    if condition.and_condition and len(condition.and_condition) > 0:
                         and_subquery = (
                             self.db.query(ImageTag.image_id)
                             .join(Tags)
-                            .filter(Tags.tag_name.in_(condition["and_condition"]))
+                            .filter(Tags.tag_name.in_(condition.and_condition))
                             .group_by(ImageTag.image_id)
-                            .having(func.count(func.distinct(Tags.tag_name)) == len(condition["and_condition"]))
+                            .having(func.count(func.distinct(Tags.tag_name)) == len(condition.and_condition))
                         )
                         current_query = current_query.filter(Images.image_id.in_(and_subquery))
 
-                    if condition["or_condition"]:
+                    if condition.or_condition and len(condition.or_condition) > 0:
                         or_subquery = (
                             self.db.query(ImageTag.image_id)
                             .join(Tags)
-                            .filter(Tags.tag_name.in_(condition["or_condition"]))
+                            .filter(Tags.tag_name.in_(condition.or_condition))
                             .distinct()
                         )
                         current_query = current_query.filter(Images.image_id.in_(or_subquery))
 
-                    if condition["not_condition"]:
+                    if condition.not_condition and len(condition.not_condition) > 0:
                         not_subquery = (
                             self.db.query(ImageTag.image_id)
                             .join(Tags)
-                            .filter(Tags.tag_name.in_(condition["not_condition"]))
+                            .filter(Tags.tag_name.in_(condition.not_condition))
                             .distinct()
                         )
                         current_query = current_query.filter(~Images.image_id.in_(not_subquery))
