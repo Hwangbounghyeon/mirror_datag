@@ -23,11 +23,7 @@ async def signup(user_data: UserCreateDTO, db: Session = Depends(get_db)):
     return {"message": "이메일 인증 코드가 전송되었습니다"}
 
 @router.post("/verification")
-async def verification(
-    email: str,
-    code: str,
-    db: Session = Depends(get_db)
-):
+async def verification(email: str, code: str, db: Session = Depends(get_db)):
     try:
         email_validate = EmailValidate(db)
         user = await email_validate.verify_and_create_user(email, code)
@@ -56,18 +52,13 @@ async def verification(
             detail=f"인증 처리 중 오류가 발생했습니다: {str(e)}"
         )
 @router.post("/login", status_code=status.HTTP_200_OK)
-async def login(
-    login_data: UserLoginDTO,
-    db: Session = Depends(get_db)
-):
+async def login(login_data: UserLoginDTO, db: Session = Depends(get_db)):
     jwt_manage = JWTManage(db)
     user_login = UserLogin(db, jwt_manage)
     return await user_login.login(login_data)
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
-async def logout(
-    db: Session = Depends(get_db)
-):
+async def logout(db: Session = Depends(get_db)):
     user_logout = UserLogout(db)
     return await user_logout.logout()
 
