@@ -1,11 +1,9 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, not_, join, func, union
-from typing import List
+from typing import List, Set
 from dto.tags_dto import TagImageResponseDTO, SearchConditionDTO
-from models.mariadb_image import Tags, ImageTag, Images, TagType
+from configs.mongodb import collection_tagimages, collection_metadata, collection_images
 from configs.s3 import get_s3_image_paths
-from configs.mongodb import collection_metadata
+from bson import ObjectId
 
 from dotenv import load_dotenv
 
@@ -15,29 +13,30 @@ load_dotenv()
 
 ## 1. tag 목록 불러오기
 class TagService:
-    def __init__(self, db: Session):
-        self.db = db
-        self.mongo_metadata = collection_metadata
+    def __init__(self):
+        self.collection_tagimages = collection_tagimages
+        self.collection_metadata = collection_metadata
+        self.collection_images = collection_images
     
     async def get_tag_and_image_lists(self) -> TagImageResponseDTO:
         try:
-            
-            tags_by_type = {tag_type: [] for tag_type in TagType}
-            
-            tag_lists = self.db.query(Tags).all()
-            for tag in tag_lists:
-                tags_by_type[tag.tag_type].append(tag.tag_name)
+
+            tag_doc = await self.collection_tagimages.find_one({})
+            if not tag_doc:
+                tags = []
+            else:
+                tags = list(tag_doc['tag'].keys())
                 
             paths = get_s3_image_paths()
 
             return TagImageResponseDTO(
-                tags=tags_by_type,
+                tags=sorted(tags),
                 paths=paths
             )
         except Exception as e:
             raise HTTPException(
                 status_code=500,
-                detail=f"태그와 이미지 목록 조회 중 오류가 발생했습니다: {str(e)}"
+                detail=f"태그 목록과 이미지 경로 조회 중 오류가 발생했습니다: {str(e)}"
             )
         
 
@@ -46,74 +45,89 @@ class TagService:
     # - 검색 조건으로 image-tag 확인해서 해당 조건에 필터링 되는 image 확인
     # - image의 metadata_id를 통해 image의 path를 찾아서 list로 만들어서 반환
 
-    async def search_images(self, search_dto: SearchConditionDTO) -> List[str]:
-            """검색 조건에 맞는 이미지의 S3 경로 목록 반환"""
-            try:
-                final_query = None
+    async def search_images_by_conditions(self, search_dto: SearchConditionDTO):
+        try:
+            # 1. tag document 가져오기
+            tag_doc = await self.collection_tagimages.find_one({})
+            if not tag_doc:
+                return []
 
-                # conditions 리스트의 각 condition은 OR로 연결
-                for condition in search_dto.conditions:
-                    # 현재 condition에 대한 쿼리 시작
-                    current_query = self.db.query(Images.image_id).distinct()
+            matching_metadata_ids = set()  # 최종 결과를 저장할 set
 
-                    # 하나의 condition 내의 조건들은 AND로 연결
-                    if condition.and_condition and len(condition.and_condition) > 0:
-                        and_subquery = (
-                            self.db.query(ImageTag.image_id)
-                            .join(Tags)
-                            .filter(Tags.tag_name.in_(condition.and_condition))
-                            .group_by(ImageTag.image_id)
-                            .having(func.count(func.distinct(Tags.tag_name)) == len(condition.and_condition))
+            # 2. 각 condition 처리 (conditions는 OR로 연결)
+            for condition in search_dto.conditions:
+                current_metadata_ids = set()  # 현재 condition의 결과
+                # 3. AND 조건 처리
+                if condition.and_condition:
+                    # 첫 번째 태그의 metadata_ids 가져오기
+                    first_tag = condition.and_condition[0]
+                    if first_tag in tag_doc['tag']:
+                        # tag_doc['tag'][first_tag]는 해당 태그를 가진 모든 metadata_id 배열
+                        current_metadata_ids = set(tag_doc['tag'][first_tag])
+                    
+                    if len(condition.and_condition) > 1:
+                        # 나머지 태그들과 교집합 구하기
+                        for tag in condition.and_condition[1:]:
+                            if tag in tag_doc['tag']:
+                                # intersection(): 두 set의 교집합 반환
+                                # 예: {1,2,3}.intersection({2,3,4}) => {2,3}
+                                current_metadata_ids = current_metadata_ids.intersection(
+                                    tag_doc['tag'][tag]
+                                )
+                                
+                # 4. OR 조건 처리
+                if condition.or_condition:
+                    or_metadata_ids = set()
+                    for tag in condition.or_condition:
+                        if tag in tag_doc['tag']:
+                            # update(): set에 여러 요소 추가 (합집합)
+                            or_metadata_ids.update(tag_doc['tag'][tag])
+                    
+                    if current_metadata_ids:  # AND 조건이 있었다면
+                        # AND 조건과 OR 조건의 교집합
+                        current_metadata_ids = current_metadata_ids.intersection(
+                            or_metadata_ids
                         )
-                        current_query = current_query.filter(Images.image_id.in_(and_subquery))
+                    else:  # AND 조건이 없었다면
+                        current_metadata_ids = or_metadata_ids
 
-                    if condition.or_condition and len(condition.or_condition) > 0:
-                        or_subquery = (
-                            self.db.query(ImageTag.image_id)
-                            .join(Tags)
-                            .filter(Tags.tag_name.in_(condition.or_condition))
-                            .distinct()
-                        )
-                        current_query = current_query.filter(Images.image_id.in_(or_subquery))
+                # 5. NOT 조건 처리
+                if condition.not_condition:
+                    not_metadata_ids = set()
+                    for tag in condition.not_condition:
+                        if tag in tag_doc['tag']:
+                            not_metadata_ids.update(tag_doc['tag'][tag])
+                    # difference(): 차집합 (A - B = A에는 있고 B에는 없는 요소들)
+                    current_metadata_ids = current_metadata_ids - not_metadata_ids
 
-                    if condition.not_condition and len(condition.not_condition) > 0:
-                        not_subquery = (
-                            self.db.query(ImageTag.image_id)
-                            .join(Tags)
-                            .filter(Tags.tag_name.in_(condition.not_condition))
-                            .distinct()
-                        )
-                        current_query = current_query.filter(~Images.image_id.in_(not_subquery))
+                # 6. 현재 condition의 결과를 전체 결과에 추가 (OR 연산)
+                matching_metadata_ids.update(current_metadata_ids)
 
-                    # 각 condition의 결과를 UNION (OR 연산)
-                    if final_query is None:
-                        final_query = current_query
-                    else:
-                        final_query = final_query.union(current_query)
-
-                # 최종 이미지 ID 목록 조회
-                image_ids = final_query.all() if final_query else []
+            # 7. metadata 컬렉션에서 실제 파일 경로 찾기
+            if matching_metadata_ids:
+                # $in: MongoDB의 배열 포함 연산자
+                query = {"_id": {"$in": [ObjectId(id) for id in matching_metadata_ids]}}
+                s3_paths = []
+                docs = await self.collection_images.find(
+                    query
+                ).to_list(length=None)
                 
-                # 이미지 경로 조회
-                images = self.db.query(Images).filter(
-                    Images.image_id.in_([id[0] for id in image_ids])
-                ).all()
-                
-                paths = []
-                for image in images:
-                    metadata = await self.mongo_metadata.find_one(
-                        {"_id": image.metadata_id}
-                    )
-                    if metadata:
-                        paths.append(metadata["fileList"])
-                        
-                return paths
+                for doc in docs: 
+                    metadata = await self.collection_metadata.find(
+                        {"_id": ObjectId(doc["metadataId"])}
+                    ).to_list(length=None)
+                    
+                    if "fileList" in metadata[0]:
+                        s3_paths.extend(metadata[0]["fileList"])
+            
+                return s3_paths
 
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"이미지 검색 중 오류 발생: {str(e)}"
-                )
+            return []
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"이미지를 찾는 중 에러가 발생했습니다: {str(e)}"
+            )
 
 
 ### 2-1(Type별로 필터링)
