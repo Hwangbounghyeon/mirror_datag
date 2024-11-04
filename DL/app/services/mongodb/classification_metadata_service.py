@@ -19,11 +19,14 @@ class ClassificationMetadataService:
     def create_classification_result_data(
         self,
         user: int,
+        project_id: int,
         is_private: bool,
         ai_model: str,
         prediction: str,
         confidence: float,
-        elapsed_time: float
+        elapsed_time: float,
+        image_url: str,
+        department_name: str
     ) -> AiResultData:
         
         # 필수 파라미터가 누락되었는지 확인
@@ -31,9 +34,11 @@ class ClassificationMetadataService:
             "user": user,
             "is_private": is_private,
             "ai_model": ai_model,
+            "project_id": project_id,
             "prediction": prediction,
             "confidence": confidence,
-            "elapsed_time": elapsed_time
+            "elapsed_time": elapsed_time,
+            "image_url": image_url,
         }
 
         missing_params = [k for k, v in required_params.items() if v is None]
@@ -43,10 +48,12 @@ class ClassificationMetadataService:
         branch = random.choice(BRANCHES)
         location = random.choice(LOCATIONS)
         equipmentId = random.choice(EQUIPMENT_IDS)
+
+        departments = [department_name] if department_name != "" or not is_private else []
         
         ai_result_data = {
             "schemaVersion": "1.0",
-            "fileList": ["/Object/Storage/Data/Url"],
+            "fileList": [image_url],
             "metadata": {
                 "branch": branch,
                 "process": "Manufacturing",
@@ -56,8 +63,8 @@ class ClassificationMetadataService:
                 "isPrivate": is_private,
                 "accessControl": {
                     "users": [user],
-                    "departments": ["gumi", "seoul"],
-                    "projects": []
+                    "departments": departments,
+                    "projects": [str(project_id)]
                 },
                 "createdAt": datetime.now(timezone.utc).isoformat(),
                 "mode": "upload"
@@ -98,7 +105,7 @@ class ClassificationMetadataService:
         if result.inserted_id:
             return str(result.inserted_id)
         else:
-            raise HTTPException(status_code=500, detail="Failed to save cls metadata")
+            raise HTTPException(status_code=500, detail="MetaData 저장에 실패하였습니다.")
 
     # Feature JSON형식 생성
     def create_feature(self, feature: List[List[float]]) -> Feature:
@@ -116,4 +123,4 @@ class ClassificationMetadataService:
         if result.inserted_id:
             return str(result.inserted_id)
         else:
-            raise HTTPException(status_code=500, detail="Failed to save Feature")
+            raise HTTPException(status_code=500, detail="Feature 저장에 실패하였습니다.")

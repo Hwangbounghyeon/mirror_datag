@@ -1,7 +1,9 @@
 from pydantic import BaseModel
+from typing import Optional
 
-class UploadBase(BaseModel):
+class UploadRequest(BaseModel):
     user_id: int
+    department_id: Optional[int] = None
     task: str
     model_name: str
     project_id: int
