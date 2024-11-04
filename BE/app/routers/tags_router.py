@@ -19,7 +19,7 @@ async def get_tags_and_images(db: Session = Depends(get_db)):
     tag_service = TagService(db)
     return await tag_service.get_tag_and_image_lists()
 
-@router.post("/search", response_model=List[str])
+@router.post("/image", response_model=List[str])
 async def search_images_by_tags(search_dto: SearchConditionDTO, db: Session = Depends(get_db)):
     tag_service = TagService(db)
     return await tag_service.search_images(search_dto)
