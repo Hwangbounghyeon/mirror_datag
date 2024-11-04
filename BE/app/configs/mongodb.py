@@ -14,6 +14,9 @@ collection_histories = database.get_collection("histories")
 collection_permissions = database.get_collection("permissions")
 collection_project_history = database.get_collection("projectHistory")
 collection_tagimages = database.get_collection("tagImages")
+collection_project_histories = database.get_collection("projectHistories")
+collection_upload_batches = database.get_collection("uploadBatches")
+collection_user_upload_batches = database.get_collection("userUploadBatches")
 collection_images = database.get_collection("images")
 
 def get_database_mongodb():

@@ -15,7 +15,8 @@ router = APIRouter(prefix="/analysis", tags=["analysis with dimension reduction"
     responses={
         400: {"model": CommonResponse[ErrorResponse]},
         500: {"model": CommonResponse[ErrorResponse]}
-    })
+    }
+)
 async def dimension_reduction_umap(
     request: DimensionReductionRequest,
     db: Session = Depends(get_database_mariadb)

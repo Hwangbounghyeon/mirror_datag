@@ -4,6 +4,5 @@ from datetime import datetime
 from bson import ObjectId
 
 class Feature(BaseModel):
-    projectId: str
     feature: List[List[float]]
     createdAt: datetime

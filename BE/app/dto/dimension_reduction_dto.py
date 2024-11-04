@@ -10,7 +10,7 @@ class DimensionReductionRequest(BaseModel):
     history_name: str
     is_private: bool
     selected_tags: List[List[str]]
-    image_ids: List[int]
+    image_ids: List[str]
 
 # 모델 추론 공통 Response Dto
 class DimensionReductionResponse(BaseModel):

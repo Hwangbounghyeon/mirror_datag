@@ -31,6 +31,7 @@ class ProjectResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        protected_namespaces = ()
 
 # Project list 조회 요청 DTO
 class ProjectListRequest(BaseModel):
@@ -54,6 +55,7 @@ class ProjectListResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        protected_namespaces = ()
 
 
 # User 응답 DTO
