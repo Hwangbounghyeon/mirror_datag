@@ -7,8 +7,8 @@ import { Authority } from "@/types/auth";
 
 interface AuthorityPanelProps {
     authorities: Authority[];
-    onRemove: (index: number) => void;
-    onAdd: (newAuthorities: Authority[]) => void;
+    onRemove: (userId: number) => void;
+    onAdd: (userIds: number[]) => void;
 }
 
 function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
@@ -25,16 +25,16 @@ function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
 
             <div className="flex-1 min-h-0 overflow-y-auto px-1 py-1">
                 <div className="flex flex-col gap-2">
-                    {authorities.map((authority, index) => (
+                    {authorities.map((authority) => (
                         <div
-                            key={`auth-${authority.id}-${index}`}
+                            key={`auth-${authority.id}`}
                             className="flex items-center justify-between ps-3 py-1 rounded-full border border-blue-400"
                         >
                             <span className="text-sm text-blue-400">
                                 {authority.name} / {authority.department}
                             </span>
                             <button
-                                onClick={() => onRemove(index)}
+                                onClick={() => onRemove(authority.id)}
                                 className="text-blue-400 hover:text-blue-300"
                             >
                                 <MdOutlineClear />

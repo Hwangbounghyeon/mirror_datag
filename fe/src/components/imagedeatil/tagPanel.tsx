@@ -33,16 +33,16 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
 
             <div className="flex-1 overflow-y-auto px-1 max-h-[calc(100%-6rem)]">
                 <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
+                    {tags.map((tag) => (
                         <div
-                            key={index}
+                            key={tag.id}
                             className="flex items-center ps-2 py-1 rounded-full border border-blue-400"
                         >
                             <span className="text-sm text-blue-400">
                                 {tag.tag}
                             </span>
                             <button
-                                onClick={() => onRemoveTag(index)}
+                                onClick={() => onRemoveTag(tag.id)}
                                 className="text-blue-400 hover:text-blue-300"
                             >
                                 <MdOutlineClear />
