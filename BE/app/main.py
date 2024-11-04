@@ -29,7 +29,7 @@ main_router = APIRouter(prefix="/be/api")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = [mongo_url, "http://localhost:3000"],
+    allow_origins = [mongo_url, "*"],
     allow_credentials = True,
     allow_methods = ["*"],
     allow_headers = ["*"]
