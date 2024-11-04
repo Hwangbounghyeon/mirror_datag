@@ -5,12 +5,13 @@ import Header from "./../../../../components/imagedeatil/header";
 import ClassPanel from "@/components/imagedeatil/classPanel";
 import TagPanel from "@/components/imagedeatil/tagPanel";
 import ImagePanel from "@/components/imagedeatil/imagePanel";
-import { useItemManager } from "@/hooks/imageDetail/useItemManager";
 import { useParams, useRouter } from "next/navigation";
 import { usePanelState } from "@/hooks/imageDetail/usePanelState";
 import MetadataPanel from "@/components/imagedeatil/metadataPanel";
 import AuthPanel from "@/components/imagedeatil/authPanel";
-import { Authority, Tag } from "@/types/auth";
+import { Tag } from "@/types/auth";
+import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
+import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 
 function ImageDetailPage() {
     const router = useRouter();
@@ -19,28 +20,10 @@ function ImageDetailPage() {
     const totalImages = 300;
     const classes = ["Dog", "Cat"];
 
-    const {
-        items: tags,
-        addItem: addTag,
-        removeItem: removeTag,
-    } = useItemManager<Tag>([
-        { id: 1, tag: "Dog" },
-        { id: 2, tag: "Animal" },
-        { id: 3, tag: "cat" },
-    ]);
+    const { authorities, addAuthorities, removeAuthority } =
+        useAuthorityManager(currentImageId);
 
-    const {
-        items: authorities,
-        addItems: addAuthorities,
-        removeItem: removeAuthority,
-    } = useItemManager<Authority>([
-        { id: 11, name: "홍길동", department: "AA 부서" },
-        { id: 12, name: "홍길동", department: "BB 부서" },
-        { id: 13, name: "홍길동", department: "CC 부서" },
-        { id: 14, name: "홍길동", department: "DD 부서" },
-        { id: 15, name: "홍길동", department: "EE 부서" },
-        { id: 16, name: "홍길동", department: "FF 부서" },
-    ]);
+    const { tags, addTag, removeTag } = useTagManager(currentImageId);
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
@@ -122,17 +105,7 @@ function ImageDetailPage() {
                             <TagPanel
                                 tags={tags}
                                 onRemoveTag={removeTag}
-                                onAddTag={(newTag) => {
-                                    const newTagObj: Tag = {
-                                        id:
-                                            Math.max(
-                                                0,
-                                                ...tags.map((t) => t.id)
-                                            ) + 1,
-                                        tag: newTag,
-                                    };
-                                    addTag(newTagObj);
-                                }}
+                                onAddTag={addTag}
                             />
                         </div>
                     </div>
