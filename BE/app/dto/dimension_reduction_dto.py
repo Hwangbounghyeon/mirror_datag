@@ -5,7 +5,7 @@ import numpy as np
 # 모델 추론 공통 Request Dto
 class DimensionReductionRequest(BaseModel):
     algorithm: str
-    project_id: int
+    project_id: str
     user_id: int
     history_name: str
     is_private: bool
@@ -14,8 +14,7 @@ class DimensionReductionRequest(BaseModel):
 
 # 모델 추론 공통 Response Dto
 class DimensionReductionResponse(BaseModel):
-    history_id: int
-    project_id: int
+    history_id: str
+    project_id: str
     user_id: int
     history_name: str
-    history_obj_id: str

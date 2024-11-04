@@ -12,12 +12,13 @@ class ReductionResults(BaseModel):
     reductionFeatures: List[List[float]]
 
 class HistoryData(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
+    # id: Optional[ObjectId] = Field(None, alias="_id")
     userId: int
+    projectId: str
     isPrivate: bool
     historyName: str
     isDone: bool
-    parameters: Parameters
-    results: ReductionResults
+    parameters: Optional[Parameters] = None
+    results: Optional[ReductionResults] = None
     createdAt: datetime
     updatedAt: datetime

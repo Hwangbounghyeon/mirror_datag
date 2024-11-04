@@ -27,7 +27,7 @@ class Images(Base):
     updated_at = Column(DateTime, onupdate=func.now(), nullable=False)
 
     image_tags = relationship("ImageTag", back_populates="images")
-    project_image = relationship("ProjectImage", back_populates="images")
+    project_images = relationship("ProjectImage", back_populates="images")
 
 
 # 태그 테이블
@@ -40,7 +40,7 @@ class Tags(Base):
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())  
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
     
-    image_tags = relationship("ImageTag", back_populates="tags") 
+    image_tags = relationship("ImageTag", back_populates="tags")
 
 
 # 이미지 태그 관계 테이블
