@@ -35,7 +35,7 @@ async def verification(
         token_data = {
             "user_id": user.user_id,
             "email": user.email,
-            "department": user.department,
+            "department_id": user.department_id,
             "is_supervised": user.is_supervised
         }
         
@@ -90,7 +90,7 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         token_data = {
             "user_id": user.user_id,
             "email": user.email,
-            "department": user.department,
+            "department_id": user.department_id,
             "is_supervised": user.is_supervised
         }
         

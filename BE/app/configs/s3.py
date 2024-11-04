@@ -2,6 +2,7 @@ from boto3 import client
 import io
 import os
 from dotenv import load_dotenv
+from urllib.parse import quote
 
 load_dotenv()
 
@@ -31,15 +32,21 @@ def get_s3_image_paths() -> list:
         while True:
             try:
                 # S3에서 객체 목록 가져오기
-                response = s3_client.list_objects_v2(
-                    Bucket=bucket_name,
-                    ContinuationToken=continuation_token
-                )
+                if continuation_token:
+                    response = s3_client.list_objects_v2(
+                        Bucket=bucket_name,
+                        ContinuationToken=continuation_token
+                    )
+                else:
+                    response = s3_client.list_objects_v2(
+                        Bucket=bucket_name
+                    )
                 
                 # 객체 경로 추가
                 for obj in response.get('Contents', []):
                     key = obj.get('Key')
-                    image_paths.append(f"https://{bucket_name}.s3.{os.getenv('S3_REGION_NAME')}.amazonaws.com/{key}")
+                    encoded_key = quote(key)
+                    image_paths.append(f"https://{bucket_name}.s3.{os.getenv('S3_REGION_NAME')}.amazonaws.com/{encoded_key}")
                 
                 # 페이징: 추가 객체가 없으면 종료
                 if not response.get('IsTruncated'):
