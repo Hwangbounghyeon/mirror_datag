@@ -2,15 +2,8 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from bson import ObjectId
 
-class ProjectMappingData(BaseModel):
+class ProjectHistory(BaseModel):
     project: Dict[str, List[str]]
-
-
-class ProjectImage(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
-    mappingName: str
-    mappingData: ProjectMappingData
-
 
 class TagMappingData(BaseModel):
     tags: Dict[str, List[str]]

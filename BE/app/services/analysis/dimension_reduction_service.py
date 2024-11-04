@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features
+from configs.mongodb import collection_histories, collection_features, collection_project_history
 from models.history_models import HistoryData, ReductionResults
 from models.mariadb_image import Images
 from models.mariadb_users import Histories
@@ -39,7 +39,9 @@ class DimensionReductionService:
             reduction_features = self._dimension_reduction_UMAP(image_features)
 
         # 작업 완료
-        await self._save_history_completed_mongodb(inserted_id, request.image_ids, reduction_features)
+        await self._save_history_completed_mongodb(request.project_id, inserted_id, request.image_ids, reduction_features)
+
+
 
         return DimensionReductionResponse(
             history_id=inserted_id,
@@ -173,6 +175,7 @@ class DimensionReductionService:
                 selected_tags
             )
             result = await collection_histories.insert_one(history_obj.model_dump())
+
             if result.inserted_id:
                 return str(result.inserted_id)
             else:
@@ -184,7 +187,8 @@ class DimensionReductionService:
     # 차원축소 기록 완료 저장 (mongodb)
     async def _save_history_completed_mongodb(
         self,
-        mognodb_id: str,
+        project_id: str,
+        history_id: str,
         image_ids: List[int], 
         reduction_features: List[List[float]]
     ):
@@ -194,10 +198,8 @@ class DimensionReductionService:
                 "reductionFeatures": reduction_features
             })
 
-            print(changed_results)
-
             await collection_histories.update_one(
-                {"_id": ObjectId(mognodb_id)},  # ID로 문서 찾기
+                {"_id": ObjectId(history_id)},  # ID로 문서 찾기
                 {
                     "$set": {
                         "results": changed_results.model_dump(),  # Pydantic 모델을 dict로 변환
@@ -206,5 +208,28 @@ class DimensionReductionService:
                     }
                 }
             )
+
+            # 기존 document 확인
+            existing_doc = await collection_project_history.find_one()
+
+            # project_id에 해당하는 배열이 있는지 확인
+            current_histories = existing_doc.get("project", {}).get(str(project_id))
+
+            if current_histories is None:
+                current_histories = []
+
+            # 새로운 image_id를 추가하고 중복 제거
+            updated_images = list(set(current_histories + [history_id]))
+
+            # 업데이트 수행
+            await collection_project_history.update_one(
+                {},
+                {
+                    "$set": {
+                        f"project.{str(project_id)}": updated_images
+                    }
+                }
+            )
+
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
