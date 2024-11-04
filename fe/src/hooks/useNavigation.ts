@@ -1,6 +1,6 @@
 "use client";
 
-import uploadImage from "@/api/uploadImage";
+import { uploadImage } from "@/api/upload/uploadImage";
 import { ImageFile } from "@/types/upload";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
