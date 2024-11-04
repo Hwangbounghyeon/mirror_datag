@@ -2,6 +2,7 @@ from fastapi import  HTTPException
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
+from typing import List
 import mimetypes
 import zipfile
 import requests
@@ -9,16 +10,15 @@ import uuid
 import io
 import os
 import json
+from bson import ObjectId
 
-
+from configs.mongodb import collection_upload_batches, collection_user_upload_batches
+from models.uploadbatch_models import UploadBatch
 from models.mariadb_users import UploadBatches, Departments
 from dto.uploads_dto import UploadRequest
 from configs.s3 import upload_to_s3
 
-
-
 BUCKENAME = 'ssafy-project'
-
 
 class Upload:
     def __init__(self, db : Session):
@@ -28,22 +28,43 @@ class Upload:
         mime_type, _ = mimetypes.guess_type(filename)
         return mimetypes is not None and mime_type.startswith("image")
 
+    # 메인 로직
     async def upload_image(self, upload_request: UploadRequest, files: list):
 
-        # 이미지 업로드 확인 Table 생성
-        batch_before = UploadBatches(
-        project_id=upload_request.project_id,
-        user_id=upload_request.user_id,
-        is_done=0,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc)
-        )
+        inserted_id = await self._before_save_upload_batch(upload_request)
 
-        self.db.add(batch_before)
-        self.db.commit()
-        self.db.refresh(batch_before)
+        await self._mapping_user_upload_batches(upload_request.project_id, upload_request.user_id, inserted_id)
 
+        file_urls = await self._upload_s3(files)
 
+        await self._analysis_data(upload_request, file_urls)
+
+        await self._after_save_upload_batch(inserted_id)
+
+        return file_urls
+        
+    async def _before_save_upload_batch(self, upload_request: UploadRequest) -> str:
+        try:
+            batch_obj = {
+                "userId": upload_request.user_id,
+                "projectId": upload_request.project_id,
+                "isDone": False,
+                "createdAt": datetime.now(timezone.utc),
+                "updatedAt": datetime.now(timezone.utc)
+            }
+
+            batch_obj = UploadBatch.model_validate(batch_obj)
+
+            result = await collection_upload_batches.insert_one(batch_obj.model_dump())
+
+            if result.inserted_id:
+                return str(result.inserted_id)
+            else:
+                raise HTTPException(status_code=500, detail="Failed to save cls metadata")
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")
+
+    async def _upload_s3(self, files: list) -> List[str]:
         file_urls = []
 
         for file in files:
@@ -86,10 +107,13 @@ class Upload:
                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
                 file_urls.append(s3_url)
 
+        return file_urls
+    
+    async def _analysis_data(self, upload_request: UploadRequest, file_urls: List[str]):
         if upload_request.task == "cls":
-            url = "http://127.0.0.1:8080/cls"
+            url = "http://192.168.100.103:8001/dl/api/cls"
         else:
-            url = "http://127.0.0.1:8080/det"
+            url = "http://192.168.100.103:8001/dl/api/det"
 
         if upload_request.department_id:
             department = self.db.query(Departments).filter(Departments.department_id == upload_request.department_id).first()
@@ -105,11 +129,7 @@ class Upload:
             "project_id": upload_request.project_id,
             "is_private": upload_request.is_private
         }
-
-        # json_data = json.dumps(data)
-
-        print(data)
-
+        
         headers = {"Content-Type": "application/json"}
         try:
             result = requests.post(url, json = data, headers=headers)
@@ -118,12 +138,42 @@ class Upload:
                 status_code=500,
                 detail=f"An unexpected error occurred: {str(e)}"
             )
+        
+    async def _after_save_upload_batch(self, inserted_id: str):
+        try:
+            await collection_upload_batches.update_one(
+                {"_id": ObjectId(inserted_id)},  # ID로 문서 찾기
+                {
+                    "$set": {
+                        "isDone": True,  # 작업 완료 표시
+                        "updatedAt": datetime.now()  # 수정 시간 업데이트
+                    }
+                }
+            )
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")
+        
+    async def _mapping_user_upload_batches(self, project_id: str, user_id: int, upload_batch_id: str):
+        try:
+            # 기존 document 확인
+            existing_doc = await collection_user_upload_batches.find_one()
 
-        batch_after = self.db.query(UploadBatches).filter(UploadBatches.upload_batch_id == batch_before.upload_batch_id)
-        if batch_after:
-            batch_after.is_done = 1
-            batch_after.updated_at = datetime.now(timezone.utc)
-            self.db.commit()
+            # project_id와 user_id에 해당하는 배열이 있는지 확인
+            project_data = existing_doc.get("project", {})
+            user_data = project_data.get(str(project_id), {})
+            current_batches = user_data.get(str(user_id), [])
 
+            # 새로운 batch_id를 추가하고 중복 제거
+            updated_batches = list(set(current_batches + [upload_batch_id]))
 
-        return file_urls
+            # 업데이트 수행
+            await collection_user_upload_batches.update_one(
+                {},
+                {
+                    "$set": {
+                        f"project.{str(project_id)}.{str(user_id)}": updated_batches
+                    }
+                }
+            )
+        except Exception as e:
+            raise Exception(f"Failed to update histories: {str(e)}")

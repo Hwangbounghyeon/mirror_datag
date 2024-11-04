@@ -18,3 +18,9 @@ class ImagePermission(BaseModel):
 
 class ImagePermissionMappingData(BaseModel):
     image: Dict[str, ImagePermission]
+
+class UserUploadBatch(BaseModel):
+    user: Dict[str, List[str]]
+
+class userUploadBatchMappingData(BaseModel):
+    project: Dict[str, UserUploadBatch]
