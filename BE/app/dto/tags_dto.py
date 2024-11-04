@@ -1,15 +1,9 @@
 from pydantic import BaseModel
-from datetime import datetime
-from typing import List, Dict
-from models.mariadb_image import TagType
-        
+from typing import List
+
 class TagImageResponseDTO(BaseModel):
-    tags: Dict[TagType, List[str]]  # 각 태그의 타입을 Key로 가지는 Dict 구조
-    paths: List[str] # 전체 이미지 S3 경로 목록
-        
-class DateFilterDTO(BaseModel):
-    year: str | None = None
-    month: str | None = None
+    tags: List[str] 
+    paths: List[str]
 
 
 class ConditionDTO(BaseModel):
