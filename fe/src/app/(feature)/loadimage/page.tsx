@@ -4,31 +4,15 @@ import { PageContainer } from "@/components/common/pageContainer";
 import { PageHeader } from "@/components/common/pageHeader";
 import { ContentContainer } from "@/components/common/contentContainer";
 import { useLoadImages } from "@/hooks/useLoadImages";
-import FilterComponent from "@/components/loadimage/filterBox";
 import BatchList from "@/components/image/BatchList";
 import ImageGrid from "@/components/image/ImageGrid";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { IoFilter } from "react-icons/io5";
+import { FilterModal } from "@/components/loadimage/filterModal";
 
 export default function LoadImagesPage() {
     const { handlePrevious, handleLoadImage } = useLoadImages();
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const filterBoxRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                filterBoxRef.current &&
-                !filterBoxRef.current.contains(event.target as Node)
-            ) {
-                setIsFilterOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
 
     const handleDone = () => {
         setIsFilterOpen(false);
@@ -52,31 +36,24 @@ export default function LoadImagesPage() {
 
                 <div className="min-h-[80vh] flex flex-[2.5] flex-col gap-4">
                     <div
-                        ref={filterBoxRef}
                         className="relative h-[8%] hover:bg-gray-100 flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsFilterOpen(!isFilterOpen);
-                        }}
+                        onClick={() => setIsFilterOpen(true)}
                     >
                         <div className="flex justify-between items-center min-w-full">
                             필터링
                             <IoFilter />
                         </div>
-                        {isFilterOpen && (
-                            <div
-                                className="absolute top-[calc(100%-1px)] my-2 right-[-1px] w-[45vw] bg-white border border-gray-200 rounded-b-lg shadow-lg z-50"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <FilterComponent onDone={handleDone} />
-                            </div>
-                        )}
                     </div>
                     <div className="h-[92%] border border-solid border-gray-300 rounded-lg p-4">
                         <BatchList />
                     </div>
                 </div>
             </ContentContainer>
+            <FilterModal
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                onDone={handleDone}
+            />
         </PageContainer>
     );
 }

@@ -50,7 +50,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                 <div key={row.id} className="flex items-center space-x-2">
                     <div className="flex-shrink-0 w-20">
                         {index === 0 ? (
-                            <span className="text-sm text-gray-500"></span>
+                            <span className="text-sm"></span>
                         ) : (
                             <select
                                 className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md"
@@ -71,7 +71,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
 
                     <div className="flex-1 flex items-center space-x-2">
                         <select
-                            className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded-md bg-white"
+                            className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded-md"
                             value={row.field}
                             onChange={(e) => {
                                 const newRows = [...filterRows];
@@ -88,7 +88,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                         </select>
 
                         <select
-                            className="w-24 px-2 py-1.5 text-sm border border-gray-200 rounded-md bg-white"
+                            className="w-24 px-2 py-1.5 text-sm border border-gray-200 rounded-md"
                             value={row.operator}
                             onChange={(e) => {
                                 const newRows = [...filterRows];
@@ -104,7 +104,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                         </select>
 
                         <div className="flex-1 relative">
-                            <div className="flex flex-col px-2 py-1.5 border border-gray-200 rounded-md bg-white">
+                            <div className="flex flex-col px-2 py-1.5 border border-gray-200 rounded-md">
                                 <select
                                     className="border-none focus:outline-none text-sm"
                                     onChange={(e) => {
@@ -136,7 +136,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                                     {row.values.map((value) => (
                                         <span
                                             key={value}
-                                            className="inline-flex items-center justify-between px-2 py-1 bg-gray-100 rounded-md text-xs"
+                                            className="inline-flex items-center justify-between px-2 py-1 rounded-md text-xs"
                                         >
                                             {value}
                                             <button
@@ -154,9 +154,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                                                 }}
                                                 className="hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center"
                                             >
-                                                <span className="text-gray-400 me-1">
-                                                    ×
-                                                </span>
+                                                <span className="me-1">×</span>
                                             </button>
                                         </span>
                                     ))}
@@ -174,7 +172,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                             }}
                             className="p-1 hover:bg-gray-100 rounded-full"
                         >
-                            <IoCloseOutline className="text-gray-400" />
+                            <IoCloseOutline />
                         </button>
                     </div>
                 </div>
