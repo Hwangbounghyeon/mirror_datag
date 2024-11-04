@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from typing import List
-from configs.mongodb import collection_metadata, collection_features
-from models.mongodb_feature import Feature
-from models.mongodb_det import AiResultData
+from configs.mongodb import collection_metadata, collection_features, collection_tag_images
+from models.feature_models import Feature
+from models.detection_models import AiResultData
 from datetime import datetime, timezone
 import random
 
@@ -59,6 +59,15 @@ class ObjectDetectionMetadataService:
         for each_tag in predictions:
             if each_tag not in prediction_tags:
                 prediction_tags.append(each_tag)
+        
+        tags = [
+            ai_model,
+            "Object Detection",
+            str(datetime.now().year) + "_" + str(datetime.now().month),
+            branch,
+            location,
+            equipmentId
+        ] + prediction_tags
 
         ai_result_data = {
             "schemaVersion": "1.0",
@@ -98,8 +107,7 @@ class ObjectDetectionMetadataService:
                             "tags": [
                                 ai_model,
                                 "Object Detection",
-                                str(datetime.now().year),
-                                str(datetime.now().month),
+                                str(datetime.now().year) + "_" + str(datetime.now().month),
                                 branch,
                                 location,
                                 equipmentId
@@ -110,7 +118,7 @@ class ObjectDetectionMetadataService:
             ]
         }
 
-        return AiResultData.parse_obj(ai_result_data)
+        return AiResultData.model_validate(ai_result_data), tags
 
     # MongoDB 업로드
     async def upload_ai_result(self, ai_result_data: AiResultData):
@@ -124,11 +132,11 @@ class ObjectDetectionMetadataService:
     # Feature JSON형식 생성
     def create_feature(self, feature: List[List[float]]) -> Feature:
         data = {
+            "feature" : feature,
             "createdAt": datetime.now(timezone.utc).isoformat(),
-            "feature" : feature
         }
         
-        return Feature.parse_obj(data)
+        return Feature.model_validate(data)
 
     # MongoDB 업로드
     async def upload_feature(self, feature: Feature):
@@ -138,3 +146,25 @@ class ObjectDetectionMetadataService:
             return str(result.inserted_id)
         else:
             raise HTTPException(status_code=500, detail="Failed to save Feature")
+
+    async def mapping_image_tags_mongodb(self, tag_name: str, image_id: str):
+        try:
+            existing_doc = await collection_tag_images.find_one()
+
+            current_images = existing_doc.get("tag", {}).get(str(tag_name))
+
+            if current_images is None:
+                current_images = []
+
+            updated_images = list(set(current_images + [image_id]))
+
+            await collection_tag_images.update_one(
+                {},
+                {
+                    "$set": {
+                        f"tag.{str(tag_name)}": updated_images
+                    }
+                }
+            )
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")

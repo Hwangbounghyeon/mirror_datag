@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from typing import List
-from configs.mongodb import collection_metadata, collection_features
-from models.mongodb_feature import Feature
-from models.mongodb_cls import AiResultData
+from configs.mongodb import collection_metadata, collection_features, collection_tag_images
+from models.feature_models import Feature
+from models.classification_models import AiResultData
 from datetime import datetime, timezone
 import random
 
@@ -51,6 +51,16 @@ class ClassificationMetadataService:
 
         departments = [department_name] if department_name != "" or not is_private else []
         
+        tags = [
+            ai_model,
+            "Classfication",
+            prediction,
+            str(datetime.now().year) + "_" + str(datetime.now().month),
+            branch,
+            location,
+            equipmentId
+        ]
+
         ai_result_data = {
             "schemaVersion": "1.0",
             "fileList": [image_url],
@@ -84,8 +94,7 @@ class ClassificationMetadataService:
                                 ai_model,
                                 "Classfication",
                                 prediction,
-                                str(datetime.now().year),
-                                str(datetime.now().month),
+                                str(datetime.now().year) + "_" + str(datetime.now().month),
                                 branch,
                                 location,
                                 equipmentId
@@ -96,7 +105,7 @@ class ClassificationMetadataService:
             ]
         }
 
-        return AiResultData.parse_obj(ai_result_data)
+        return AiResultData.parse_obj(ai_result_data), tags
 
     # MongoDB 업로드
     async def upload_ai_result(self, ai_result_data: AiResultData):
@@ -110,8 +119,8 @@ class ClassificationMetadataService:
     # Feature JSON형식 생성
     def create_feature(self, feature: List[List[float]]) -> Feature:
         data = {
-            "createdAt": datetime.now(timezone.utc).isoformat(),
-            "feature" : feature
+            "feature" : feature,
+            "createdAt": datetime.now(timezone.utc).isoformat()
         }
         
         return Feature.parse_obj(data)
@@ -124,3 +133,25 @@ class ClassificationMetadataService:
             return str(result.inserted_id)
         else:
             raise HTTPException(status_code=500, detail="Feature 저장에 실패하였습니다.")
+    
+    async def mapping_image_tags_mongodb(self, tag_name: str, image_id: str):
+        try:
+            existing_doc = await collection_tag_images.find_one()
+
+            current_images = existing_doc.get("tag", {}).get(str(tag_name))
+
+            if current_images is None:
+                current_images = []
+
+            updated_images = list(set(current_images + [image_id]))
+
+            await collection_tag_images.update_one(
+                {},
+                {
+                    "$set": {
+                        f"tag.{str(tag_name)}": updated_images
+                    }
+                }
+            )
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")
