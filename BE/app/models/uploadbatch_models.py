@@ -4,7 +4,6 @@ from datetime import datetime
 from bson import ObjectId
 
 class UploadBatch(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
     userId: int
     projectId: str
     isDone: bool

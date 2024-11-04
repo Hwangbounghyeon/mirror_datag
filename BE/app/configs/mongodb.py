@@ -12,7 +12,7 @@ collection_metadata = database.get_collection("metadata")
 collection_features = database.get_collection("features")
 collection_histories = database.get_collection("histories")
 collection_permissions = database.get_collection("permissions")
-collection_project_history = database.get_collection("projectHistory")
+collection_project_histories = database.get_collection("projectHistories")
 
 def get_database_mongodb():
     try:

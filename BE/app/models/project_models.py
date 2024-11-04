@@ -4,7 +4,6 @@ from datetime import datetime
 from bson import ObjectId
 
 class Project(BaseModel):
-    id: Optional[ObjectId] = Field(None, alias="_id")
     projectName: str
     description: str
     modelName: str

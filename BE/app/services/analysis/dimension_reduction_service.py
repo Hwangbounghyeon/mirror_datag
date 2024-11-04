@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features, collection_project_history
+from configs.mongodb import collection_histories, collection_features, collection_project_histories
 from models.history_models import HistoryData, ReductionResults
 from models.mariadb_image import Images
 from models.mariadb_users import Histories
@@ -122,7 +122,7 @@ class DimensionReductionService:
         history_name: str,
         selected_algorithm: str,
         selected_tags: List[List[str]],
-    ) -> dict:
+    ) -> HistoryData:
 
         # 필수 파라미터가 누락되었는지 확인
         required_params = {
@@ -210,7 +210,7 @@ class DimensionReductionService:
             )
 
             # 기존 document 확인
-            existing_doc = await collection_project_history.find_one()
+            existing_doc = await collection_project_histories.find_one()
 
             # project_id에 해당하는 배열이 있는지 확인
             current_histories = existing_doc.get("project", {}).get(str(project_id))
@@ -219,14 +219,14 @@ class DimensionReductionService:
                 current_histories = []
 
             # 새로운 image_id를 추가하고 중복 제거
-            updated_images = list(set(current_histories + [history_id]))
+            updated_histories = list(set(current_histories + [history_id]))
 
             # 업데이트 수행
-            await collection_project_history.update_one(
+            await collection_project_histories.update_one(
                 {},
                 {
                     "$set": {
-                        f"project.{str(project_id)}": updated_images
+                        f"project.{str(project_id)}": updated_histories
                     }
                 }
             )
