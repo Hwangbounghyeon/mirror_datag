@@ -1,30 +1,49 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setAccessToken } from "@/store/authSlice";
+// components/hoc/WithAuth.tsx
+import { useEffect, ComponentType } from "react";
+import { useRouter } from "next/router";
+import { useDispatch, useSelector } from "react-redux";
+import { setAccessToken, clearAuth } from "@/store/authSlice";
+import { clearUserInfo } from "@/store/userInfoSlice";
+import { RootState } from "@/store/store";
 
-export default function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const dispatch = useDispatch();
+export function WithAuth<T extends object>(WrappedComponent: ComponentType<T>) {
+  return function WithAuthComponent(props: T) {
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const accessToken = useSelector(
+      (state: RootState) => state.auth.accessToken
+    );
 
-  useEffect(() => {
-    const fetchAccessToken = async () => {
-      try {
-        const response = await fetch("/your-endpoint");
-        const newAccessToken = response.headers.get("x-new-access-token");
+    useEffect(() => {
+      const verifyAuth = async () => {
+        if (!accessToken) {
+          try {
+            const response = await fetch("/api/auth/refresh", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
 
-        if (newAccessToken) {
-          dispatch(setAccessToken(newAccessToken));
+            if (response.ok) {
+              const data = await response.json();
+              dispatch(setAccessToken(data.access_token));
+            } else {
+              dispatch(clearAuth());
+              router.push("/login");
+            }
+          } catch (error) {
+            console.error("Auth verification failed:", error);
+            clearAuth();
+            clearUserInfo();
+          }
         }
-      } catch (error) {
-        console.error("Failed to fetch access token:", error);
-      }
-    };
+      };
 
-    fetchAccessToken();
-  }, [dispatch]);
+      verifyAuth();
+    }, [accessToken, dispatch, router]);
 
-  return <>{children}</>;
+    return <WrappedComponent {...props} />;
+  };
 }

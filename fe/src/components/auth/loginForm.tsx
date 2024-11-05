@@ -4,11 +4,11 @@ import { Button, Input } from "@nextui-org/react";
 import { check_auth } from "@/app/actions/auth";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { setAccessToken } from "@/store/authSlice";
 import { setUserInfo } from "@/store/userInfoSlice";
 import { DefaultResponseType } from "@/types/default";
 import { UserType } from "@/types/auth";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 
 type LoginFormValues = {
   email: string;
@@ -16,11 +16,11 @@ type LoginFormValues = {
 };
 
 interface LoginResult {
-  accessToken: string;
   UserData: UserType;
 }
 
 export const LoginForm = () => {
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -33,7 +33,7 @@ export const LoginForm = () => {
   });
   const router = useRouter();
   useEffect(() => {
-    // mount 될 때 처리하도록 
+    // mount 될 때 처리하도록
     router.prefetch("/project");
   }, [router]);
   const [errorMessage, SetErrorMessage] = useState<string | null>(null);
@@ -52,8 +52,7 @@ export const LoginForm = () => {
       SetErrorMessage(response.error || "An error occurred");
     } else {
       const data: LoginResult = response.data;
-      setAccessToken(data.accessToken);
-      setUserInfo(data.UserData);
+      dispatch(setUserInfo(data.UserData));
       router.push("/project");
     }
   };

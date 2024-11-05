@@ -23,7 +23,7 @@ const BMJUA = localFont({
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactElement;
 }>) {
   return (
     <html
