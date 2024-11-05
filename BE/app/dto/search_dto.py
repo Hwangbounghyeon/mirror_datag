@@ -1,10 +1,17 @@
 from pydantic import BaseModel
 from typing import List, Dict
 
+class TagSearchParams(BaseModel):
+    and_tags: List[str] = []
+    or_tags: List[str] = []
+    not_tags: List[str] = []
+
 class TagImageResponseDTO(BaseModel):
     tags: List[str] 
     images: List[Dict[str, str]]
-
+    
+class ImageSearchResponseDTO(BaseModel):
+    images: Dict[str, str]
 
 class ConditionDTO(BaseModel):
     and_condition: List[str] = []
@@ -25,3 +32,10 @@ class SearchConditionDTO(BaseModel):
         ]
     }
     """
+    
+# class SearchConditionDTO(BaseModel):
+#     conditions: List[ConditionDTO] | None = None
+#     page: int = 1
+#     page_size: int = 20
+#     sort_by: str = "created_at"
+#     sort_order: str = "desc"
