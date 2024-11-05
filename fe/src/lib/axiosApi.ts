@@ -1,5 +1,6 @@
 import axios from "axios";
-import { store } from "@/store";
+import { store } from "@/store/store";
+import { clearAuth, setAccessToken } from "@/store/authSlice";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -23,11 +24,10 @@ api.interceptors.response.use(
       try {
         const response = await api.post("/auth/refresh");
         const { accessToken } = response.data;
-        store.dispatch(setAccessToken(accessToken));
+        setAccessToken(accessToken);
         return api(originalRequest);
-      } catch (refreshError) {
-        store.dispatch(clearAuth());
-        window.location.href = "/login";
+      } catch (error) {
+        clearAuth();
       }
     }
     return Promise.reject(error);
