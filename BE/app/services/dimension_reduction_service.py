@@ -11,8 +11,6 @@ from bson import ObjectId
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
 from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images
 from models.history_models import HistoryData, ReductionResults
-from models.mariadb_image import Images
-from models.mariadb_users import Histories
 
 class DimensionReductionService:
     def __init__(self, db: Session):
@@ -195,20 +193,24 @@ class DimensionReductionService:
         reduction_features: List[List[float]]
     ):
         try:
+            document = await collection_histories.find_one({"_id": ObjectId(history_id)})
+            if not document:
+                raise Exception(f"Document with id {history_id} not found")
+
             changed_results = ReductionResults.model_validate({
                 "imageIds": image_ids,
                 "reductionFeatures": reduction_features
             })
+            
+            update_data = {
+                "results": changed_results.model_dump(),
+                "isDone": True,
+                "updatedAt": datetime.now(timezone.utc)
+            }
 
             await collection_histories.update_one(
                 {"_id": ObjectId(history_id)},  # ID로 문서 찾기
-                {
-                    "$set": {
-                        "results": changed_results.model_dump(),  # Pydantic 모델을 dict로 변환
-                        "isDone": True,  # 작업 완료 표시
-                        "updatedAt": datetime.now()  # 수정 시간 업데이트
-                    }
-                }
+                {"$set": update_data}
             )
 
         except Exception as e:
@@ -218,6 +220,14 @@ class DimensionReductionService:
         try:
             # 기존 document 확인
             existing_doc = await collection_project_histories.find_one()
+
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "project": {}
+                }
+                await collection_project_histories.insert_one(new_document)
+                existing_doc = new_document
 
             # project_id에 해당하는 배열이 있는지 확인
             current_histories = existing_doc.get("project", {}).get(str(project_id))

@@ -28,11 +28,11 @@ async def project(
         )
     
     except Exception as e:
-            return ErrorResponse(
-                    code="DB_ERROR",
-                    message="프로젝트 생성 중 오류가 발생했습니다.",
-                    detail=str(e)
-                )
+        return ErrorResponse(
+            code="DB_ERROR",
+            message="프로젝트 생성 중 오류가 발생했습니다.",
+            detail=str(e)
+        )
     
 
 # 2. Project 리스트 조회
@@ -52,11 +52,11 @@ async def project_list(
             )
 
     except Exception as e:
-                return ErrorResponse(
-                        code="DB_ERROR",
-                        message="프로젝트 리스트 조회 중 오류가 발생했습니다.",
-                        detail=str(e)
-                    )
+        return ErrorResponse(
+            code="DB_ERROR",
+            message="프로젝트 리스트 조회 중 오류가 발생했습니다.",
+            detail=str(e)
+        )
 
 # 3. Project 삭제
 @router.delete("/{project_id}")
@@ -71,11 +71,11 @@ async def delete_project(project_id: str, db : Session = Depends(get_database_ma
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
-            return ErrorResponse(
-                code="Project Error",
-                message="프로젝트를 삭제하지 못하였습니다.",
-                detail=str(e)
-            )
+        return ErrorResponse(
+            code="Project Error",
+            message="프로젝트를 삭제하지 못하였습니다.",
+            detail=str(e)
+        )
 
 
 # 4. 부서 리스트 조회
@@ -89,11 +89,11 @@ async def get_department_list(db: Session = Depends(get_database_mariadb)):
             data=departments
         )
     except Exception as e:
-            return ErrorResponse(
-                    code="DB_ERROR",
-                    message="부서 리스트 조회 중 오류가 발생했습니다.",
-                    detail=str(e)
-                )
+        return ErrorResponse(
+            code="DB_ERROR",
+            message="부서 리스트 조회 중 오류가 발생했습니다.",
+            detail=str(e)
+        )
 
 # 5. 사용자 이름 검색
 @router.get("/users/search")
@@ -106,8 +106,8 @@ async def search_user_name(name: str, db: Session = Depends(get_database_mariadb
             data=users
         )
     except Exception as e:
-                return ErrorResponse(
-                        code="DB_ERROR",
-                        message="사용자 이름 검색 중 오류가 발생했습니다.",
-                        detail=str(e)
-                    )
+        return ErrorResponse(
+            code="DB_ERROR",
+            message="사용자 이름 검색 중 오류가 발생했습니다.",
+            detail=str(e)
+        )
