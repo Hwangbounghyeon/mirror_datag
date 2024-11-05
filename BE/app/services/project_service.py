@@ -33,7 +33,7 @@ class ProjectService:
             'description':request.description,
             'user_id':request.user_id,
             'department' : project_department.department_name if project_department else "",
-            'imageCount': 0,
+            'image_count': 0,
             'is_private':request.is_private,
             'created_at':datetime.now(timezone.utc),
             'updated_at':datetime.now(timezone.utc)
@@ -160,7 +160,7 @@ class ProjectService:
                 department=project.get("department", ""),
                 user_id=project.get("user_id", ""),
                 description=project.get("description", ""),
-                imageCount=project.get("imageCount", ""),
+                image_count=project.get("image_count", ""),
                 is_private=project.get("is_private", ""),
                 created_at=project.get("created_at", ""),
                 updated_at=project.get("updated_at", "")
