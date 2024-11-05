@@ -7,6 +7,7 @@ import {
   accessTokenDuration,
   refreshTokenDuration,
 } from "@/lib/constants/token-duration";
+import { DefaultResponseType } from "@/types/default";
 
 export const check_auth = async (formData: FormData) => {
   const email = formData.get("email");
@@ -39,15 +40,23 @@ export const check_auth = async (formData: FormData) => {
         status: response.status,
       };
     }
-    console.log("login success");
 
-    const data: LoginResponseType = await response.json();
-    console.log(data);
+    const data: DefaultResponseType<LoginResponseType> = await response.json();
+
+    if (!data?.data) {
+      console.log("login fail");
+      return {
+        error: "Invalid",
+        status: 400,
+      };
+    }
+
+    console.log("login success = ", data.data?.access_token);
     const cookieStore = await cookies();
 
     cookieStore.set({
       name: "refreshToken",
-      value: data.refresh_token,
+      value: data.data.refresh_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
       maxAge: 60 * 60 * 7,
@@ -55,7 +64,7 @@ export const check_auth = async (formData: FormData) => {
 
     cookieStore.set({
       name: "accessToken",
-      value: data.access_token,
+      value: data.data.access_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
       maxAge: 60 * 20,
@@ -64,7 +73,7 @@ export const check_auth = async (formData: FormData) => {
     return {
       status: response.status,
       data: {
-        UserData: data.user,
+        UserData: data.data.user,
       },
     };
   } catch (error) {
