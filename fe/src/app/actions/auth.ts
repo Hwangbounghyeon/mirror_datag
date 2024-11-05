@@ -72,15 +72,11 @@ export const check_auth = async (formData: FormData) => {
   }
 };
 
-export const refreshToken = async (): Promise<string | null> => {
+export const refreshAccessToken = async (): Promise<string | null> => {
+  const cookieStore = cookies();
+  const refreshToken = cookieStore.get("refreshToken");
+  if (!refreshToken) return null;
   try {
-    const cookieStore = cookies();
-    const refreshToken = cookieStore.get("refreshToken");
-
-    if (!refreshToken) {
-      return null;
-    }
-
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh?refresh_token=${refreshToken.value}`,
       {
@@ -100,21 +96,35 @@ export const refreshToken = async (): Promise<string | null> => {
 
     const data: RefreshResponseType = await response.json();
 
-    // 새로운 토큰들을 쿠키에 설정
     cookieStore.set({
       name: "accessToken",
       value: data.access_token,
       httpOnly: true,
-      path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-      maxAge: 60 * 20, // 20분
+      maxAge: 60 * 20,
     });
-
     return data.access_token;
   } catch (error) {
     console.error("Token refresh failed:", error);
-    const cookieStore = cookies();
     cookieStore.delete("refreshToken");
     cookieStore.delete("accessToken");
+    return null;
+  }
+};
+
+export const logout = async () => {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("Logout failed:", error);
+  } finally {
+    cookies().delete("refreshToken");
+    cookies().delete("accessToken");
     return null;
   }
 };
