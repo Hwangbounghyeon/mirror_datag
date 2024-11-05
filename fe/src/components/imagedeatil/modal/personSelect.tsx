@@ -18,9 +18,7 @@ export function PersonSelect({
     const availableUsers = USERS.filter(
         (user) =>
             user.department_name === selectedDepartment &&
-            !existingAuthorities.some(
-                (existing) => existing.id === user.user_id
-            )
+            !existingAuthorities.some((existing) => existing.id === user.uid)
     );
 
     return (
@@ -32,13 +30,13 @@ export function PersonSelect({
             onChange={(e) => {
                 const selectedIds = Array.from(e.target.value);
                 const users = availableUsers.filter((user) =>
-                    selectedIds.includes(user.user_id.toString())
+                    selectedIds.includes(user.uid.toString())
                 );
                 onSelect(users);
             }}
         >
             {availableUsers.map((user) => (
-                <SelectItem key={user.user_id} value={user.user_id}>
+                <SelectItem key={user.uid} value={user.uid}>
                     {user.name}
                 </SelectItem>
             ))}

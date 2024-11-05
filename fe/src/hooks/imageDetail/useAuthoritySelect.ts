@@ -21,11 +21,11 @@ export function useAuthoritySelect(existingAuthorities: Authority[]) {
         const currentDeptPeople = selectedIds
             .map((id) => {
                 const user = availableUsers.find(
-                    (u) => u.user_id.toString() === id
+                    (u) => u.uid.toString() === id
                 );
                 if (!user) return null;
                 return {
-                    id: user.user_id,
+                    id: user.uid,
                     name: user.name,
                     department: selectedDepartment,
                 };
@@ -47,7 +47,7 @@ export function useAuthoritySelect(existingAuthorities: Authority[]) {
         ? USERS.filter(
               (user) =>
                   user.department_name === selectedDepartment &&
-                  !existingAuthorities.some((auth) => auth.id === user.user_id)
+                  !existingAuthorities.some((auth) => auth.id === user.uid)
           )
         : [];
 

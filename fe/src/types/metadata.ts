@@ -1,3 +1,10 @@
+import { User } from "./auth";
+
+interface AccessControlResponse {
+    user: User[];
+    department: string[];
+}
+
 interface AccessControl {
     users: number[];
     departments: string[];
@@ -37,10 +44,19 @@ interface AiResult {
     predictions: Prediction[];
 }
 
-export interface ImageDetail {
+interface ImageDetail {
     _id: string;
     schemaVersion: string;
     fileList: string[];
     metadata: Metadata;
     aiResults: AiResult[];
+}
+
+export interface ImageDetailResponse {
+    status: number;
+    data: {
+        metadata: ImageDetail;
+        access_control: AccessControlResponse;
+    };
+    error: null | string;
 }
