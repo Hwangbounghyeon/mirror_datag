@@ -80,7 +80,7 @@ async def get_history_list(
         500: {"model": CommonResponse[ErrorResponse]}
     }
 )
-async def get_history_list(
+async def get_history_detail(
     history_id: str,
     authorization: str = Header(None),
     db: Session = Depends(get_database_mariadb)
