@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     Modal,
     ModalContent,
@@ -6,11 +5,13 @@ import {
     ModalBody,
     ModalFooter,
     Button,
+    Select,
+    SelectItem,
+    Chip,
 } from "@nextui-org/react";
-import { DepartmentSelect } from "./departmentSelect";
-import { PersonSelect } from "./personSelect";
-import { SelectedPeople } from "./selectedPerson";
-import { Authority, Department, User } from "@/types/auth";
+import { Authority } from "@/types/auth";
+import { DEPARTMENTS } from "@/lib/constants/mockData";
+import { useAuthoritySelect } from "@/hooks/imageDetail/useAuthoritySelect";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -25,40 +26,25 @@ export default function AuthModal({
     onAdd,
     existingAuthorities,
 }: AuthModalProps) {
-    const [departmentSearch, setDepartmentSearch] = useState("");
-    const [selectedDepartment, setSelectedDepartment] =
-        useState<Department | null>(null);
-    const [personSearch, setPersonSearch] = useState("");
-    const [selectedPeople, setSelectedPeople] = useState<Authority[]>([]);
-
-    const handleDepartmentSelect = (dept: Department) => {
-        setSelectedDepartment(dept);
-        setDepartmentSearch(dept.department_name);
-        setPersonSearch("");
-    };
-
-    const handlePersonSelect = (user: User) => {
-        if (!selectedDepartment) return;
-        const newAuthority: Authority = {
-            id: user.user_id,
-            name: user.name,
-            department: selectedDepartment.department_name,
-        };
-        setSelectedPeople([...selectedPeople, newAuthority]);
-        setPersonSearch("");
-    };
-
-    const handleRemovePerson = (id: number) => {
-        setSelectedPeople(selectedPeople.filter((p) => p.id !== id));
-    };
+    const {
+        selectedDepartment,
+        selectedPeople,
+        availableUsers,
+        handleDepartmentSelect,
+        handlePeopleSelect,
+        handleRemovePerson,
+        reset,
+    } = useAuthoritySelect(existingAuthorities);
 
     const handleConfirm = () => {
         const userIds = selectedPeople.map((person) => person.id);
         onAdd(userIds);
-        setSelectedPeople([]);
-        setSelectedDepartment(null);
-        setDepartmentSearch("");
-        setPersonSearch("");
+        reset();
+        onClose();
+    };
+
+    const handleCancel = () => {
+        reset();
         onClose();
     };
 
@@ -66,7 +52,7 @@ export default function AuthModal({
         <Modal
             size={"4xl"}
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleCancel}
             classNames={{
                 base: "min-h-[50%]",
                 wrapper: "min-h-[50%]",
@@ -79,35 +65,79 @@ export default function AuthModal({
                         <ModalHeader>Add Authority</ModalHeader>
                         <ModalBody>
                             <div className="space-y-4">
-                                <DepartmentSelect
-                                    departmentSearch={departmentSearch}
-                                    selectedDepartment={selectedDepartment}
-                                    onSearchChange={setDepartmentSearch}
-                                    onSelect={handleDepartmentSelect}
-                                />
+                                <Select
+                                    label="Department"
+                                    placeholder="Select a department"
+                                    selectedKeys={
+                                        selectedDepartment
+                                            ? [selectedDepartment.toString()]
+                                            : []
+                                    }
+                                    onChange={(e) =>
+                                        handleDepartmentSelect(e.target.value)
+                                    }
+                                >
+                                    {DEPARTMENTS.map((dept) => (
+                                        <SelectItem key={dept.department_name}>
+                                            {dept.department_name}
+                                        </SelectItem>
+                                    ))}
+                                </Select>
+
                                 {selectedDepartment && (
-                                    <PersonSelect
-                                        selectedDepartment={selectedDepartment}
-                                        personSearch={personSearch}
-                                        onSearchChange={setPersonSearch}
-                                        onSelect={handlePersonSelect}
-                                        selectedPeople={selectedPeople}
-                                        existingAuthorities={
-                                            existingAuthorities
+                                    <Select
+                                        label="People"
+                                        placeholder="Select people"
+                                        selectionMode="multiple"
+                                        selectedKeys={selectedPeople
+                                            .filter(
+                                                (p) =>
+                                                    p.department ===
+                                                    selectedDepartment
+                                            )
+                                            .map((p) => p.id.toString())}
+                                        onChange={(e) =>
+                                            handlePeopleSelect(
+                                                Array.from(e.target.value)
+                                            )
                                         }
-                                    />
+                                    >
+                                        {availableUsers.map((user) => (
+                                            <SelectItem
+                                                key={user.user_id.toString()}
+                                            >
+                                                {user.name}
+                                            </SelectItem>
+                                        ))}
+                                    </Select>
                                 )}
-                                <SelectedPeople
-                                    people={selectedPeople}
-                                    onRemove={handleRemovePerson}
-                                />
+
+                                {selectedPeople.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedPeople.map((person) => (
+                                            <Chip
+                                                key={person.id}
+                                                onClose={() =>
+                                                    handleRemovePerson(
+                                                        person.id
+                                                    )
+                                                }
+                                                variant="flat"
+                                                color="primary"
+                                            >
+                                                {person.name} /{" "}
+                                                {person.department}
+                                            </Chip>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </ModalBody>
                         <ModalFooter>
                             <Button
                                 color="danger"
                                 variant="light"
-                                onPress={onClose}
+                                onPress={handleCancel}
                             >
                                 Close
                             </Button>

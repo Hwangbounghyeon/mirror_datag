@@ -21,8 +21,8 @@ export default function LoadImagesPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Load Images"
-                rightButtonText="Load Image"
+                title="Load Image"
+                rightButtonText="Load Images"
                 onPrevious={handlePrevious}
                 onRightButtonClick={handleLoadImage}
             />

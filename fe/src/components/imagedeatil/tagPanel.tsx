@@ -1,11 +1,10 @@
-import { Tag } from "@/types/auth";
 import { Input } from "@nextui-org/react";
 import React, { useState } from "react";
 import { MdOutlineClear } from "react-icons/md";
 
 interface TagPanelProps {
-    tags: Tag[];
-    onRemoveTag: (index: number) => void;
+    tags: string[];
+    onRemoveTag: (tag_name: string) => void;
     onAddTag: (tag: string) => void;
 }
 
@@ -35,14 +34,12 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
                 <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => (
                         <div
-                            key={tag.id}
+                            key={tag}
                             className="flex items-center ps-2 py-1 rounded-full border border-blue-400"
                         >
-                            <span className="text-sm text-blue-400">
-                                {tag.tag}
-                            </span>
+                            <span className="text-sm text-blue-400">{tag}</span>
                             <button
-                                onClick={() => onRemoveTag(tag.id)}
+                                onClick={() => onRemoveTag(tag)}
                                 className="text-blue-400 hover:text-blue-300"
                             >
                                 <MdOutlineClear />

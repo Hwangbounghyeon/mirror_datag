@@ -9,7 +9,6 @@ import { useParams, useRouter } from "next/navigation";
 import { usePanelState } from "@/hooks/imageDetail/usePanelState";
 import MetadataPanel from "@/components/imagedeatil/metadataPanel";
 import AuthPanel from "@/components/imagedeatil/authPanel";
-import { Tag } from "@/types/auth";
 import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 

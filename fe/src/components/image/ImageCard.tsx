@@ -1,6 +1,9 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { ImageCardProps } from "@/types/upload";
+import Image from "next/image";
+
+const fallbackImageSrc = "/images/zip.png";
 
 export const ImageCard: FC<ImageCardProps> = ({ src, name, onDelete }) => (
     <div className="relative">
@@ -19,11 +22,22 @@ const DeleteButton: FC<{ onDelete: () => void }> = ({ onDelete }) => (
     </div>
 );
 
-const ImageContainer: FC<{ src: string; name: string }> = ({ src, name }) => (
-    <div className="aspect-square rounded-lg overflow-hidden">
-        <img src={src} alt={name} className="w-full h-full object-cover" />
-    </div>
-);
+const ImageContainer: FC<{ src: string; name: string }> = ({ src }) => {
+    const [imgError, setImgError] = useState(false);
+
+    return (
+        <div className="aspect-square rounded-lg overflow-hidden relative">
+            <Image
+                src={imgError ? fallbackImageSrc : src}
+                alt="No Image"
+                fill
+                className="w-full h-full object-cover pointer-events-none"
+                draggable={false}
+                onError={() => setImgError(true)}
+            />
+        </div>
+    );
+};
 
 const ImageName: FC<{ name: string }> = ({ name }) => (
     <p className="text-sm mt-1 text-center">{name}</p>

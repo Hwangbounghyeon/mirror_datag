@@ -1,12 +1,7 @@
-export interface Department {
-  department_id: number;
-  department_name: string;
-}
-
 export interface User {
-  user_id: number;
-  name: string;
-  department: number;
+    user_id: number;
+    name: string;
+    department_name: string;
 }
 
 export interface Authority {
