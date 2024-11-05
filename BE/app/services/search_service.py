@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from typing import List, Set
-from dto.tags_dto import TagImageResponseDTO, SearchConditionDTO
+from typing import Dict
+from dto.search_dto import TagImageResponseDTO, SearchConditionDTO, ImageSearchResponseDTO
 from configs.mongodb import collection_tag_images, collection_metadata, collection_images
 from configs.s3 import get_s3_image_paths
 from bson import ObjectId
@@ -45,7 +45,7 @@ class TagService:
     # - 검색 조건으로 image-tag 확인해서 해당 조건에 필터링 되는 image 확인
     # - image의 metadata_id를 통해 image의 path를 찾아서 list로 만들어서 반환
 
-    async def search_images_by_conditions(self, search_dto: SearchConditionDTO):
+    async def search_images_by_conditions(self, search_dto: SearchConditionDTO) -> ImageSearchResponseDTO:
         try:
             # 1. tag document 가져오기
             tag_doc = await self.collection_tag_images.find_one({})
@@ -60,7 +60,7 @@ class TagService:
             }
             '''
             if not tag_doc:
-                return []
+                ImageSearchResponseDTO(images={})
 
             matching_metadata_ids = set()  # 최종 결과를 저장할 set
             '''
@@ -84,22 +84,20 @@ class TagService:
 
                 # 3. AND 조건 처리
                 if condition.and_condition:
-                    first_tag = condition.and_condition[0]  # "dog"
-                    if first_tag in tag_doc['tag']:
-                        current_metadata_ids = set(tag_doc['tag'][first_tag])
-                        '''
-                        current_metadata_ids = {"metadata_id1", "metadata_id2", "metadata_id3"}
-                        '''
-                    
-                    if len(condition.and_condition) > 1:
-                        for idx in range(1, len(condition.and_condition)): 
-                            tag = condition.and_condition[idx] # "2024"
-                            if tag in tag_doc['tag']:
-                                current_metadata_ids = current_metadata_ids.intersection(set(tag_doc['tag'][tag]))
-                                '''
-                                tag_doc['tag']["2024"] = ["metadata_id1", "metadata_id2"]
-                                current_metadata_ids = {"metadata_id1", "metadata_id2"}
-                                '''
+                    current_metadata_ids = set(tag_doc['tag'].get(condition.and_condition[0], []))
+                    '''
+                    current_metadata_ids = {"metadata_id1", "metadata_id2", "metadata_id3"}
+                    '''
+                    for tag in condition.and_condition[1:]:
+                        if tag in tag_doc['tag']:
+                            current_metadata_ids &= set(tag_doc['tag'][tag])
+                            '''
+                            tag_doc['tag']["2024"] = ["metadata_id1", "metadata_id2"]
+                            current_metadata_ids = {"metadata_id1", "metadata_id2"}
+                            '''
+                        else:
+                            ImageSearchResponseDTO(images={})
+                                
                                 
                 # 4. OR 조건 처리
                 if condition.or_condition:
@@ -115,7 +113,7 @@ class TagService:
                             '''
                     
                     if current_metadata_ids:  # AND 조건이 있었다면
-                        current_metadata_ids = current_metadata_ids.intersection(or_metadata_ids)
+                        current_metadata_ids &= or_metadata_ids
                         '''
                         current_metadata_ids = {"metadata_id2"}
                         # {"metadata_id1", "metadata_id2"} ∩ {"metadata_id2", "metadata_id4"}
@@ -136,7 +134,7 @@ class TagService:
                             '''
                             not_metadata_ids = {"metadata_id5", "metadata_id6"}
                             '''
-                    current_metadata_ids = current_metadata_ids.difference(not_metadata_ids)
+                    current_metadata_ids -= current_metadata_ids.difference(not_metadata_ids)
                     '''
                     현재 예시에서는 not_condition이 비어있으므로 변화 없음
                     current_metadata_ids = {"metadata_id2"}
@@ -151,7 +149,7 @@ class TagService:
             # 7. metadata 아이디로 images 컬렉션에서 image 정보 가져오고, metadata 컬렉션에서 실제 파일 경로 찾기
             if matching_metadata_ids:
                 query = {"_id": {"$in": [ObjectId(id) for id in matching_metadata_ids]}}
-                image_data = []
+                image_data = {}
                 '''
                 query = {"_id": {"$in": [ObjectId("metadata_id2")]}
                 '''
@@ -196,9 +194,9 @@ class TagService:
                         }
                         '''
                 
-                return image_data
+                return ImageSearchResponseDTO(images=image_data)
 
-            return []
+            return ImageSearchResponseDTO(images={})
 
         except Exception as e:
             raise HTTPException(
