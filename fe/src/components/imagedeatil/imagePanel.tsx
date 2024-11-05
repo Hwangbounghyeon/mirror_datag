@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 interface ImagePanelProps {
@@ -7,8 +8,15 @@ interface ImagePanelProps {
 function ImagePanel({ imageSrc }: ImagePanelProps) {
     return (
         <div className="h-full flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-600">
-            <div className="relative w-full h-full flex items-center justify-center">
-                <img src={imageSrc} className="w-auto h-auto" />
+            <div className="rounded-lg overflow-hidden min-h-[1000px] min-w-[1000px] relative">
+                <Image
+                    src={imageSrc}
+                    fill
+                    alt="No Image"
+                    sizes="(min-width: 400px) 100vw, 300px"
+                    className="object-contain"
+                    priority
+                />
             </div>
         </div>
     );
