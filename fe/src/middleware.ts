@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  accessTokenDuration,
+  refreshTokenDuration,
+} from "./lib/constants/token-duration";
 
 const publicRoutes = ["/login", "/signup", "/"];
 
@@ -42,7 +46,14 @@ export async function middleware(request: NextRequest) {
         value: data.access_token,
         httpOnly: true,
         path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-        maxAge: 60 * 20,
+        maxAge: accessTokenDuration,
+      });
+      res.cookies.set({
+        name: "refreshToken",
+        value: data.refresh_token,
+        httpOnly: true,
+        path: process.env.NEXT_PUBLIC_FRONTEND_URL,
+        maxAge: refreshTokenDuration,
       });
 
       return res;
