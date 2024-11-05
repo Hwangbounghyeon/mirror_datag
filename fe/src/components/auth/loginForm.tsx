@@ -7,7 +7,7 @@ export const LoginForm = () => {
     <form className="mt-8 space-y-6">
       <div className="space-y-4 rounded-md">
         <Input
-          name="name"
+          name="email"
           radius="sm"
           type="email"
           label="name"
@@ -15,6 +15,7 @@ export const LoginForm = () => {
         />
         <Input
           radius="sm"
+          name="password"
           type="password"
           label="password"
           placeholder="Enter your password"
