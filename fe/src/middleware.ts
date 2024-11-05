@@ -1,31 +1,61 @@
-// src/middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const publicRoutes = ["/login", "/signup", "/"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const refreshTokenCookie = request.cookies.get("refreshToken");
+  const accessTokenCookie = request.cookies.get("accessToken");
   const path = request.nextUrl.pathname;
   const isPublicRoute = publicRoutes.includes(path);
 
-  // 로그인된 상태 (refreshToken이 있는 경우)
-  if (refreshTokenCookie) {
-    // 공개 페이지 접근 시도하면 /project로 리다이렉트
+  // 엑세스 토큰 있을 경우, 공개 페이지로 접근 시 대시보드로 리다이렉트
+  if (accessTokenCookie) {
     if (isPublicRoute) {
       return NextResponse.redirect(new URL("/project", request.url));
     }
-    // 그 외의 경우는 정상적으로 접근 허용
     return NextResponse.next();
   }
 
-  // 로그인되지 않은 상태 (refreshToken이 없는 경우)
-  // 공개 페이지가 아닌 곳에 접근 시도하면 /login으로 리다이렉트
+  // refreshToken이 남아있는 경우
+  if (refreshTokenCookie) {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh?refresh_token=${refreshTokenCookie.value}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response || !response.ok || response.status >= 400) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+
+      const data = await response.json();
+      const res = NextResponse.next();
+
+      res.cookies.set({
+        name: "accessToken",
+        value: data.access_token,
+        httpOnly: true,
+        path: process.env.NEXT_PUBLIC_FRONTEND_URL,
+        maxAge: 60 * 20,
+      });
+
+      return res;
+    } catch (error) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
+
+  // 토큰이 없는 경우
   if (!isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 공개 페이지는 정상적으로 접근 허용
   return NextResponse.next();
 }
 

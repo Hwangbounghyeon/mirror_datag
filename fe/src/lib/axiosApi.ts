@@ -1,7 +1,9 @@
+// src/lib/axiosApi.ts
+
 import axios from "axios";
 import store from "@/store/store";
 import { clearAuth, setAccessToken } from "@/store/authSlice";
-import { setUserInfo, clearUserInfo } from "@/store/userInfoSlice";
+import { clearUserInfo } from "@/store/userInfoSlice";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
