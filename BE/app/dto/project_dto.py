@@ -42,6 +42,10 @@ class ProjectListRequest(BaseModel):
     model_name: Optional[str] = None
     page: int = Query(1, ge=1)
     limit: int = Query(10, ge=1, le=100)
+
+    model_config = {
+        "protected_namespaces": ()
+    }
     
 # Project list 응답 DTO
 class ProjectListResponse(BaseModel):

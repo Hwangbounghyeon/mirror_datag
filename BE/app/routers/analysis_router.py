@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
 from dto.common_dto import CommonResponse, ErrorResponse
 from configs.mariadb import get_database_mariadb
-from services.analysis.dimension_reduction_service import DimensionReductionService
+from services.dimension_reduction_service import DimensionReductionService
 
 router = APIRouter(prefix="/analysis", tags=["analysis with dimension reduction"])
 

@@ -12,7 +12,7 @@ router = APIRouter(
     tags=["search"]
 )
 
-@router.get("/", response_model=CommonResponse[TagImageResponseDTO])
+@router.get("", response_model=CommonResponse[TagImageResponseDTO])
 async def get_tags_and_images():
     """
     태그 목록과 전체 이미지 경로 반환
@@ -31,7 +31,7 @@ async def get_tags_and_images():
             )
         )
 
-@router.post("/image", response_model=CommonResponse[List[str]])
+@router.get("/image", response_model=CommonResponse[List[str]])
 async def search_images_by_tags(search_dto: SearchConditionDTO):
     try:
         tag_service = TagService()

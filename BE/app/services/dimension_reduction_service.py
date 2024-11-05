@@ -11,8 +11,6 @@ from bson import ObjectId
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
 from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images
 from models.history_models import HistoryData, ReductionResults
-from models.mariadb_image import Images
-from models.mariadb_users import Histories
 
 class DimensionReductionService:
     def __init__(self, db: Session):
@@ -218,6 +216,14 @@ class DimensionReductionService:
         try:
             # 기존 document 확인
             existing_doc = await collection_project_histories.find_one()
+
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "project": {}
+                }
+                await collection_project_histories.insert_one(new_document)
+                existing_doc = new_document
 
             # project_id에 해당하는 배열이 있는지 확인
             current_histories = existing_doc.get("project", {}).get(str(project_id))

@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from typing import List, Set
 from dto.tags_dto import TagImageResponseDTO, SearchConditionDTO
-from configs.mongodb import collection_tagimages, collection_metadata, collection_images
+from configs.mongodb import collection_tag_images, collection_metadata, collection_images
 from configs.s3 import get_s3_image_paths
 from bson import ObjectId
 
@@ -14,14 +14,14 @@ load_dotenv()
 ## 1. tag 목록 불러오기
 class TagService:
     def __init__(self):
-        self.collection_tagimages = collection_tagimages
+        self.collection_tag_images = collection_tag_images
         self.collection_metadata = collection_metadata
         self.collection_images = collection_images
     
     async def get_tag_and_image_lists(self) -> TagImageResponseDTO:
         try:
 
-            tag_doc = await self.collection_tagimages.find_one({})
+            tag_doc = await self.collection_tag_images.find_one({})
             if not tag_doc:
                 tags = []
             else:
@@ -48,7 +48,7 @@ class TagService:
     async def search_images_by_conditions(self, search_dto: SearchConditionDTO):
         try:
             # 1. tag document 가져오기
-            tag_doc = await self.collection_tagimages.find_one({})
+            tag_doc = await self.collection_tag_images.find_one({})
             if not tag_doc:
                 return []
 

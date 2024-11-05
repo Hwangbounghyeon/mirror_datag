@@ -10,7 +10,7 @@ from configs.mariadb import get_database_mariadb
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
-@router.post('/', description="이미지 업로드(zip, image)")
+@router.post('', description="이미지 업로드(zip, image)")
 async def image_upload(
     upload_request: str = Form(...),
     files: list[UploadFile] = File(...),
