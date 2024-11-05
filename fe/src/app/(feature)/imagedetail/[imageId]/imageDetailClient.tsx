@@ -19,6 +19,13 @@ interface ImageDetailClientProps {
     initialTags: string[];
     classes: string[];
     imageSrc: string;
+    metadata: {
+        branch: string;
+        process: string;
+        location: string;
+        equipmentId: string;
+        createdAt: Date;
+    };
 }
 
 function ImageDetailClient({
@@ -27,6 +34,7 @@ function ImageDetailClient({
     initialTags,
     classes,
     imageSrc,
+    metadata,
 }: ImageDetailClientProps) {
     const router = useRouter();
     const totalImages = 300;
@@ -92,7 +100,7 @@ function ImageDetailClient({
                             {activePanel === "class" ? (
                                 <ClassPanel classes={classes} />
                             ) : (
-                                <MetadataPanel />
+                                <MetadataPanel metadata={metadata} />
                             )}
                         </div>
                         <div className="h-1/3 border-b border-gray-700 dark:border-gray-50">
