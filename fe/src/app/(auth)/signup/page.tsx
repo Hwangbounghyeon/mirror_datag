@@ -1,9 +1,12 @@
 import SignForm from "@/components/auth/signupForm";
 import { DepartmentType } from "@/types/departmentType";
-import { getDepartments } from "@/lib/constants/department";
 
 export default async function Page() {
-  const department_list: DepartmentType[] = await getDepartments();
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/departments`
+  );
+  const data = await response.json();
+  const department_list: DepartmentType[] = data.data;
 
   return <SignForm department_list={department_list} />;
 }
