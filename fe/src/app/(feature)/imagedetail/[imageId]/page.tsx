@@ -24,6 +24,8 @@ export default async function ImageDetailPage({
             (detection) => detection.prediction
         ) || [];
 
+    const metadata = data.data.metadata.metadata;
+
     const imageSrc = data.data.metadata.fileList[0];
 
     return (
@@ -34,6 +36,7 @@ export default async function ImageDetailPage({
                 initialTags={initialTags}
                 classes={classes}
                 imageSrc={imageSrc}
+                metadata={metadata}
             />
         </Suspense>
     );
