@@ -4,6 +4,8 @@ import {
   accessTokenDuration,
   refreshTokenDuration,
 } from "./lib/constants/token-duration";
+import { DefaultResponseType } from "./types/default";
+import { RefreshResponseType } from "./types/auth";
 
 const publicRoutes = ["/login", "/signup", "/"];
 
@@ -12,6 +14,7 @@ export async function middleware(request: NextRequest) {
   const accessTokenCookie = request.cookies.get("accessToken");
   const path = request.nextUrl.pathname;
   const isPublicRoute = publicRoutes.includes(path);
+  const res = NextResponse.next();
 
   // 엑세스 토큰 있을 경우, 공개 페이지로 접근 시 대시보드로 리다이렉트
   if (accessTokenCookie) {
@@ -37,20 +40,36 @@ export async function middleware(request: NextRequest) {
       if (!response || !response.ok || response.status >= 400) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
-
-      const data = await response.json();
-      const res = NextResponse.next();
+      const data: DefaultResponseType<RefreshResponseType> =
+        await response.json();
+      if (!data?.data) {
+        res.cookies.set({
+          name: "accessToken",
+          value: "",
+          httpOnly: true,
+          path: process.env.NEXT_PUBLIC_FRONTEND_URL,
+          maxAge: 0,
+        });
+        res.cookies.set({
+          name: "refreshToken",
+          value: "",
+          httpOnly: true,
+          path: process.env.NEXT_PUBLIC_FRONTEND_URL,
+          maxAge: 0,
+        });
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
 
       res.cookies.set({
         name: "accessToken",
-        value: data.access_token,
+        value: data.data.access_token,
         httpOnly: true,
         path: process.env.NEXT_PUBLIC_FRONTEND_URL,
         maxAge: accessTokenDuration,
       });
       res.cookies.set({
         name: "refreshToken",
-        value: data.refresh_token,
+        value: data.data.refresh_token,
         httpOnly: true,
         path: process.env.NEXT_PUBLIC_FRONTEND_URL,
         maxAge: refreshTokenDuration,
