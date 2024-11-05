@@ -49,47 +49,83 @@ class TagService:
         try:
             # 1. tag document 가져오기
             tag_doc = await self.collection_tag_images.find_one({})
+            '''
+            tag_doc = {
+                "_id": ObjectId("67284a7df0b2373f02710c8f"),
+                "tag": {
+                    "dog": ["metadata_id1", "metadata_id2", "metadata_id3"],
+                    "cat": ["metadata_id2", "metadata_id4"],
+                    "2024-01": ["metadata_id1", "metadata_id2"]
+                }
+            }
+            '''
             if not tag_doc:
                 return []
 
             matching_metadata_ids = set()  # 최종 결과를 저장할 set
+            '''
+            matching_metadata_ids = set()  # 초기값: 빈 set
+            '''
 
             # 2. 각 condition 처리 (conditions는 OR로 연결)
             for condition in search_dto.conditions:
+                '''
+                condition 예시:
+                {
+                    "and_condition": ["dog", "2024"],
+                    "or_condition": ["cat"],
+                    "not_condition": []
+                }
+                '''
                 current_metadata_ids = set()  # 현재 condition의 결과
+                '''
+                current_metadata_ids = set()  # 초기값: 빈 set
+                '''
+
                 # 3. AND 조건 처리
                 if condition.and_condition:
-                    # 첫 번째 태그의 metadata_ids 가져오기
-                    first_tag = condition.and_condition[0]
+                    first_tag = condition.and_condition[0]  # "dog"
                     if first_tag in tag_doc['tag']:
-                        # tag_doc['tag'][first_tag]는 해당 태그를 가진 모든 metadata_id 배열
                         current_metadata_ids = set(tag_doc['tag'][first_tag])
+                        '''
+                        current_metadata_ids = {"metadata_id1", "metadata_id2", "metadata_id3"}
+                        '''
                     
                     if len(condition.and_condition) > 1:
-                        # 나머지 태그들과 교집합 구하기
-                        for tag in condition.and_condition[1:]:
+                        for idx in range(1, len(condition.and_condition)): 
+                            tag = condition.and_condition[idx] # "2024"
                             if tag in tag_doc['tag']:
-                                # intersection(): 두 set의 교집합 반환
-                                # 예: {1,2,3}.intersection({2,3,4}) => {2,3}
-                                current_metadata_ids = current_metadata_ids.intersection(
-                                    tag_doc['tag'][tag]
-                                )
+                                current_metadata_ids = current_metadata_ids.intersection(set(tag_doc['tag'][tag]))
+                                '''
+                                tag_doc['tag']["2024"] = ["metadata_id1", "metadata_id2"]
+                                current_metadata_ids = {"metadata_id1", "metadata_id2"}
+                                '''
                                 
                 # 4. OR 조건 처리
                 if condition.or_condition:
                     or_metadata_ids = set()
-                    for tag in condition.or_condition:
+                    '''
+                    or_metadata_ids = set()  # 초기값: 빈 set
+                    '''
+                    for tag in condition.or_condition:  # "cat"
                         if tag in tag_doc['tag']:
-                            # update(): set에 여러 요소 추가 (합집합)
                             or_metadata_ids.update(tag_doc['tag'][tag])
+                            '''
+                            or_metadata_ids = {"metadata_id2", "metadata_id4"}
+                            '''
                     
                     if current_metadata_ids:  # AND 조건이 있었다면
-                        # AND 조건과 OR 조건의 교집합
-                        current_metadata_ids = current_metadata_ids.intersection(
-                            or_metadata_ids
-                        )
-                    else:  # AND 조건이 없었다면
+                        current_metadata_ids = current_metadata_ids.intersection(or_metadata_ids)
+                        '''
+                        current_metadata_ids = {"metadata_id2"}
+                        # {"metadata_id1", "metadata_id2"} ∩ {"metadata_id2", "metadata_id4"}
+                        '''
+                    else:  
                         current_metadata_ids = or_metadata_ids
+                        '''
+                        # AND 조건이 없었을 경우
+                        current_metadata_ids = {"metadata_id2", "metadata_id4"}
+                        '''
 
                 # 5. NOT 조건 처리
                 if condition.not_condition:
@@ -97,32 +133,73 @@ class TagService:
                     for tag in condition.not_condition:
                         if tag in tag_doc['tag']:
                             not_metadata_ids.update(tag_doc['tag'][tag])
-                    # difference(): 차집합 (A - B = A에는 있고 B에는 없는 요소들)
-                    current_metadata_ids = current_metadata_ids - not_metadata_ids
+                            '''
+                            not_metadata_ids = {"metadata_id5", "metadata_id6"}
+                            '''
+                    current_metadata_ids = current_metadata_ids.difference(not_metadata_ids)
+                    '''
+                    현재 예시에서는 not_condition이 비어있으므로 변화 없음
+                    current_metadata_ids = {"metadata_id2"}
+                    '''
 
-                # 6. 현재 condition의 결과를 전체 결과에 추가 (OR 연산)
+                # 6. 현재 condition의 결과를 전체 결과에 추가 (각 고급 연산 결과 간에는 OR 연산 수행)
                 matching_metadata_ids.update(current_metadata_ids)
+                '''
+                matching_metadata_ids = {"metadata_id2"}
+                '''
 
-            # 7. metadata 컬렉션에서 실제 파일 경로 찾기
+            # 7. metadata 아이디로 images 컬렉션에서 image 정보 가져오고, metadata 컬렉션에서 실제 파일 경로 찾기
             if matching_metadata_ids:
-                # $in: MongoDB의 배열 포함 연산자
                 query = {"_id": {"$in": [ObjectId(id) for id in matching_metadata_ids]}}
-                s3_paths = []
-                docs = await self.collection_images.find(
-                    query
-                ).to_list(length=None)
+                image_data = []
+                '''
+                query = {"_id": {"$in": [ObjectId("metadata_id2")]}
+                '''
+                docs = await self.collection_images.find(query).to_list(length=None)
+                '''
+                docs = [
+                    {
+                        "_id": ObjectId("image_id1"),
+                        "metadataId": "metadata_id1",
+                        "featureId": "feature_id1"
+                    },
+                    {
+                        "_id": ObjectId("image_id2"),
+                        "metadataId": "metadata_id2",
+                        "featureId": "feature_id2"
+                    }
+                ]
+                '''
                 
-                for doc in docs: 
-                    metadata = await self.collection_metadata.find(
+                for doc in docs:
+                    metadata = await self.collection_metadata.find_one(
                         {"_id": ObjectId(doc["metadataId"])}
-                    ).to_list(length=None)
+                    )
+                    '''
+                    metadata = {
+                        "_id": ObjectId("metadata_id1"),
+                        "fileList": ["s3://bucket/path/to/image1.jpg"],
+                        "metadata": {
+                            "branch": "branch1",
+                            "process": "process1",
+                            ...
+                        }
+                    }
+                    '''
                     
-                    if "fileList" in metadata[0]:
-                        s3_paths.extend(metadata[0]["fileList"])
-            
-                return s3_paths
+                    if metadata and "fileList" in metadata and metadata["fileList"]:
+                        image_data[str(doc["_id"])] = metadata["fileList"][0]
+                        '''
+                        image_dict = {
+                            "image_id1": "s3://bucket/path/to/image1.jpg",
+                            "image_id2": "s3://bucket/path/to/image2.jpg"
+                        }
+                        '''
+                
+                return image_data
 
             return []
+
         except Exception as e:
             raise HTTPException(
                 status_code=500,
