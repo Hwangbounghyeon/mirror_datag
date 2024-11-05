@@ -4,7 +4,16 @@ import { cookies } from "next/headers";
 
 import { LoginResponseType, RefreshResponseType } from "@/types/auth";
 
-export const check_auth = async (email: string, password: string) => {
+export const check_auth = async (formData: FormData) => {
+  const email = formData.get("email");
+  const password = formData.get("password");
+  if (!email || !password) {
+    return {
+      status: 400,
+      error: "Email and password are required",
+    };
+  }
+  console.log("login try");
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
@@ -17,14 +26,19 @@ export const check_auth = async (email: string, password: string) => {
         cache: "no-store",
       }
     );
+    console.log("response", response);
 
     if (!response.ok) {
+      console.log("login fail");
       return {
         error: "Invalid email or password",
         status: response.status,
       };
     }
+    console.log("login success");
+
     const data: LoginResponseType = await response.json();
+    console.log(data);
     const cookieStore = await cookies();
     cookieStore.set({
       name: "refreshToken",
@@ -42,6 +56,8 @@ export const check_auth = async (email: string, password: string) => {
       },
     };
   } catch (error) {
+    console.log("login fail");
+
     return {
       error: "Something went wrong",
       status: 500,

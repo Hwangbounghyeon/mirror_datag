@@ -1,16 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-interface UserInfo {
-  user_id: number;
-  name: string;
-  email: string;
-  department_id: number;
-  is_superuser: boolean;
-}
+import { UserType } from "@/types/auth";
 
 interface UserInfoState {
   isLogin: boolean;
-  userInfo: UserInfo | null;
+  userInfo: UserType | null;
 }
 
 const initialState: UserInfoState = {
@@ -22,9 +15,9 @@ const userInfoSlice = createSlice({
   name: "userInfo",
   initialState,
   reducers: {
-    setUserInfo: (state, action: PayloadAction<UserInfoState>) => {
+    setUserInfo: (state, action: PayloadAction<UserType>) => {
       state.isLogin = true;
-      state.userInfo = action.payload.userInfo;
+      state.userInfo = action.payload;
     },
     clearUserInfo: (state) => {
       state.isLogin = false;
