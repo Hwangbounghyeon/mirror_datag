@@ -193,20 +193,24 @@ class DimensionReductionService:
         reduction_features: List[List[float]]
     ):
         try:
+            document = await collection_histories.find_one({"_id": ObjectId(history_id)})
+            if not document:
+                raise Exception(f"Document with id {history_id} not found")
+
             changed_results = ReductionResults.model_validate({
                 "imageIds": image_ids,
                 "reductionFeatures": reduction_features
             })
+            
+            update_data = {
+                "results": changed_results.model_dump(),
+                "isDone": True,
+                "updatedAt": datetime.now(timezone.utc)
+            }
 
             await collection_histories.update_one(
                 {"_id": ObjectId(history_id)},  # ID로 문서 찾기
-                {
-                    "$set": {
-                        "results": changed_results.model_dump(),  # Pydantic 모델을 dict로 변환
-                        "isDone": True,  # 작업 완료 표시
-                        "updatedAt": datetime.now()  # 수정 시간 업데이트
-                    }
-                }
+                {"$set": update_data}
             )
 
         except Exception as e:
