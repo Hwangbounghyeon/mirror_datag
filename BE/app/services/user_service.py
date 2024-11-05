@@ -188,7 +188,7 @@ class JWTManage:
     def __init__(self, db: Session):
         self.db = db
         self.secret_key = os.getenv('JWT_SECRET_KEY')
-        self.access_token_expire_minutes = 30
+        self.access_token_expire_minutes = 60
         self.refresh_token_expire_days = 7
         self.algorithm = "HS256"
     
@@ -207,20 +207,26 @@ class JWTManage:
         to_encode.update({"exp": expire})
         return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
     
-    def create_access_token(self, data: dict):
-        return self.create_token(data, is_refresh=False)
+    def create_access_token(self, user: Users):
+        user_data = {
+            "user_id": user.user_id,
+            "email": user.email,
+            "department_id": user.department_id,
+            "is_supervised": user.is_supervised
+        }
+        return self.create_token(user_data, is_refresh=False)
     
-    def create_refresh_token(self, data: dict):
-        return self.create_token(data, is_refresh=True)
+    def create_refresh_token(self, user_id: int):
+        return self.create_token({"user_id": user_id}, is_refresh=True)
         
     def verify_token(self, token: str):
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             return payload
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="토큰이 만료되었습니다.")
+            raise HTTPException(status_code=401, detail="토큰의 기간이 만료되었습니다.")
         except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="옳지 않은 토큰입니다.")
+            raise HTTPException(status_code=401, detail="사용할 수 없는 토큰입니다.")
 
 ## 4. 로그인
 class UserLogin:
@@ -243,23 +249,14 @@ class UserLogin:
                 status_code=401,
                 detail="비밀번호가 틀렸습니다."
             )
-
-        # 토큰에 포함될 데이터
-        token_data = {
-            "user_id": user.user_id,
-            "email": user.email,
-            "department_id": user.department_id,
-            "is_supervised": user.is_supervised
-        }
         
-        access_token = self.jwt_manage.create_access_token(token_data)
-        refresh_token = self.jwt_manage.create_refresh_token({"user_id": user.user_id})
+        access_token = self.jwt_manage.create_access_token(user)
+        refresh_token = self.jwt_manage.create_refresh_token(user.user_id)
         
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": token_data
         }
 
 ## 5. 로그아웃

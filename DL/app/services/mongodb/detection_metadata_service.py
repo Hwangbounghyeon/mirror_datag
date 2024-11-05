@@ -151,6 +151,14 @@ class ObjectDetectionMetadataService:
         try:
             existing_doc = await collection_tag_images.find_one()
 
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "tag": {}
+                }
+                await collection_tag_images.insert_one(new_document)
+                existing_doc = new_document
+
             current_images = existing_doc.get("tag", {}).get(str(tag_name))
 
             if current_images is None:

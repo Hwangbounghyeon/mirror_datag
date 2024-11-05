@@ -14,7 +14,7 @@ from bson import ObjectId
 
 from configs.mongodb import collection_upload_batches, collection_user_upload_batches
 from models.uploadbatch_models import UploadBatch
-from models.mariadb_users import UploadBatches, Departments
+from models.mariadb_users import Departments
 from dto.uploads_dto import UploadRequest
 from configs.s3 import upload_to_s3
 
@@ -111,20 +111,20 @@ class Upload:
     
     async def _analysis_data(self, upload_request: UploadRequest, file_urls: List[str]):
         if upload_request.task == "cls":
-            url = "http://192.168.100.103:8001/dl/api/cls"
+            url = "http://localhost:8001/dl/api/cls"
         else:
-            url = "http://192.168.100.103:8001/dl/api/det"
+            url = "http://localhost:8001/dl/api/det"
 
         if upload_request.department_id:
             department = self.db.query(Departments).filter(Departments.department_id == upload_request.department_id).first()
-            department_name = department.department_name if department else None
+            department_name = department.department_name if department else "None"
         else:
-            department_name = None
+            department_name = "None"
 
         data = {
             "image_urls": file_urls,
             "model_name": upload_request.model_name,
-            "department_name": department_name or "",
+            "department_name": department_name,
             "user_id": upload_request.user_id,
             "project_id": upload_request.project_id,
             "is_private": upload_request.is_private
@@ -157,6 +157,14 @@ class Upload:
         try:
             # 기존 document 확인
             existing_doc = await collection_user_upload_batches.find_one()
+
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "project": {}
+                }
+                await collection_user_upload_batches.insert_one(new_document)
+                existing_doc = new_document
 
             # project_id와 user_id에 해당하는 배열이 있는지 확인
             project_data = existing_doc.get("project", {})
