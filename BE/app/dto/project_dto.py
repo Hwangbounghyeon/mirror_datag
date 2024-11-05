@@ -26,7 +26,7 @@ class ProjectResponse(BaseModel):
     description: Optional[str] = ""
     user_id: int
     department : Optional[str] = ""
-    imageCount : Optional[int] = 0
+    image_count : Optional[int] = 0
     is_private: Optional[int] = 0
     created_at: datetime
     updated_at: datetime
