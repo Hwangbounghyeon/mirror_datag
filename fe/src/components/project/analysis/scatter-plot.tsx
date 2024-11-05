@@ -1,4 +1,3 @@
-// components/ScatterPlot.tsx
 'use client'
 
 import { useRef, useState, useEffect } from 'react';
@@ -71,11 +70,12 @@ const ScatterPlot = ({ data, onSelectPoints }: ScatterPlotProps) => {
         y: p.y,
         id: p.id,
       })),
-      backgroundColor: points.map(p => 
+      backgroundColor: labelColors[label] || 'rgba(0, 0, 0, 0.6)', // legend 색상용
+      pointBackgroundColor: points.map(p => 
         selectedPoints.includes(p.id) 
           ? 'rgba(255, 255, 255, 0.8)' 
           : labelColors[label] || 'rgba(0, 0, 0, 0.6)'
-      ),
+      ), // 포인트 색상용
       pointRadius: 8,
       pointHoverRadius: 10,
     })),
@@ -121,7 +121,19 @@ const ScatterPlot = ({ data, onSelectPoints }: ScatterPlotProps) => {
       },
       legend: {
         position: 'top' as const,
-      },
+        labels: {
+          usePointStyle: false,  // legend에서 점 스타일 사용 안 함
+          generateLabels: (chart: any) => {
+            const datasets = chart.data.datasets;
+            return datasets.map((dataset: any, i: number) => ({
+              text: dataset.label,
+              fillStyle: dataset.backgroundColor,
+              hidden: !chart.isDatasetVisible(i),
+              index: i
+            }));
+          }
+        }
+      }
     },
     responsive: true,
     maintainAspectRatio: false,

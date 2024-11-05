@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Button, Modal, ModalContent, useDisclosure } from "@nextui-org/react";
 import Image from "next/image";
 
-
 import { ImagesType } from "@/types/ImagesType";
 import ImageList from "@/components/project/dataset/image-list";
 import FilterModal from "@/components/project/dataset/filter-modal";
