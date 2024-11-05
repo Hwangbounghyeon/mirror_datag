@@ -1,5 +1,5 @@
 from dto.project_dto import ProjectRequest
-from configs.mongodb import collection_permissions, collection_projects
+from configs.mongodb import collection_project_permissions, collection_projects
 
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
 from dto.common_dto import ErrorResponse
-from configs.mongodb import collection_permissions
 from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from typing import List
 
@@ -43,7 +42,7 @@ class ProjectService:
         new_project = await collection_projects.insert_one(project)
         project_id = str(new_project.inserted_id)
         
-        document = await collection_permissions.find_one({})
+        document = await collection_project_permissions.find_one({})
         
         # 문서가 없을 경우 새로운 문서 생성
         if document is None:
@@ -51,7 +50,7 @@ class ProjectService:
                 "user": {user_id: {"view": [], "edit": []} for user_id in request.accesscontrol.view_users},
                 "department": {dept: {"view": [], "edit": []} for dept in request.accesscontrol.view_departments}
             }
-            await collection_permissions.insert_one(new_document)
+            await collection_project_permissions.insert_one(new_document)
             document = new_document
         
             
@@ -59,12 +58,12 @@ class ProjectService:
             user_key = f"user.{user_id}"
             if user_id not in document.get("user", {}):
                 # `user` 내에 해당 ID가 없으면 새로운 리스트 추가
-                await collection_permissions.update_one(
+                await collection_project_permissions.update_one(
                     {"_id": document["_id"]},
                     {"$set": {user_key: {"view": [], "edit": []}}}
                 )
             # view 리스트에 project_id 추가
-            await collection_permissions.update_one(
+            await collection_project_permissions.update_one(
                 {"_id": document["_id"]},
                 {"$addToSet": {f"{user_key}.view": project_id}}
             )
@@ -72,11 +71,11 @@ class ProjectService:
         for user_id in request.accesscontrol.edit_users:
             user_key = f"user.{user_id}"
             if user_id not in document.get("user", {}):
-                await collection_permissions.update_one(
+                await collection_project_permissions.update_one(
                     {"_id": document["_id"]},
                     {"$set": {user_key: {"view": [], "edit": []}}}
                 )
-            await collection_permissions.update_one(
+            await collection_project_permissions.update_one(
                 {"_id": document["_id"]},
                 {"$addToSet": {f"{user_key}.edit": project_id}}
             )
@@ -86,12 +85,12 @@ class ProjectService:
             department_key = f"department.{department}"
             if department not in document.get("department", {}):
                 # `department` 내에 해당 부서가 없으면 새로운 리스트 추가
-                await collection_permissions.update_one(
+                await collection_project_permissions.update_one(
                     {"_id": document["_id"]},
                     {"$set": {department_key: {"view": [], "edit": []}}}
                 )
             # view 리스트에 project_id 추가
-            await collection_permissions.update_one(
+            await collection_project_permissions.update_one(
                 {"_id": document["_id"]},
                 {"$addToSet": {f"{department_key}.view": project_id}}
             )
@@ -99,11 +98,11 @@ class ProjectService:
         for department in request.accesscontrol.edit_departments:
             department_key = f"department.{department}"
             if department not in document.get("department", {}):
-                await collection_permissions.update_one(
+                await collection_project_permissions.update_one(
                     {"_id": document["_id"]},
                     {"$set": {department_key: {"view": [], "edit": []}}}
                 )
-            await collection_permissions.update_one(
+            await collection_project_permissions.update_one(
                 {"_id": document["_id"]},
                 {"$addToSet": {f"{department_key}.edit": project_id}}
             )
@@ -115,7 +114,7 @@ class ProjectService:
 
         skip = (request.page - 1) * request.limit
         
-        user_permissions = await collection_permissions.find_one({f"user.{request.user_id}": {"$exists": True}})
+        user_permissions = await collection_project_permissions.find_one({f"user.{request.user_id}": {"$exists": True}})
         
         # 사용자 권한이 없을 경우 빈 리스트 반환
         if not user_permissions or str(request.user_id) not in user_permissions["user"]:
@@ -174,38 +173,38 @@ class ProjectService:
     
     # 1-3. 프로젝트 삭제
     async def delete_project(self, project_id: str):
-            # MariaDB에서 project 조회 및 삭제
-            delete_project = await collection_projects.delete_one({"_id": ObjectId(project_id)})
-            if delete_project.deleted_count == 0:
-                raise HTTPException(
-                    status_code=404,
-                    detail="프로젝트를 찾을 수 없습니다."
+        # MariaDB에서 project 조회 및 삭제
+        delete_project = await collection_projects.delete_one({"_id": ObjectId(project_id)})
+        if delete_project.deleted_count == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="프로젝트를 찾을 수 없습니다."
+            )
+            
+        document = await collection_project_permissions.find_one({})
+
+        if document:
+            # user 필드에서 project_id 제거
+            for user_id, permissions in document.get("user", {}).items():
+                await collection_project_permissions.update_one(
+                    {"_id": document["_id"]},
+                    {"$pull": {f"user.{user_id}.view": project_id}}
                 )
-                
-            document = await collection_permissions.find_one({})
+                await collection_project_permissions.update_one(
+                    {"_id": document["_id"]},
+                    {"$pull": {f"user.{user_id}.edit": project_id}}
+                )
 
-            if document:
-                # user 필드에서 project_id 제거
-                for user_id, permissions in document.get("user", {}).items():
-                    await collection_permissions.update_one(
-                        {"_id": document["_id"]},
-                        {"$pull": {f"user.{user_id}.view": project_id}}
-                    )
-                    await collection_permissions.update_one(
-                        {"_id": document["_id"]},
-                        {"$pull": {f"user.{user_id}.edit": project_id}}
-                    )
-
-                # department 필드에서 project_id 제거
-                for department, permissions in document.get("department", {}).items():
-                    await collection_permissions.update_one(
-                        {"_id": document["_id"]},
-                        {"$pull": {f"department.{department}.view": project_id}}
-                    )
-                    await collection_permissions.update_one(
-                        {"_id": document["_id"]},
-                        {"$pull": {f"department.{department}.edit": project_id}}
-                    )
+            # department 필드에서 project_id 제거
+            for department, permissions in document.get("department", {}).items():
+                await collection_project_permissions.update_one(
+                    {"_id": document["_id"]},
+                    {"$pull": {f"department.{department}.view": project_id}}
+                )
+                await collection_project_permissions.update_one(
+                    {"_id": document["_id"]},
+                    {"$pull": {f"department.{department}.edit": project_id}}
+                )
 
 
 # 2. 이름 검색 및 부서 불러오기
@@ -215,8 +214,8 @@ class ProjectSubService:
     
     # 2-1. 부서 리스트 불러오기
     async def get_department_list(self):
-            departments = self.db.query(Departments).all()
-            return [DepartmentResponse.model_validate(dept).model_dump() for dept in departments]
+        departments = self.db.query(Departments).all()
+        return [DepartmentResponse.model_validate(dept).model_dump() for dept in departments]
     
     # 2-2. 이름 검색
     async def search_user_name(self, name: str):

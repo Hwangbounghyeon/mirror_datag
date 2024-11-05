@@ -11,14 +11,14 @@ database = client.get_database("S11P31S108")
 collection_metadata = database.get_collection("metadata")
 collection_features = database.get_collection("features")
 collection_histories = database.get_collection("histories")
-collection_permissions = database.get_collection("permissions")
-collection_project_history = database.get_collection("projectHistory")
-collection_tagimages = database.get_collection("tagImages")
-collection_project_histories = database.get_collection("projectHistories")
 collection_upload_batches = database.get_collection("uploadBatches")
-collection_user_upload_batches = database.get_collection("userUploadBatches")
 collection_images = database.get_collection("images")
 collection_projects = database.get_collection("projects")
+
+collection_tag_images = database.get_collection("tagImages")
+collection_project_permissions = database.get_collection("projectPermissions")
+collection_project_histories = database.get_collection("projectHistories")
+collection_user_upload_batches = database.get_collection("userUploadBatches")
 
 def get_database_mongodb():
     try:

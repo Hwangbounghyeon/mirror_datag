@@ -36,6 +36,14 @@ class ImageService:
         try:
             existing_doc = await collection_project_images.find_one()
 
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "project": {}
+                }
+                await collection_project_images.insert_one(new_document)
+                existing_doc = new_document
+
             current_images = existing_doc.get("project", {}).get(str(project_id))
 
             if current_images is None:
@@ -58,32 +66,42 @@ class ImageService:
         try:
             existing_doc = await collection_image_permissions.find_one()
 
-            image_permissions = existing_doc.get("image", {}).get(str(image_id))
-
-            if image_permissions is None:
-                image_permissions = {
-                    "user": [],
-                    "project": [], 
-                    "department": []
+            # 문서가 없을 경우 새로운 문서 생성
+            if existing_doc is None:
+                new_document = {
+                    "user": {},
+                    "department": {},
+                    "project": {}
                 }
+                await collection_image_permissions.insert_one(new_document)
+                existing_doc = new_document
 
-            current_user_permissions = image_permissions.get("user", [])
-            current_project_permissions = image_permissions.get("project", [])
-            current_department_permissions = image_permissions.get("department", [])
+            user_permissions = existing_doc.get("user", {}).get(str(user_id), [])
+            department_permissions = existing_doc.get("department", {}).get(str(department_name), [])
+            project_permissions = existing_doc.get("project", {}).get(str(project_id), [])
 
-            updated_user_permissions = list(set(current_user_permissions + [user_id]))
-            updated_project_permissions = list(set(current_project_permissions + [project_id]))
-            updated_department_permissions = list(set(current_department_permissions + [department_name]))
+            # 권한 업데이트
+            updated_user_permissions = list(set(user_permissions + [image_id]))
+            updated_department_permissions = list(set(department_permissions + [image_id]))
+            updated_project_permissions = list(set(project_permissions + [image_id]))
 
+            # 업데이트할 데이터 구성
+            update_data = {
+                "user": existing_doc.get("user", {}),
+                "department": existing_doc.get("department", {}),
+                "project": existing_doc.get("project", {})
+            }
+            
+            # 데이터 업데이트
+            update_data["user"][str(user_id)] = updated_user_permissions
+            update_data["department"][str(department_name)] = updated_department_permissions
+            update_data["project"][str(project_id)] = updated_project_permissions
+
+            # MongoDB 업데이트
             await collection_image_permissions.update_one(
                 {},
-                {
-                    "$set": {
-                        f"image.{str(image_id)}.user": updated_user_permissions,
-                        f"image.{str(image_id)}.project": updated_project_permissions,
-                        f"image.{str(image_id)}.department": updated_department_permissions
-                    }
-                }
+                {"$set": update_data}
             )
+            
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
