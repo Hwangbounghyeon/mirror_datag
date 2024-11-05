@@ -12,6 +12,7 @@ from routers.users_router import router as users_router
 from routers.project_router import router as project_router
 from routers.download_router import router as download_router
 from routers.tags_router import router as tags_router
+from routers.image_detail_router import router as image_detail_router
 
 import asyncio
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, UploadFile, File
@@ -41,6 +42,7 @@ main_router.include_router(users_router)
 main_router.include_router(project_router)
 main_router.include_router(download_router)
 main_router.include_router(tags_router)
+main_router.include_router(image_detail_router)
 
 app.include_router(main_router)
 
