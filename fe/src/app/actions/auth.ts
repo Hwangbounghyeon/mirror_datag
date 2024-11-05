@@ -128,3 +128,28 @@ export const logout = async () => {
     return null;
   }
 };
+
+export const getAccessToken = async () => {
+  const cookieStore = cookies();
+  const accessToken = cookieStore.get("accessToken");
+  const refreshToken = cookieStore.get("refreshToken");
+
+  if (accessToken) {
+    return accessToken.value;
+  } else {
+    if (refreshToken) {
+      const result = await refreshAccessToken();
+      if (result) {
+        cookieStore.set({
+          name: "accessToken",
+          value: result,
+          httpOnly: true,
+          maxAge: 60 * 20,
+        });
+      }
+      return result;
+    } else {
+      return null;
+    }
+  }
+};
