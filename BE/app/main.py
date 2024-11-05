@@ -12,6 +12,7 @@ from routers.users_router import router as users_router
 from routers.project_router import router as project_router
 from routers.download_router import router as download_router
 from routers.tags_router import router as tags_router
+from routers.image_detail_router import router as image_detail_router
 from routers.history_router import router as history_router
 from routers.search_router import router as search_router
 
@@ -43,6 +44,7 @@ main_router.include_router(users_router)
 main_router.include_router(project_router)
 main_router.include_router(download_router)
 main_router.include_router(tags_router)
+main_router.include_router(image_detail_router)
 main_router.include_router(history_router)
 main_router.include_router(search_router)
 
