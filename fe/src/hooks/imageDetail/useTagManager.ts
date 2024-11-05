@@ -1,11 +1,10 @@
 "use client";
 
 import { tagApi } from "@/api/detail/tagApi";
-import { Tag } from "@/types/auth";
 import { useState } from "react";
 
 export function useTagManager(image_id: number) {
-    const [tags, setTags] = useState<Tag[]>([]);
+    const [tags, setTags] = useState<string[]>([]);
 
     const addTag = async (tagName: string) => {
         try {
@@ -20,14 +19,14 @@ export function useTagManager(image_id: number) {
         }
     };
 
-    const removeTag = async (tag_id: number) => {
+    const removeTag = async (tag_name: string) => {
         try {
             const request = {
                 image_id: image_id,
-                tag_id: tag_id,
+                tag_name: tag_name,
             };
             await tagApi.delete(request);
-            setTags((prevTags) => prevTags.filter((tag) => tag.id !== tag_id));
+            setTags((prevTags) => prevTags.filter((tag) => tag !== tag_name));
         } catch (error) {
             console.error("Failed to remove tag:", error);
         }

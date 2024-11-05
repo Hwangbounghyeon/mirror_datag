@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Select, SelectItem, Button } from "@nextui-org/react";
 import { IoCloseOutline } from "react-icons/io5";
 
 interface FilterRow {
@@ -52,9 +53,9 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                         {index === 0 ? (
                             <span className="text-sm"></span>
                         ) : (
-                            <select
-                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md"
-                                value={row.logic}
+                            <Select
+                                size="sm"
+                                defaultSelectedKeys={[row.logic]}
                                 onChange={(e) => {
                                     const newRows = [...filterRows];
                                     newRows[index].logic = e.target.value as
@@ -63,128 +64,111 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                                     setFilterRows(newRows);
                                 }}
                             >
-                                <option value="and">And</option>
-                                <option value="or">Or</option>
-                            </select>
+                                <SelectItem key="and">And</SelectItem>
+                                <SelectItem key="or">Or</SelectItem>
+                            </Select>
                         )}
                     </div>
-
                     <div className="flex-1 flex items-center space-x-2">
-                        <select
-                            className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded-md"
-                            value={row.field}
+                        <Select
+                            size="sm"
+                            placeholder="Select field"
+                            defaultSelectedKeys={row.field ? [row.field] : []}
                             onChange={(e) => {
                                 const newRows = [...filterRows];
                                 newRows[index].field = e.target.value;
                                 setFilterRows(newRows);
                             }}
+                            classNames={{
+                                base: "max-w-[150px]",
+                            }}
                         >
-                            <option value="">Select field</option>
                             {fields.map((field) => (
-                                <option key={field} value={field}>
-                                    {field}
-                                </option>
+                                <SelectItem key={field}>{field}</SelectItem>
                             ))}
-                        </select>
-
-                        <select
-                            className="w-24 px-2 py-1.5 text-sm border border-gray-200 rounded-md"
-                            value={row.operator}
+                        </Select>
+                        <Select
+                            size="sm"
+                            defaultSelectedKeys={[row.operator]}
                             onChange={(e) => {
                                 const newRows = [...filterRows];
                                 newRows[index].operator = e.target.value;
                                 setFilterRows(newRows);
                             }}
+                            classNames={{
+                                base: "max-w-[100px]",
+                            }}
                         >
                             {operators.map((op) => (
-                                <option key={op} value={op}>
-                                    {op}
-                                </option>
+                                <SelectItem key={op}>{op}</SelectItem>
                             ))}
-                        </select>
-
-                        <div className="flex-1 relative">
-                            <div className="flex flex-col px-2 py-1.5 border border-gray-200 rounded-md">
-                                <select
-                                    className="border-none focus:outline-none text-sm"
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (
-                                            value &&
-                                            !row.values.includes(value)
-                                        ) {
-                                            const newRows = [...filterRows];
-                                            newRows[index].values = [
-                                                ...newRows[index].values,
-                                                value,
-                                            ];
-                                            setFilterRows(newRows);
-                                        }
-                                        e.target.value = "";
-                                    }}
-                                >
-                                    <option value="">Select value</option>
-                                    {values
-                                        .filter((v) => !row.values.includes(v))
-                                        .map((value) => (
-                                            <option key={value} value={value}>
-                                                {value}
-                                            </option>
-                                        ))}
-                                </select>
-                                <div className="flex flex-col gap-1">
-                                    {row.values.map((value) => (
-                                        <span
-                                            key={value}
-                                            className="inline-flex items-center justify-between px-2 py-1 rounded-md text-xs"
-                                        >
-                                            {value}
-                                            <button
-                                                onClick={() => {
-                                                    const newRows = [
-                                                        ...filterRows,
-                                                    ];
-                                                    newRows[index].values =
-                                                        newRows[
-                                                            index
-                                                        ].values.filter(
-                                                            (v) => v !== value
-                                                        );
-                                                    setFilterRows(newRows);
-                                                }}
-                                                className="hover:bg-gray-200 rounded-full w-4 h-4 flex items-center justify-center"
-                                            >
-                                                <span className="me-1">×</span>
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                if (filterRows.length > 1) {
-                                    setFilterRows(
-                                        filterRows.filter((_, i) => i !== index)
-                                    );
-                                }
+                        </Select>
+                        <Select
+                            size="sm"
+                            selectionMode="multiple"
+                            placeholder="Select values"
+                            selectedKeys={new Set(row.values)}
+                            onSelectionChange={(keys) => {
+                                const selectedValues = Array.from(
+                                    keys as Set<string>
+                                );
+                                const newRows = [...filterRows];
+                                newRows[index].values = selectedValues;
+                                setFilterRows(newRows);
                             }}
-                            className="p-1 hover:bg-gray-100 rounded-full"
                         >
-                            <IoCloseOutline />
-                        </button>
+                            {values.map((value) => (
+                                <SelectItem key={value}>{value}</SelectItem>
+                            ))}
+                        </Select>
                     </div>
+                    <Button
+                        isIconOnly
+                        radius="full"
+                        size="sm"
+                        onClick={() => {
+                            if (filterRows.length > 1) {
+                                setFilterRows(
+                                    filterRows.filter((_, i) => i !== index)
+                                );
+                            } else {
+                                setFilterRows([
+                                    {
+                                        id: Date.now().toString(),
+                                        logic: "and",
+                                        field: "",
+                                        operator: "is",
+                                        values: [],
+                                    },
+                                ]);
+                            }
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                    >
+                        <IoCloseOutline />
+                    </Button>
                 </div>
             ))}
-
-            <div className="flex justify-end pt-3">
-                <button
-                    onClick={onDone}
-                    className="px-4 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+            <div className="flex justify-end pt-3 gap-4">
+                <Button
+                    color="danger"
+                    onPress={() => {
+                        setFilterRows([
+                            {
+                                id: Date.now().toString(),
+                                logic: "and",
+                                field: "",
+                                operator: "is",
+                                values: [],
+                            },
+                        ]);
+                    }}
                 >
+                    Reset
+                </Button>
+                <Button color="primary" onPress={onDone}>
                     Done
-                </button>
+                </Button>
             </div>
         </div>
     );

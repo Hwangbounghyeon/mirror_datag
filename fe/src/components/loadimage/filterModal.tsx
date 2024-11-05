@@ -1,24 +1,16 @@
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Button,
-} from "@nextui-org/react";
-import { IoCloseOutline } from "react-icons/io5";
+import { Modal, ModalContent, ModalHeader, ModalBody } from "@nextui-org/react";
 import FilterComponent from "./filterBox";
 
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onDone?: () => void;
+    onDone: () => void;
 }
 
 export const FilterModal = ({ isOpen, onClose, onDone }: FilterModalProps) => {
     return (
         <Modal
-            size="2xl"
+            size="3xl"
             isOpen={isOpen}
             onClose={onClose}
             classNames={{
@@ -37,12 +29,7 @@ export const FilterModal = ({ isOpen, onClose, onDone }: FilterModalProps) => {
                         </ModalHeader>
 
                         <ModalBody>
-                            <FilterComponent
-                                onDone={() => {
-                                    if (onDone) onDone();
-                                    onClose();
-                                }}
-                            />
+                            <FilterComponent onDone={onDone} />
                         </ModalBody>
                     </>
                 )}

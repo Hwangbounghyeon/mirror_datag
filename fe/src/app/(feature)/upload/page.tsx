@@ -25,7 +25,7 @@ export default function UploadPage() {
         <PageContainer>
             <PageHeader
                 title="Upload Image"
-                rightButtonText="Move To Dataset"
+                rightButtonText="Upload Images"
                 onRightButtonClick={handleMoveToDataset}
                 onPrevious={goBack}
             />
