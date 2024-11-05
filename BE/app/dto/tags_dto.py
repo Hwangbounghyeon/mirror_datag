@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 class TagImageResponseDTO(BaseModel):
     tags: List[str] 
-    paths: List[str]
+    images: List[Dict[str, str]]
 
 
 class ConditionDTO(BaseModel):
