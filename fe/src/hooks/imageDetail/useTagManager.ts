@@ -3,8 +3,8 @@
 import { tagApi } from "@/api/detail/tagApi";
 import { useState } from "react";
 
-export function useTagManager(image_id: number) {
-    const [tags, setTags] = useState<string[]>([]);
+export function useTagManager(image_id: number, initialTags: string[]) {
+    const [tags, setTags] = useState<string[]>(initialTags);
 
     const addTag = async (tagName: string) => {
         try {
