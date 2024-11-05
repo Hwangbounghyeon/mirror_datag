@@ -3,6 +3,10 @@
 import { cookies } from "next/headers";
 
 import { LoginResponseType, RefreshResponseType } from "@/types/auth";
+import {
+  accessTokenDuration,
+  refreshTokenDuration,
+} from "@/lib/constants/token-duration";
 
 export const check_auth = async (formData: FormData) => {
   const email = formData.get("email");
@@ -100,7 +104,13 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       name: "accessToken",
       value: data.access_token,
       httpOnly: true,
-      maxAge: 60 * 20,
+      maxAge: accessTokenDuration,
+    });
+    cookieStore.set({
+      name: "refreshToken",
+      value: data.refresh_token,
+      httpOnly: true,
+      maxAge: refreshTokenDuration,
     });
     return data.access_token;
   } catch (error) {
@@ -139,14 +149,6 @@ export const getAccessToken = async () => {
   } else {
     if (refreshToken) {
       const result = await refreshAccessToken();
-      if (result) {
-        cookieStore.set({
-          name: "accessToken",
-          value: result,
-          httpOnly: true,
-          maxAge: 60 * 20,
-        });
-      }
       return result;
     } else {
       return null;
