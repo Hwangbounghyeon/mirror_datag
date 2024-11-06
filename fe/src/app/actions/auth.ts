@@ -60,7 +60,7 @@ export const check_auth = async (formData: FormData) => {
       value: data.data.refresh_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-      maxAge: 60 * 60 * 7,
+      maxAge: refreshTokenDuration,
     });
 
     cookieStore.set({
@@ -68,7 +68,7 @@ export const check_auth = async (formData: FormData) => {
       value: data.data.access_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-      maxAge: 60 * 20,
+      maxAge: accessTokenDuration,
     });
 
     return {
