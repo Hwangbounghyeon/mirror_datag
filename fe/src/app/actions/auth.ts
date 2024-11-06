@@ -10,6 +10,7 @@ import {
 import { DefaultResponseType } from "@/types/default";
 
 export const check_auth = async (formData: FormData) => {
+  console.log("check_auth");
   const email = formData.get("email");
   const password = formData.get("password");
   if (!email || !password) {
@@ -33,11 +34,11 @@ export const check_auth = async (formData: FormData) => {
     );
     console.log("response", response);
 
-    if (!response.ok) {
-      console.log("login fail");
+    if (!response || !response.ok || response.status >= 400) {
+      console.log("login fail here");
       return {
-        error: "Invalid email or password",
-        status: response.status,
+        error: "유효하지 않는 이메일 또는 비밀번호입니다.",
+        status: 400,
       };
     }
 
@@ -77,7 +78,7 @@ export const check_auth = async (formData: FormData) => {
       },
     };
   } catch (error) {
-    console.log("login fail");
+    console.error("Login failed:", error);
     return {
       error: "Something went wrong",
       status: 500,
