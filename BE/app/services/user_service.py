@@ -283,12 +283,10 @@ class UserLogin:
                 detail="비밀번호가 틀렸습니다."
             )
         
-        access_token = self.jwt_manage.create_access_token(user)
-        refresh_token = self.jwt_manage.create_refresh_token(user.user_id)
         token_data = {
-            "access_token": access_token,
-            "refresh_token": refresh_token
-            }
+            "access_token": self.jwt_manage.create_access_token(user),
+            "refresh_token": self.jwt_manage.create_refresh_token(user.user_id)
+        }
         
         return TokenResponse.model_validate(token_data)
 
@@ -329,7 +327,8 @@ class UserLogout:
             if ttl > 0:
                 self.redis_client.setex(f"bl_access_token:{access_token}", ttl, 1)
             
-            return {"message": "성공적으로 로그아웃이 되었습니다"}
+            return {"message": "로그아웃 되었습니다"}
+        
         except HTTPException as http_exc:
             raise http_exc
         except Exception as e:
