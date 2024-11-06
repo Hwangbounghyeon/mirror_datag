@@ -1,23 +1,29 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import SideHistories from "@/components/project/analysis/side-histories";
 import MainAnalysis from "@/components/project/analysis/main-analysis";
+import { Suspense } from "react";
 
-import { HistoryListData } from "@/types/historyType";
+interface PageProps {
+  params: {
+    project_id: string;
+  };
+  searchParams: {
+    history_id?: string;
+  };
+}
 
-const Page = ({ params }: { params: { project_id: string } }) => {
-  const [selectedHistory, setSelectedHistory] = useState<string | null>(null);
-
+const Page = ({ params, searchParams }: PageProps) => {
   return (
-    <div className="h-full flex flex-col gap-[1rem] mx-[3rem] pt-[2rem]">
-      <div className="w-full h-[3rem] flex justify-between">
-        <div className="text-3xl">Analysis</div>
-      </div>
-      <div className="w-full flex flex-grow">
-        <SideHistories projectId={params.project_id} setSelectedHistory={setSelectedHistory}/>
-        <MainAnalysis selectedHistory={selectedHistory}/>
-      </div>
-    </div>
+    <Suspense
+      key={
+        "project_id=" +
+        params.project_id +
+        "&history_id=" +
+        (searchParams.history_id || "")
+      }
+      fallback={<div>Loading...</div>}
+    >
+      <MainAnalysis selectedHistory={searchParams.history_id} />
+    </Suspense>
   );
 };
 
