@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
 
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import CommonResponse
 from dto.uploads_dto import UploadRequest
 from services.upload_service import Upload
 from configs.mariadb import get_database_mariadb
@@ -30,8 +30,4 @@ async def image_upload(
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
-        raise ErrorResponse(
-            code="Upload Error",
-            message="이미지 업로드에 실패하였습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
