@@ -41,6 +41,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal창
   const [verificationCode, setVerificationCode] = useState(""); // 인증 코드
   const [isVerifying, setIsVerifying] = useState(false); //인증 시도 중인가?
+  const [failVerifying, setFailVerifying] = useState(false); //인증 실패
   const [userEmail, setUserEmail] = useState(""); // Store email for verification
   const router = useRouter();
   const {
@@ -99,15 +100,19 @@ export const SignForm = ({ department_list }: SignFormProps) => {
   // 이메일 인증 로직
   const handleVerificationSubmit = async () => {
     setIsVerifying(true);
+    setFailVerifying(false);
     try {
+      const queryString = new URLSearchParams({
+        email: userEmail,
+        code: verificationCode,
+      }).toString();
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verification`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verification?${queryString}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email: userEmail, code: verificationCode }),
         }
       );
 
@@ -115,6 +120,11 @@ export const SignForm = ({ department_list }: SignFormProps) => {
         onClose();
         // Handle successful verification (e.g., redirect or show success message)
         router.push("/login");
+      } else {
+        setFailVerifying(true);
+        throw Error("response", {
+          cause: response,
+        });
       }
     } catch (error) {
       console.error("Verification failed:", error);
@@ -342,6 +352,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
               {userEmail}로 전송된 인증 코드를 입력해주세요.
             </p>
             <Input
+              isInvalid={failVerifying}
               autoFocus
               label="인증 코드"
               placeholder="인증 코드 입력하세요"
