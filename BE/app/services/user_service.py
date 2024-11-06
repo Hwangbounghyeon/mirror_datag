@@ -61,7 +61,7 @@ class EmailValidate:
             
             # Redis 클라이언트 설정(같은 네트워크로 묶을 것이므로 localhost에 연결, decode_response=True로 하면 반환값을 자동으로 문자열로 디코딩)
             self.redis_client = redis.Redis(
-                host='localhost', 
+                host='k11s108.p.ssafy.io',
                 port=redis_port,
                 password=redis_password,
                 db=0,
