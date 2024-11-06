@@ -1,17 +1,17 @@
 import apiClient from "../client";
 
 interface TagList {
-    image_id: number;
+    image_id: string;
     tag_name: string[];
 }
 
 interface AddTagRequest {
-    image_id: number;
+    image_id: string;
     tag_name: string;
 }
 
 interface DeleteTagRequest {
-    image_id: number;
+    image_id: string;
     tag_name: string;
 }
 
@@ -23,8 +23,8 @@ export const tagApi = {
         });
     },
 
-    add: async (request: AddTagRequest): Promise<string> => {
-        return apiClient<string>("/loadImage", {
+    add: async (request: AddTagRequest): Promise<string[]> => {
+        return apiClient<string[]>("/loadImage", {
             method: "PATCH",
             body: JSON.stringify(request),
             cache: "no-store",

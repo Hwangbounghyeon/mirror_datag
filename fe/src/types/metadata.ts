@@ -19,7 +19,7 @@ interface Metadata {
     uploader: number;
     isPrivate: boolean;
     accessControl: AccessControl;
-    createdAt: Date;
+    createdAt: string;
     mode: string;
 }
 
@@ -33,7 +33,7 @@ interface Detection {
 interface Prediction {
     fileIndex: number;
     detections: Detection[];
-    inferenceStartedAt: Date;
+    inferenceStartedAt: string;
     elapsedTime: number;
     tags: string[];
 }

@@ -8,7 +8,7 @@ export default async function ImageDetailPage({
     params: { imageId: string };
 }) {
     const imageId = Number(params.imageId);
-    const data = await loadImageDetail(imageId);
+    const data = await loadImageDetail("6729792cae005e3836525cae");
 
     const initialAuthorities = data.data.access_control.user.map((user) => ({
         id: user.uid,
