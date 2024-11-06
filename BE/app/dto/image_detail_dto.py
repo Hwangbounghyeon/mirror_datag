@@ -34,3 +34,11 @@ class ImageDetailAuthRequest(BaseModel):
 class ImageDetailAuthResponse(BaseModel):
     image_id: str
     auth: List[AuthDetail]
+
+class ImageDetailTagDeleteRequest(BaseModel):
+    image_id: str
+    delete_tag_list: List[str]
+
+class ImageDetailTagDeleteResponse(BaseModel):
+    image_id: str
+    tag_name_list: List[str]
