@@ -19,7 +19,6 @@ export const check_auth = async (formData: FormData) => {
       error: "Email and password are required",
     };
   }
-  console.log("login try");
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
@@ -32,19 +31,20 @@ export const check_auth = async (formData: FormData) => {
         cache: "no-store",
       }
     );
-    console.log("response", response);
+    console.log("login try result", response);
 
     if (!response || !response.ok || response.status >= 400) {
-      console.log("login fail here");
+      console.log("login fail here ---- ");
+      console.log(response);
       return {
         error: "유효하지 않는 이메일 또는 비밀번호입니다.",
-        status: 400,
+        status: 401,
       };
     }
 
     const data: DefaultResponseType<LoginResponseType> = await response.json();
 
-    if (!data?.data) {
+    if (!data?.data || !data.data.access_token) {
       console.log("login fail");
       return {
         error: "Invalid",
