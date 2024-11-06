@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime
 from bson import ObjectId
 
@@ -8,8 +8,9 @@ class Parameters(BaseModel):
     selectedTags: List[List[str]]
 
 class ReductionResults(BaseModel):
-    imageIds: List[str]
-    reductionFeatures: List[List[float]]
+    imageId: str
+    features: List[float]
+    predictions: Any
 
 class HistoryData(BaseModel):
     userId: int
@@ -18,6 +19,6 @@ class HistoryData(BaseModel):
     historyName: str
     isDone: bool
     parameters: Optional[Parameters] = None
-    results: Optional[ReductionResults] = None
+    results: Optional[List[ReductionResults]] = None
     createdAt: datetime
     updatedAt: datetime
