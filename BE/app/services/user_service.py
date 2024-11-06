@@ -61,7 +61,7 @@ class EmailValidate:
             
             # Redis 클라이언트 설정(같은 네트워크로 묶을 것이므로 localhost에 연결, decode_response=True로 하면 반환값을 자동으로 문자열로 디코딩)
             self.redis_client = redis.Redis(
-                host='localhost', 
+                host='k11s108.p.ssafy.io',
                 port=redis_port,
                 password=redis_password,
                 db=0,
@@ -71,18 +71,32 @@ class EmailValidate:
             self.redis_client.ping()
             
         except Exception as e:
-            print(f"Redis 연결 실패: {str(e)}")
             raise Exception(f"Redis 연결 실패: {str(e)}")
         
         self.verification_expire_seconds = 180
+        self.max_attempts = 5
+        self.attempt_expire_seconds = 3600
         
     async def send_verification_email(self, email: str, temp_user_data: dict):
-        verification_code = secrets.token_urlsafe(6)
-        
         # Redis에 인증 정보 저장
-        await self._store_verification_data(email, verification_code, temp_user_data)
-        
+                
         try:
+            # 이전 인증 시도 횟수 확인 후 진행
+            attempt_key = f"attempt:{email}"
+            attempt_count = self.redis_client.get(attempt_key)
+            
+            if attempt_count and int(attempt_count) >= self.max_attempts:
+                raise HTTPException(
+                    status_code=400,
+                    detail="이메일 인증 시도 너무 많습니다. 1시간 후에 다시 시도해주세요."
+                )
+            
+            # 인증 코드 생성
+            verification_code = secrets.token_urlsafe(6)
+            
+            # Redis에 인증 정보 저장
+            await self._store_verification_data(email, verification_code, temp_user_data)
+            
             await self._send_email(email, verification_code)
             return verification_code
         except Exception as e:
@@ -94,6 +108,7 @@ class EmailValidate:
             )
 
     async def verify_and_create_user(self, email: str, code: str):
+        
         # Redis에서 저장된 인증 정보 확인
         stored_data = await self._get_verification_data(email)
         if not stored_data:
@@ -129,17 +144,35 @@ class EmailValidate:
             )
 
     async def _store_verification_data(self, email: str, code: str, user_data: dict):
-        # 이메일 인증 Dict
-        verification_data = {
-            'code': code,
-            'user_data': user_data,
-            'created_at': datetime.now().isoformat()
-        }
-        self.redis_client.setex(
-            f"이메일 인증:{email}",
-            self.verification_expire_seconds,
-            json.dumps(verification_data)
-        )
+        try:
+            # Redis Transaction
+            pipe = self.redis_client.pipeline()
+            
+            verification_key = f"이메일 인증:{email}"
+            attempt_key  = f"attempt:{email}"
+            
+            # 이전 인증 데이터 삭제
+            pipe.delete(verification_key)
+            
+            verification_data = {
+                'code': code,
+                'user_data': user_data,
+                'created_at': datetime.now().isoformat(),
+                'attempts': 0
+            }
+            pipe.setex(
+                verification_key,
+                self.verification_expire_seconds,
+                json.dumps(verification_data)
+            )
+            
+            pipe.incr(attempt_key)
+            pipe.expire(attempt_key, self.attempt_expire_seconds)
+            
+            # Pipe는 transaction으로 묶여서 실행
+            pipe.execute()
+        except Exception as e:
+            raise Exception(f"Redis 인증 데이터 저장에 실패했습니다: {str(e)}")
 
     async def _get_verification_data(self, email: str) -> str:
         return self.redis_client.get(f"이메일 인증:{email}")

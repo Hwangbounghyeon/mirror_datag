@@ -11,7 +11,6 @@ class AccessControl(BaseModel):
     edit_departments: List[str] = None
 
 class ProjectRequest(BaseModel):
-    user_id: int
     project_name: str
     project_model_name: str
     description: str
