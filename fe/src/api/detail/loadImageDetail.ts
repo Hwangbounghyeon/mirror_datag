@@ -2,10 +2,13 @@ import { ImageDetailResponse } from "@/types/metadata";
 import apiClient from "../client";
 
 export const loadImageDetail = async (
-    imageId: number
+    imageId: string
 ): Promise<ImageDetailResponse> => {
-    return apiClient<ImageDetailResponse>(`/imagedetail?imageId=${imageId}`, {
-        method: "GET",
-        cache: "no-store",
-    });
+    return apiClient<ImageDetailResponse>(
+        `/imageDetail/detail?image_id=${imageId}`,
+        {
+            method: "GET",
+            cache: "no-store",
+        }
+    );
 };

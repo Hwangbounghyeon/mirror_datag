@@ -7,7 +7,7 @@ import { Authority } from "@/types/auth";
 import { useState } from "react";
 
 export function useAuthorityManager(
-    imageId: number,
+    imageId: string,
     initialAuthorities: Authority[]
 ) {
     const [authorities, setAuthorities] =
