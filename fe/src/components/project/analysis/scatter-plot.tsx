@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   LinearScale,
@@ -8,17 +8,10 @@ import {
   LineElement,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Scatter } from 'react-chartjs-2';
-import zoomPlugin from 'chartjs-plugin-zoom';
-
-// 타입 정의
-interface DataPoint {
-  id: string;
-  x: number;
-  y: number;
-  label: string;
-}
+} from "chart.js";
+import { Scatter } from "react-chartjs-2";
+import zoomPlugin from "chartjs-plugin-zoom";
+import { DataPoint } from "@/types/chartType";
 
 interface ScatterPlotProps {
   data: DataPoint[];
@@ -29,7 +22,6 @@ interface LabelColors {
   [key: string]: string;
 }
 
-// ChartJS 등록
 ChartJS.register(
   LinearScale,
   PointElement,
@@ -41,12 +33,13 @@ ChartJS.register(
 
 const ScatterPlot = ({ data, onSelectPoints }: ScatterPlotProps) => {
   const chartRef = useRef<any>(null);
-  const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [isDragging, setIsDragging] = useState(false);
+  const animationFrameRef = useRef<number>();
 
-  // 데이터 그룹화 (class별 그룹화)
   const groupedData = data.reduce((acc, point) => {
     if (!acc[point.label]) {
       acc[point.label] = [];
@@ -55,45 +48,42 @@ const ScatterPlot = ({ data, onSelectPoints }: ScatterPlotProps) => {
     return acc;
   }, {} as Record<string, DataPoint[]>);
 
-  // 데이터 색상 (class별)
   const labelColors: LabelColors = {
-    'A': 'rgba(255, 99, 132, 0.8)',
-    'B': 'rgba(54, 162, 235, 0.8)',
+    A: "rgba(255, 99, 132, 0.8)",
+    B: "rgba(54, 162, 235, 0.8)",
   };
 
-  // 차트 데이터 구성
   const chartData = {
     datasets: Object.entries(groupedData).map(([label, points]) => ({
       label,
-      data: points.map(p => ({
+      data: points.map((p) => ({
         x: p.x,
         y: p.y,
         id: p.id,
       })),
-      backgroundColor: labelColors[label] || 'rgba(0, 0, 0, 0.6)', // legend 색상용
-      pointBackgroundColor: points.map(p => 
-        selectedPoints.includes(p.id) 
-          ? 'rgba(255, 255, 255, 0.8)' 
-          : labelColors[label] || 'rgba(0, 0, 0, 0.6)'
-      ), // 포인트 색상용
+      backgroundColor: labelColors[label] || "rgba(0, 0, 0, 0.6)",
+      pointBackgroundColor: points.map((p) =>
+        selectedPoints.includes(p.id)
+          ? "rgba(255, 255, 255, 0.8)"
+          : labelColors[label] || "rgba(0, 0, 0, 0.6)"
+      ),
+      // legend 테두리 색상 추가
+      borderColor: labelColors[label] || "rgba(0, 0, 0, 0.6)",
       pointRadius: 8,
       pointHoverRadius: 10,
     })),
   };
 
-  // 차트 옵션 구성
-  const options = {
-    animation: {
-      duration: 0
-    },
+  const optionsRef = useRef({
+    animation: { duration: 0 },
     scales: {
       x: {
-        type: 'linear' as const,
-        position: 'bottom' as const,
+        type: "linear" as const,
+        position: "bottom" as const,
       },
       y: {
-        type: 'linear' as const,
-        position: 'left' as const,
+        type: "linear" as const,
+        position: "left" as const,
       },
     },
     plugins: {
@@ -104,170 +94,156 @@ const ScatterPlot = ({ data, onSelectPoints }: ScatterPlotProps) => {
             speed: 0.1,
           },
           pinch: {
-            enabled: true
+            enabled: false,
           },
-          mode: 'xy' as const,
+          mode: "xy" as const,
         },
       },
       tooltip: {
+        enabled: (context: any) => {
+          return !context.chart.dragStatus?.isDragging;
+        },
         callbacks: {
           label: (context: any) => {
-            const point = data.find(p => 
-              p.x === context.parsed.x && p.y === context.parsed.y
+            const point = data.find(
+              (p) => p.x === context.parsed.x && p.y === context.parsed.y
             );
             return `ID: ${point?.id}, Label: ${point?.label}`;
           },
         },
       },
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
         labels: {
-          usePointStyle: false,  // legend에서 점 스타일 사용 안 함
+          // legend 텍스트 색상 유지
+          usePointStyle: true,
           generateLabels: (chart: any) => {
             const datasets = chart.data.datasets;
-            return datasets.map((dataset: any, i: number) => ({
+            return datasets.map((dataset: any) => ({
               text: dataset.label,
               fillStyle: dataset.backgroundColor,
-              hidden: !chart.isDatasetVisible(i),
-              index: i
+              strokeStyle: dataset.borderColor,
+              lineWidth: 2,
+              hidden: !chart.isDatasetVisible(datasets.indexOf(dataset)),
             }));
-          }
-        }
-      }
+          },
+        },
+      },
     },
     responsive: true,
     maintainAspectRatio: false,
-    preserveAspectRatio: false,
-    redraw: false,
-  };
+    events: [
+      "mousemove",
+      "mouseout",
+      "click",
+      "touchstart",
+      "touchmove",
+      "mousedown",
+      "mouseup",
+    ] as (keyof HTMLElementEventMap)[],
+    hover: {
+      mode: "nearest" as const,
+      intersect: true,
+    },
+    interaction: {
+      mode: "nearest" as const,
+      intersect: true,
+    },
+  });
 
   useEffect(() => {
-    const mainCanvas = chartRef.current?.canvas;
-    if (!mainCanvas) return;
+    const dragSelectPlugin = {
+      id: "dragSelect",
+      beforeEvent: function (chart: any, args: any) {
+        const event = args.event;
 
-    const container = mainCanvas.parentElement;
-    if (!container) return;
+        if (event.type === "mousedown") {
+          setDragStart({ x: event.x, y: event.y });
+          setIsDragging(true);
+          chart.dragStatus = { isDragging: true };
+          // 드래그 시작 시 interaction 비활성화
+          chart.options.hover.mode = null;
+          chart.options.interaction.mode = null;
+        }
 
-    // 오버레이 캔버스 생성 및 설정
-    const createOverlayCanvas = () => {
-      const overlay = overlayCanvasRef.current;
-      if (!overlay) return;
+        if (event.type === "mousemove" && isDragging && dragStart) {
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
 
-      const rect = mainCanvas.getBoundingClientRect();
-      
-      // 메인 캔버스와 동일한 크기로 설정
-      overlay.width = rect.width;
-      overlay.height = rect.height;
-      
-      // 오버레이 캔버스 스타일 설정
-      overlay.style.position = 'absolute';
-      overlay.style.left = '0';
-      overlay.style.top = '0';
-      overlay.style.width = '100%';
-      overlay.style.height = '100%';
-      overlay.style.pointerEvents = 'none';
+          animationFrameRef.current = requestAnimationFrame(() => {
+            const canvas = chart.canvas;
+            const ctx = canvas.getContext("2d");
+
+            chart.draw();
+            ctx.save();
+            ctx.beginPath();
+            ctx.fillStyle = "rgba(0, 123, 255, 0.2)";
+            ctx.strokeStyle = "rgba(0, 123, 255, 0.8)";
+            ctx.lineWidth = 1;
+
+            const rect = {
+              x: Math.min(dragStart.x, event.x),
+              y: Math.min(dragStart.y, event.y),
+              width: Math.abs(event.x - dragStart.x),
+              height: Math.abs(event.y - dragStart.y),
+            };
+
+            ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+            ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+            ctx.restore();
+          });
+        }
+
+        if (event.type === "mouseup" && isDragging && dragStart) {
+          const xScale = chart.scales.x;
+          const yScale = chart.scales.y;
+          const startDataX = xScale.getValueForPixel(dragStart.x);
+          const endDataX = xScale.getValueForPixel(event.x);
+          const startDataY = yScale.getValueForPixel(dragStart.y);
+          const endDataY = yScale.getValueForPixel(event.y);
+
+          const newSelectedPoints = data
+            .filter(
+              (point) =>
+                point.x >= Math.min(startDataX, endDataX) &&
+                point.x <= Math.max(startDataX, endDataX) &&
+                point.y >= Math.min(startDataY, endDataY) &&
+                point.y <= Math.max(startDataY, endDataY)
+            )
+            .map((p) => p.id);
+
+          setSelectedPoints(newSelectedPoints);
+          onSelectPoints?.(newSelectedPoints);
+          setIsDragging(false);
+          setDragStart(null);
+          chart.dragStatus = { isDragging: false };
+          // 드래그 종료 시 interaction 다시 활성화
+          chart.options.hover.mode = "point";
+          chart.options.interaction.mode = "point";
+
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+          chart.draw();
+        }
+      },
     };
 
-    createOverlayCanvas();
-
-    const handleMouseDown = (e: MouseEvent) => {
-      const rect = mainCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      setDragStart({ x, y });
-      setIsDragging(true);
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !dragStart) return;
-      
-      requestAnimationFrame(() => {
-        const overlay = overlayCanvasRef.current;
-        if (!overlay) return;
-        const ctx = overlay.getContext('2d');
-        if (!ctx) return;
-
-        // 오버레이 캔버스만 클리어
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-        const rect = mainCanvas.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
-
-        // 드래그 박스 그리기
-        ctx.fillStyle = 'rgba(0, 123, 255, 0.2)';
-        ctx.fillRect(
-          dragStart.x,
-          dragStart.y,
-          currentX - dragStart.x,
-          currentY - dragStart.y
-        );
-      });
-    };
-
-    const handleMouseUp = (e: MouseEvent) => {
-      if (!isDragging || !dragStart) return;
-
-      const rect = mainCanvas.getBoundingClientRect();
-      const endX = e.clientX - rect.left;
-      const endY = e.clientY - rect.top;
-
-      const chart = chartRef.current;
-      const xScale = chart.scales.x;
-      const yScale = chart.scales.y;
-
-      const startDataX = xScale.getValueForPixel(dragStart.x);
-      const endDataX = xScale.getValueForPixel(endX);
-      const startDataY = yScale.getValueForPixel(dragStart.y);
-      const endDataY = yScale.getValueForPixel(endY);
-
-      const newSelectedPoints = data.filter(point => 
-        point.x >= Math.min(startDataX, endDataX) &&
-        point.x <= Math.max(startDataX, endDataX) &&
-        point.y >= Math.min(startDataY, endDataY) &&
-        point.y <= Math.max(startDataY, endDataY)
-      ).map(p => p.id);
-
-      setSelectedPoints(newSelectedPoints);
-      onSelectPoints?.(newSelectedPoints);
-
-      setIsDragging(false);
-      setDragStart(null);
-
-      // 드래그 박스 제거
-      const overlay = overlayCanvasRef.current;
-      if (overlay) {
-        const ctx = overlay.getContext('2d');
-        ctx?.clearRect(0, 0, overlay.width, overlay.height);
-      }
-    };
-
-    // 윈도우 리사이즈 시 오버레이 캔버스 위치 조정
-    const handleResize = () => {
-      createOverlayCanvas();
-    };
-
-    mainCanvas.addEventListener('mousedown', handleMouseDown);
-    mainCanvas.addEventListener('mousemove', handleMouseMove);
-    mainCanvas.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('resize', handleResize);
+    ChartJS.register(dragSelectPlugin);
 
     return () => {
-      mainCanvas.removeEventListener('mousedown', handleMouseDown);
-      mainCanvas.removeEventListener('mousemove', handleMouseMove);
-      mainCanvas.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('resize', handleResize);
+      ChartJS.unregister(dragSelectPlugin);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, [isDragging, dragStart, data, selectedPoints, onSelectPoints]);
+  }, [isDragging, dragStart, data, onSelectPoints]);
 
   return (
-    <div className='relative w-full h-full'>
-      <div className="relative" style={{ width: '100%', height: '100%' }}>
-        <Scatter ref={chartRef} data={chartData} options={options} />
-        <canvas 
-          ref={overlayCanvasRef} 
-          className="absolute inset-0"
-        />
+    <div className="relative w-full h-full">
+      <div className="relative" style={{ width: "100%", height: "100%" }}>
+        <Scatter ref={chartRef} data={chartData} options={optionsRef.current} />
       </div>
       <button
         className="absolute top-[1rem] right-[1rem] px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"

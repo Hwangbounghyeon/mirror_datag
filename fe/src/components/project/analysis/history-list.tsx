@@ -1,41 +1,48 @@
-import { HistoryListData } from "@/types/historyType";
+import PaginationBar from "@/components/common/pagination";
+import HistoryCard from "@/components/project/analysis/history-card";
+import { HistoryResponseType } from "@/types/historyType";
 
-export async function HistoryList({ projectId }: { projectId: string }) {
-  // const requestParams = new URLSearchParams({
-  //   page: page.toString(),
-  //   limit: limit.toString()
-  // });
-
+const GetHistories = async ({
+  projectId,
+  nowPage,
+}: {
+  projectId: string;
+  requestParams?: URLSearchParams;
+  nowPage?: number;
+}) => {
+  const page = nowPage ? nowPage : 1;
+  const requestParams = new URLSearchParams({
+    page: page.toString(),
+  });
   const response = await fetch(
-    `http://localhost:8000/be/api/history/${projectId}`,
+    `${
+      process.env.NEXT_PUBLIC_BACKEND_URL
+    }/history/${projectId}?${requestParams.toString()}`,
     {
       headers: {
-        'Authorization': `bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJlbWFpbCI6IjU1MTYyMzdAa211LmtyIiwiZGVwYXJ0bWVudF9pZCI6MSwiaXNfc3VwZXJ2aXNlZCI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTczMDg5MzkzOX0.asRcUQvBAr5NoLSXnu7kxabQL4mW5uiNKvtvj2gMHi0`,
+        Authorization: `bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJlbWFpbCI6IjU1MTYyMzdAa211LmtyIiwiZGVwYXJ0bWVudF9pZCI6MSwiaXNfc3VwZXJ2aXNlZCI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTczMDg5MzkzOX0.asRcUQvBAr5NoLSXnu7kxabQL4mW5uiNKvtvj2gMHi0`,
       },
-      cache: 'no-store'
+      cache: "no-store",
     }
   );
-  
-  console.log(response)
-
-  if (!response.ok) {
-    return (
-      <div className="flex-grow bg-red-500 overflow-auto flex items-center justify-center text-white">
-        데이터 로드 실패
-      </div>
-    );
-  }
-
-  const result = await response.json();
-  const histories = result.data;
-
+  const result: HistoryResponseType = await response.json();
   return (
-    <div className="flex-grow bg-red-500 overflow-auto">
-      {histories.data.map((history: HistoryListData) => (
-        <div key={history.history_id}>
-          {history.history_name}
-        </div>
-      ))}
+    <div className="h-full w-full flex flex-col flex-grow items-center">
+      <div className="h-[90%] w-[95%] flex flex-col overflow-y-scroll">
+        {result.data.data.map((history) => (
+          <HistoryCard
+            key={history.history_id}
+            project_id={projectId}
+            {...history}
+          />
+        ))}
+      </div>
+      <PaginationBar
+        totalPage={result.data.total_pages}
+        currentPage={
+          page > result.data.total_pages ? result.data.total_pages : page
+        }
+      />
     </div>
   );
-}
+};

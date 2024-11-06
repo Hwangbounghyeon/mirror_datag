@@ -14,12 +14,7 @@ interface PageProps {
 const Page = ({ params, searchParams }: PageProps) => {
   return (
     <Suspense
-      key={
-        "project_id=" +
-        params.project_id +
-        "&history_id=" +
-        (searchParams.history_id || "")
-      }
+      key={"history_id=" + (searchParams.history_id || "")}
       fallback={<div>Loading...</div>}
     >
       <MainAnalysis selectedHistory={searchParams.history_id} />
