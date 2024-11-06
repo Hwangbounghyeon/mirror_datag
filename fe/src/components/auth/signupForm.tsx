@@ -352,6 +352,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
               {userEmail}로 전송된 인증 코드를 입력해주세요.
             </p>
             <Input
+              readOnly={isVerifying}
               isInvalid={failVerifying}
               autoFocus
               label="인증 코드"
