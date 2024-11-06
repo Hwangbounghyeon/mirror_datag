@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images
+from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata
 from models.history_models import HistoryData, ReductionResults
 
 class DimensionReductionService:
@@ -32,14 +32,47 @@ class DimensionReductionService:
         # image_ids로 이미지 정보들 가져오기
         image_features = await self._get_image_features(request.image_ids)
 
+        print(len(request.image_ids))
+        print(len(image_features))
+
+        concat_image_infos = []
+        for i in range(len(image_features)):
+            image_info = await collection_images.find_one({"_id": ObjectId(request.image_ids[i])})
+            image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
+
+            ai_results = image_metadata["aiResults"][0]
+            predictions = ai_results["predictions"][0]
+            
+            # feature의 클래스 수만큼 반복
+            if ai_results["task"] == "det":
+                for j in range(len(image_features[i])):  # 클래스 수만큼 반복
+                    concat_image_infos.append({
+                        "imageId": request.image_ids[i],
+                        "predictions": predictions["detections"][j]
+                    })
+            else:
+                for j in range(len(image_features[i])):  # 클래스 수만큼 반복
+                    concat_image_infos.append({
+                        "imageId": request.image_ids[i],
+                        "predictions": {
+                            "prediction": predictions["prediction"],
+                            "confidence": predictions["confidence"]
+                        }
+                    })
+        # features concatenate
+        concat_features = self._concatenate_array(image_features)
+        
         # 차원축소 진행
         if request.algorithm == "tsne":
-            reduction_features = self._dimension_reduction_TSNE(image_features)
+            reduction_features = self._dimension_reduction_TSNE(concat_features)
         else:
-            reduction_features = self._dimension_reduction_UMAP(image_features)
+            reduction_features = self._dimension_reduction_UMAP(concat_features)
+
+        for i in range(len(concat_image_infos)):
+            concat_image_infos[i]["features"] = reduction_features[i]
 
         # 작업 완료
-        await self._save_history_completed_mongodb(request.project_id, inserted_id, request.image_ids, reduction_features)
+        await self._save_history_completed_mongodb(request.project_id, inserted_id, concat_image_infos)
 
         return DimensionReductionResponse(
             history_id=inserted_id,
@@ -79,12 +112,10 @@ class DimensionReductionService:
     # TSNE 차원축소
     def _dimension_reduction_TSNE(
         self, 
-        features: List[List[float]],
+        features: np.ndarray,
         n_components: int = 10,
         perplexity: int = 50
     ) -> List[List[float]]:
-        features = self._concatenate_array(features)
-
         # 최대 50 제한
         perplexity = min(int(np.sqrt(features.shape[0])), perplexity)
 
@@ -96,21 +127,24 @@ class DimensionReductionService:
     # umap 차원축소
     def _dimension_reduction_UMAP(
         self,
-        features: List[List[float]],
+        features: np.ndarray,
         n_components: int = 10,
         n_neighbors: int = 10
     ) -> List[List[float]]:
-        features = self._concatenate_array(features)
-
         n_neighbors_min = min(n_neighbors, features.shape[0]-1)
         
-        umap_reducer = umap.UMAP(n_components=n_components, n_neighbors=n_neighbors_min, init='spectral')
+        umap_reducer = umap.UMAP(
+            n_components=n_components, 
+            n_neighbors=n_neighbors_min, 
+            init='random',
+            n_jobs=1
+        )
 
         umap_result = umap_reducer.fit_transform(features)
         return umap_result.tolist()
 
     # array concatenate
-    def _concatenate_array(self, features: List[List[float]]) -> List[List[float]]:
+    def _concatenate_array(self, features: List[List[float]]) -> np.ndarray:
         return np.concatenate(features, axis=0)
         
     # mongodb history object 생성
@@ -189,21 +223,15 @@ class DimensionReductionService:
         self,
         project_id: str,
         history_id: str,
-        image_ids: List[str], 
-        reduction_features: List[List[float]]
+        image_infos: List[ReductionResults]
     ):
         try:
             document = await collection_histories.find_one({"_id": ObjectId(history_id)})
             if not document:
                 raise Exception(f"Document with id {history_id} not found")
-
-            changed_results = ReductionResults.model_validate({
-                "imageIds": image_ids,
-                "reductionFeatures": reduction_features
-            })
             
             update_data = {
-                "results": changed_results.model_dump(),
+                "results": image_infos,
                 "isDone": True,
                 "updatedAt": datetime.now(timezone.utc)
             }
