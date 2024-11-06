@@ -8,7 +8,7 @@ interface ImagePanelProps {
 function ImagePanel({ imageSrc }: ImagePanelProps) {
     return (
         <div className="h-full flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-600">
-            <div className="rounded-lg overflow-hidden min-h-[1000px] min-w-[1000px] relative">
+            <div className="rounded-lg overflow-hidden min-h-[600px] min-w-[600px] relative">
                 <Image
                     src={imageSrc}
                     fill
