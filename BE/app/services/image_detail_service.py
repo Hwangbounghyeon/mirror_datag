@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from configs.mongodb import collection_metadata, collection_images, collection_tag_images
 from models.mariadb_users import Users, Departments
-from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailResponse, ImageDetailTaggingRequest, ImageDetailTaggingResponse, ImageDetailAuthRequest, ImageDetailAuthResponse
+from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailResponse, ImageDetailTaggingRequest, ImageDetailTaggingResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -117,6 +117,71 @@ class ImageDetailService:
         
         tags = metadata_one.get("aiResults", [{}])[0].get("predictions", [{}])[0].get("tags", [])
         # 4. 응답 반환
+        try:
+            return {
+                "image_id": image_id,
+                "tag_name_list": tags
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
+            )
+        
+    # 3. 태그 삭제
+    async def delete_image_tag(self, request: ImageDetailTagDeleteRequest) -> ImageDetailTagDeleteResponse:
+        # 1. image_id, image_one
+        image_id = request.image_id
+        image_one = await collection_images.find_one({"_id": ObjectId(image_id)})
+        if image_one is None:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        image_one["_id"] = str(image_one["_id"])
+
+        # 2. metadata_id, metadata_one
+        metadata_id = image_one.get("metadataId")
+        metadata_one = await collection_metadata.find_one({"_id": ObjectId(metadata_id)})
+        if metadata_one is None:
+            raise HTTPException(status_code=404, detail="Metadata not found")
+
+        metadata_one["_id"] = str(metadata_one["_id"])
+
+        # 3. metadata에서 태그 삭제
+        await collection_metadata.update_one(
+            {"_id": ObjectId(metadata_id)},
+            {
+                "$pull": {
+                    "aiResults.0.predictions.0.tags": {"$in": request.delete_tag_list}
+                }
+            }
+        )
+
+        # 4. tagImages에서 image_id를 해당 태그들에서 삭제
+        for tag in request.delete_tag_list:
+            await collection_tag_images.update_one(
+                {"_id": ObjectId("6729792cae005e3836525caf")},
+                {
+                    "$pull": {
+                        f"tag.{tag}": image_id  # 각 태그 목록에서 image_id 삭제
+                    }
+                }
+            )
+
+        # 업데이트된 tag 데이터 다시 가져오기
+        tag_datas = await collection_tag_images.find_one({"_id": ObjectId("6729792cae005e3836525caf")})
+        
+        # 빈 배열이 된 태그 필드 삭제
+        for tag, images in tag_datas.get("tag", {}).items():
+            if not images:  # 빈 배열인 경우
+                await collection_tag_images.update_one(
+                    {"_id": ObjectId("6729792cae005e3836525caf")},
+                    {"$unset": {f"tag.{tag}": ""}}  # 빈 배열이 되면 필드 삭제
+                )
+        
+        # 삭제 후 남아있는 tags 확인
+        tags = metadata_one.get("aiResults", [{}])[0].get("predictions", [{}])[0].get("tags", [])
+        
+        # 5. 응답 반환
         try:
             return {
                 "image_id": image_id,
