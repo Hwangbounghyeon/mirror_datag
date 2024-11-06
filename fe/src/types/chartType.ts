@@ -1,4 +1,3 @@
-// types/chart.types.ts
 export interface DataPoint {
   id: string;
   x: number;

@@ -5,7 +5,7 @@ interface PaginationProps {
   totalPage: number;
   currentPage: number;
   queryStrings?: URLSearchParams;
-  prefetch: boolean | null;
+  prefetch?: boolean | null;
 }
 
 const PaginationBar = ({

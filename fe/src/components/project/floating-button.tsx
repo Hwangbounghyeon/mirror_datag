@@ -3,10 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@nextui-org/react";
 import { useRouter, usePathname } from "next/navigation";
 
-interface FloatingButtonProps {
-}
-
-export function FloatingButton({  }: FloatingButtonProps) {
+export function FloatingButton() {
   const router = useRouter();
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
