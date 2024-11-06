@@ -9,9 +9,11 @@ const ScatterPlot = dynamic(
 );
 
 interface MainAnalysisProps {
+  selectedHistory: string | null
 }
 
-export function MainAnalysis({  }: MainAnalysisProps) {
+export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
+  
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
 
   const sampleData = [
