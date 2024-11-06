@@ -20,19 +20,30 @@ class TagService:
     
     async def get_tag_and_image_lists(self) -> TagImageResponseDTO:
         try:
-
             tag_doc = await self.collection_tag_images.find_one({})
             if not tag_doc:
                 tags = []
             else:
-                tags = list(tag_doc['tag'].keys())
-                
-            paths = get_s3_image_paths()
+                tags = list(tag_doc['tag'].keys()) if tag_doc else []
+            
+            images = {}
+            image_docs = await self.collection_images.find({}).to_list(length=None)
+            
+            for doc in image_docs:
+                # 메타데이터에서 파일 경로 조회
+                metadata = await self.collection_metadata.find_one(
+                    {"_id": ObjectId(doc["metadataId"])}
+                )
+                if metadata and "fileList" in metadata and metadata["fileList"]:
+                    # 이미지의 _id와 경로 매칭하여 딕셔너리에 추가
+                    images[str(doc["_id"])] = metadata["fileList"][0]
 
+            # images 필드가 Dict[str, str] 형식으로 반환
             return TagImageResponseDTO(
                 tags=sorted(tags),
-                paths=paths
+                images=images  # {이미지 _id: 이미지 경로}
             )
+            
         except Exception as e:
             raise HTTPException(
                 status_code=500,

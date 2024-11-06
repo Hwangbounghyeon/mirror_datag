@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import CommonResponse
 from dto.image_detail_dto import ImageDetailTaggingRequest, ImageDetailTaggingResponse, ImageDetailAuthRequest, ImageDetailAuthResponse
 from services.image_detail_service import ImageDetailService
 
@@ -17,26 +17,12 @@ async def imageDetailRead(
     ):
     try:
         if not authorization:
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
-            
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
         # Bearer 토큰 형식 검증 및 토큰 추출
         token_parts = authorization.split()
         if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
             
         image_detail_service = ImageDetailService(db)
         response = await image_detail_service.read_image_detail(image_id)
@@ -45,12 +31,10 @@ async def imageDetailRead(
             status=200,
             data=response
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR", 
-            message="이미지 정보 조회 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 # 2. 해당 이미지에 태그 추가
 @router.post('/tagging', description="태그 추가")
@@ -61,26 +45,12 @@ async def imageDetailTagging(
     ):
     try:
         if not authorization:
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
-            
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
         # Bearer 토큰 형식 검증 및 토큰 추출
         token_parts = authorization.split()
         if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
             
         image_detail_service = ImageDetailService(db)
 
@@ -90,9 +60,7 @@ async def imageDetailTagging(
             status=200,
             data=response
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="태그 추가 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))

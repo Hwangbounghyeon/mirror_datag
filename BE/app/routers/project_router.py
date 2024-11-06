@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import CommonResponse
 from dto.project_dto import ProjectRequest, ProjectListRequest
 from services.project_service import ProjectService, ProjectSubService
-
+from services.user_service import JWTManage
 
 
 
@@ -15,48 +15,73 @@ router = APIRouter(prefix="/project", tags=["project"])
 @router.post('', description="프로젝트 생성")
 async def project(
     project_request: ProjectRequest,
+    authorization: str = Header(None),
     db : Session = Depends(get_database_mariadb)
     ):
     try:
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
+        # Bearer 토큰 형식 검증 및 토큰 추출
+        token_parts = authorization.split()
+        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
+        access_token = token_parts[1]
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(access_token)["user_id"]
+        
         project_service = ProjectService(db)
 
-        response = await project_service.create_project(project_request)
+        response = await project_service.create_project(user_id, project_request)
 
         return CommonResponse(
             status=200,
             data=response
         )
     
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="프로젝트 생성 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
     
 
 # 2. Project 리스트 조회
-@router.post("/list")
+@router.get("/list")
 async def project_list(
-    project_list : ProjectListRequest,
+    department_name: str | None = None,
+    model_name: str | None = None,
+    page: int = 0,
+    limit: int = 10,
+    authorization: str = Header(None),
     db : Session = Depends(get_database_mariadb)
     ):
     try:
+        if not authorization:
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
+        # Bearer 토큰 형식 검증 및 토큰 추출
+        token_parts = authorization.split()
+        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
+        access_token = token_parts[1]
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(access_token)["user_id"]
+        
         project_service = ProjectService(db)
 
-        projects_list = await project_service.get_project_list(project_list)
+        projects_list = await project_service.get_project_list(user_id, department_name, model_name, page, limit)
 
         return CommonResponse(
                 status=200,
                 data=projects_list
             )
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="프로젝트 리스트 조회 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 # 3. Project 삭제
 @router.delete("/{project_id}")
@@ -71,11 +96,7 @@ async def delete_project(project_id: str, db : Session = Depends(get_database_ma
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="Project Error",
-            message="프로젝트를 삭제하지 못하였습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # 4. 부서 리스트 조회
@@ -88,12 +109,10 @@ async def get_department_list(db: Session = Depends(get_database_mariadb)):
             status=200,
             data=departments
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="부서 리스트 조회 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 # 5. 사용자 이름 검색
 @router.get("/users/search")
@@ -105,9 +124,7 @@ async def search_user_name(name: str, db: Session = Depends(get_database_mariadb
             status=200,
             data=users
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="사용자 이름 검색 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
