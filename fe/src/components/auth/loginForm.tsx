@@ -47,7 +47,7 @@ export const LoginForm = () => {
       formData
     );
 
-    if (response.error || !response.data) {
+    if (response.error || !response.data || response.error) {
       console.log(response.error);
       SetErrorMessage(response.error || "An error occurred");
     } else {

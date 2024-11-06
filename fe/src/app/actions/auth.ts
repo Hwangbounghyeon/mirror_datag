@@ -3,8 +3,14 @@
 import { cookies } from "next/headers";
 
 import { LoginResponseType, RefreshResponseType } from "@/types/auth";
+import {
+  accessTokenDuration,
+  refreshTokenDuration,
+} from "@/lib/constants/token-duration";
+import { DefaultResponseType } from "@/types/default";
 
 export const check_auth = async (formData: FormData) => {
+  console.log("check_auth");
   const email = formData.get("email");
   const password = formData.get("password");
   if (!email || !password) {
@@ -13,7 +19,6 @@ export const check_auth = async (formData: FormData) => {
       error: "Email and password are required",
     };
   }
-  console.log("login try");
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
@@ -26,45 +31,54 @@ export const check_auth = async (formData: FormData) => {
         cache: "no-store",
       }
     );
-    console.log("response", response);
+    console.log("login try result", response);
 
-    if (!response.ok) {
-      console.log("login fail");
+    if (!response || !response.ok || response.status >= 400) {
+      console.log("login fail here ---- ");
+      console.log(response);
       return {
-        error: "Invalid email or password",
-        status: response.status,
+        error: "유효하지 않는 이메일 또는 비밀번호입니다.",
+        status: 401,
       };
     }
-    console.log("login success");
 
-    const data: LoginResponseType = await response.json();
-    console.log(data);
+    const data: DefaultResponseType<LoginResponseType> = await response.json();
+
+    if (!data?.data || !data.data.access_token) {
+      console.log("login fail");
+      return {
+        error: "Invalid",
+        status: 400,
+      };
+    }
+
+    console.log("login success = ", data.data?.access_token);
     const cookieStore = await cookies();
 
     cookieStore.set({
       name: "refreshToken",
-      value: data.refresh_token,
+      value: data.data.refresh_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-      maxAge: 60 * 60 * 7,
+      maxAge: refreshTokenDuration,
     });
 
     cookieStore.set({
       name: "accessToken",
-      value: data.access_token,
+      value: data.data.access_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
-      maxAge: 60 * 20,
+      maxAge: accessTokenDuration,
     });
 
     return {
       status: response.status,
       data: {
-        UserData: data.user,
+        UserData: data.data.user,
       },
     };
   } catch (error) {
-    console.log("login fail");
+    console.error("Login failed:", error);
     return {
       error: "Something went wrong",
       status: 500,
@@ -100,7 +114,13 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       name: "accessToken",
       value: data.access_token,
       httpOnly: true,
-      maxAge: 60 * 20,
+      maxAge: accessTokenDuration,
+    });
+    cookieStore.set({
+      name: "refreshToken",
+      value: data.refresh_token,
+      httpOnly: true,
+      maxAge: refreshTokenDuration,
     });
     return data.access_token;
   } catch (error) {
@@ -139,14 +159,6 @@ export const getAccessToken = async () => {
   } else {
     if (refreshToken) {
       const result = await refreshAccessToken();
-      if (result) {
-        cookieStore.set({
-          name: "accessToken",
-          value: result,
-          httpOnly: true,
-          maxAge: 60 * 20,
-        });
-      }
       return result;
     } else {
       return null;
