@@ -4,7 +4,7 @@ export type HistoryListData = {
   is_done: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type HistoryListResponse = {
   data: HistoryListData[];
@@ -12,4 +12,15 @@ export type HistoryListResponse = {
   limit: number;
   total_count: number;
   total_pages: number;
-}
+};
+
+export type HistoryResponseType = {
+  status: number;
+  data: {
+    data: HistoryListData[];
+    page: number;
+    limit: number;
+    total_count: number;
+    total_pages: number;
+  };
+};
