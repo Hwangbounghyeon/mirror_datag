@@ -26,12 +26,12 @@ const ImageContainer: FC<{ src: string; name: string }> = ({ src }) => {
     const [imgError, setImgError] = useState(false);
 
     return (
-        <div className="aspect-square rounded-lg overflow-hidden relative">
+        <div className="aspect-square rounded-lg overflow-hidden relative min-w-[120px] min-h-[120px]">
             <Image
                 src={imgError ? fallbackImageSrc : src}
                 alt="No Image"
                 fill
-                className="w-full h-full object-cover pointer-events-none"
+                className="object-cover pointer-events-none"
                 draggable={false}
                 onError={() => setImgError(true)}
             />
@@ -40,5 +40,5 @@ const ImageContainer: FC<{ src: string; name: string }> = ({ src }) => {
 };
 
 const ImageName: FC<{ name: string }> = ({ name }) => (
-    <p className="text-sm mt-1 text-center">{name}</p>
+    <p className="text-sm mt-1 text-center truncate max-w-[120px]">{name}</p>
 );
