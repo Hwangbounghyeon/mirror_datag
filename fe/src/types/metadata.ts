@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import { DefaultResponseType } from "./default";
 
 interface AccessControlResponse {
     user: User[];
@@ -52,11 +53,9 @@ interface ImageDetail {
     aiResults: AiResult[];
 }
 
-export interface ImageDetailResponse {
-    status: number;
-    data: {
-        metadata: ImageDetail;
-        access_control: AccessControlResponse;
-    };
-    error: null | string;
+interface ImageDetailResponseData {
+    metadata: ImageDetail;
+    access_control: AccessControlResponse;
 }
+
+export type ImageDetailResponse = DefaultResponseType<ImageDetailResponseData>;
