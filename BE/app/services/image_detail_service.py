@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from dto.common_dto import ErrorResponse
-from configs.mongodb import collection_permissions, collection_metadata, collection_images, collection_tagimages
+from configs.mongodb import collection_metadata, collection_images
 from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailRequest, ImageDetailResponse, ImageDetailTagRequest, ImageDetailTagResponse, ImageDetailAuthRequest, ImageDetailAuthResponse
 

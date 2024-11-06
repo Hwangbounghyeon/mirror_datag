@@ -19,9 +19,9 @@ class ProjectService:
         self.db = db
     
     # 1-1. Project 생성
-    async def create_project(self, request: ProjectRequest):
+    async def create_project(self, user_idx: int, request: ProjectRequest):
         
-        user_department = self.db.query(Users).filter(Users.user_id == request.user_id).first()
+        user_department = self.db.query(Users).filter(Users.user_id == user_idx).first()
         if not user_department:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
         project_department = self.db.query(Departments).filter(Departments.department_id == user_department.department_id).first()
@@ -31,7 +31,7 @@ class ProjectService:
             'project_name':request.project_name,
             'model_name':request.project_model_name,
             'description':request.description,
-            'user_id':request.user_id,
+            'user_id':user_idx,
             'department' : project_department.department_name if project_department else "",
             'image_count': 0,
             'is_private':request.is_private,
@@ -110,19 +110,26 @@ class ProjectService:
         return project_id
     
     # 1-2. 프로젝트 리스트 불러오기
-    async def get_project_list(self, request: ProjectListRequest) -> list:
+    async def get_project_list(
+        self,
+        user_id: int,
+        department_name: str | None = None,
+        model_name: str | None = None,
+        page: int = 0,
+        limit: int = 10
+        ) -> list:
 
-        skip = (request.page - 1) * request.limit
+        skip = (page - 1) * limit
         
-        user_permissions = await collection_project_permissions.find_one({f"user.{request.user_id}": {"$exists": True}})
+        user_permissions = await collection_project_permissions.find_one({f"user.{user_id}": {"$exists": True}})
         
         # 사용자 권한이 없을 경우 빈 리스트 반환
-        if not user_permissions or str(request.user_id) not in user_permissions["user"]:
+        if not user_permissions or str(user_id) not in user_permissions["user"]:
             return []
 
         # 특정 user_id의 view 및 edit 권한 가져오기
-        user_view_permissions = user_permissions["user"].get(str(request.user_id), {}).get("view", [])
-        user_edit_permissions = user_permissions["user"].get(str(request.user_id), {}).get("edit", [])
+        user_view_permissions = user_permissions["user"].get(str(user_id), {}).get("view", [])
+        user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
 
         # view 및 edit 권한의 프로젝트 ID 합집합 구하기
         viewable_project_ids = set(user_view_permissions) | set(user_edit_permissions)
@@ -136,18 +143,18 @@ class ProjectService:
         
         # 추가 조건 (department와 model_name 중 하나 또는 모두)
         conditions = []
-        if request.department:
-            conditions.append({"department": request.department})
-        if request.model_name:
-            conditions.append({"model_name": request.model_name})
+        if department_name:
+            conditions.append({"department": department_name})
+        if model_name:
+            conditions.append({"model_name": model_name})
 
         # 조건을 추가한 필터링
         if conditions:
             query["$or"] = conditions
         
         # MongoDB 쿼리 실행 및 페이지네이션
-        projects_cursor = collection_projects.find(query).skip(skip).limit(request.limit)
-        projects = await projects_cursor.to_list(length=request.limit)
+        projects_cursor = collection_projects.find(query).skip(skip).limit(limit)
+        projects = await projects_cursor.to_list(length=limit)
         
         print(query)
 
