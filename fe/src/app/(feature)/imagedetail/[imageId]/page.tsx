@@ -7,8 +7,12 @@ export default async function ImageDetailPage({
 }: {
     params: { imageId: string };
 }) {
-    const imageId = Number(params.imageId);
-    const data = await loadImageDetail("6729792cae005e3836525cae");
+    const imageId = params.imageId;
+    const data = await loadImageDetail("6729792cae005e3836525cae"); //TODO 추후 수정
+
+    if (!data.data) {
+        throw new Error("Data is undefined");
+    }
 
     const initialAuthorities = data.data.access_control.user.map((user) => ({
         id: user.uid,
@@ -32,6 +36,7 @@ export default async function ImageDetailPage({
         <Suspense fallback={<div>Loading...</div>}>
             <ImageDetailClient
                 imageId={imageId}
+                imageIdx={parseInt(imageId, 10)} //TODO 추후 수정
                 initialAuthorities={initialAuthorities}
                 initialTags={initialTags}
                 classes={classes}
