@@ -1,6 +1,5 @@
 import json
 import jwt
-import httpx
 import redis
 import os
 import secrets
@@ -11,7 +10,7 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from dto.users_dto import UserCreateDTO, UserLoginDTO
+from dto.users_dto import UserSignUp, UserSignIn, UserInfoResponse, TokenResponse
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -30,7 +29,7 @@ class UserCreate:
         self.pwd_context = CryptContext(schemes=["bcrypt"])
 
     # 임시로 사용자 생성(UserSchema로 들어오는 데이터 검증)
-    async def create_temp_user(self, user_data: UserCreateDTO):
+    async def create_temp_user(self, user_data: UserSignUp):
         if self._check_existing_email(user_data.email):
             raise HTTPException(status_code=400, detail="해당 이메일이 이미 존재합니다.")
             
@@ -56,12 +55,13 @@ class EmailValidate:
         self.db = db
         
         try:
+            redis_host = os.getenv('REDIS_HOST')
             redis_port = int(os.getenv('REDIS_PORT', 6379))
             redis_password = os.getenv('REDIS_PASSWORD')
             
             # Redis 클라이언트 설정(같은 네트워크로 묶을 것이므로 localhost에 연결, decode_response=True로 하면 반환값을 자동으로 문자열로 디코딩)
             self.redis_client = redis.Redis(
-                host='k11s108.p.ssafy.io',
+                host=redis_host,
                 port=redis_port,
                 password=redis_password,
                 db=0,
@@ -104,7 +104,7 @@ class EmailValidate:
             await self._remove_verification_data(email)
             raise HTTPException(
                 status_code=500,
-                detail="이메일 인증코드 전송에 실패했습니다."
+                detail=f"이메일 인증코드 전송에 실패했습니다: {str(e)}"
             )
 
     async def verify_and_create_user(self, email: str, code: str):
@@ -137,7 +137,7 @@ class EmailValidate:
         except Exception as e:
             #  DB에 회원 정보 저장 실패
             self.db.rollback()
-            print(f"DB 저장에 실패하였습니다: {e}")
+            print(f"DB 저장에 실패하였습니다: {str(e)}")
             raise HTTPException(
                 status_code=500,
                 detail="회원가입에 실패하였습니다"
@@ -198,15 +198,15 @@ class EmailValidate:
             body = f"인증 코드: {code}\n\n코드를 확인 후 입력해주세요."
             msg.attach(MIMEText(body, 'plain'))
             
-            print("SMTP 서버 연결 시도...")
+            # print("SMTP 서버 연결 시도...")
             with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-                print("TLS 시작...")
+                # print("TLS 시작...")
                 server.starttls()  # TLS 보안 연결
-                print("로그인 시도...")
+                # print("로그인 시도...")
                 server.login(admin_email, smtp_password)  # Gmail 로그인
-                print("이메일 전송 시도...")
+                # print("이메일 전송 시도...")
                 server.send_message(msg)
-                print("이메일 전송 성공")
+                # print("이메일 전송 성공")
         except Exception as e:
             error_msg = f"메일 발송 실패 - 상세 오류: {str(e)}"
             print(error_msg)
@@ -268,7 +268,7 @@ class UserLogin:
         self.jwt_manage = jwt_manage
         self.pwd_context = CryptContext(schemes=["bcrypt"])
 
-    async def login(self, login_data: UserLoginDTO):
+    async def login(self, login_data: UserSignIn) -> token:
         # 이메일 검증
         user = self.db.query(Users).filter(Users.email == login_data.email).first()
         if not user:
@@ -285,21 +285,91 @@ class UserLogin:
         
         access_token = self.jwt_manage.create_access_token(user)
         refresh_token = self.jwt_manage.create_refresh_token(user.user_id)
-        
-        return {
+        token_data = {
             "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-        }
+            "refresh_token": refresh_token
+            }
+        
+        return TokenResponse.model_validate(token_data)
 
 ## 5. 로그아웃
 class UserLogout:
     def __init__(self, db: Session):
         self.db = db
         
-    async def logout(self):
-        return {"message": "성공적으로 로그아웃이 되었습니다"}
+        try:
+            redis_host = os.getenv('REDIS_HOST')
+            redis_port = int(os.getenv('REDIS_PORT', 6379))
+            redis_password = os.getenv('REDIS_PASSWORD')
+            
+            self.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                password=redis_password,
+                db=0,
+                decode_responses=True
+            )
+            self.redis_client.ping()
+            
+        except Exception as e:
+            raise Exception(f"Redis 연결 실패: {str(e)}")
+        
+    async def logout(self, access_token: str):
+        try:
+            jwt_manager = JWTManage(self.db)
+            payload = jwt_manager.verify_token(access_token)
+            
+            expire_timestamp = payload.get('exp')
+            if not expire_timestamp:
+                raise HTTPException(status_code=400, detail="JWT 토큰 구조가 옳지 않습니다.")
+            
+            current_timestamp = datetime.now().timestamp()
+            ttl = int(expire_timestamp - current_timestamp)
+            
+            if ttl > 0:
+                self.redis_client.setex(f"bl_access_token:{access_token}", ttl, 1)
+            
+            return {"message": "성공적으로 로그아웃이 되었습니다"}
+        except HTTPException as http_exc:
+            raise http_exc
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"로그아웃 처리 중 오류가 발생했습니다: {str(e)}"
+            )        
     
+
+## 6. 유저 정보 조회
+class UserInformation:
+    def __init__(self, db: Session):
+        self.db = db
+        
+    async def get_user_info(self, user_id: int) -> UserInfoResponse:
+        try:
+            user = self.db.query(Users).filter(Users.user_id == user_id).first()
+            
+            if not user:
+                raise HTTPException(
+                    status_code=404,
+                    detail="사용자를 찾을 수 없습니다."
+                )
+                
+            return UserInfoResponse.model_validate(user)
+            
+        except HTTPException as http_exc:
+            raise http_exc
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"사용자 정보를 불러오는데 실패하였습니다: {str(e)}"
+            )
+
+## 7. 유저 프로필
+class UserProfile:
+    pass
+    
+
+
 
 # 부가 기능
 ## 1. 프로필 화면

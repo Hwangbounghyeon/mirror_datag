@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
-from services.user_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout
+from services.user_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout, UserInformation
 from dto.common_dto import CommonResponse
-from dto.users_dto import UserCreateDTO, UserLoginDTO
+from dto.users_dto import UserSignUp, UserSignIn, UserInfoResponse, TokenResponse
 from models.mariadb_users import Users
 from configs.mariadb import get_database_mariadb as get_db
 
@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 @router.post("/signup", response_model=CommonResponse)
-async def signup(user_data: UserCreateDTO, db: Session = Depends(get_db)):
+async def signup(user_data: UserSignUp, db: Session = Depends(get_db)):
     try:
         user_create = UserCreate(db)
         email_validate = EmailValidate(db)
@@ -32,7 +32,7 @@ async def signup(user_data: UserCreateDTO, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
         
 
-@router.post("/verification", response_model=CommonResponse)
+@router.post("/verification", response_model=CommonResponse[TokenResponse])
 async def verification(email: str, code: str, db: Session = Depends(get_db)):
     try:
         email_validate = EmailValidate(db)
@@ -42,29 +42,30 @@ async def verification(email: str, code: str, db: Session = Depends(get_db)):
         access_token = jwt_manage.create_access_token(user)
         refresh_token = jwt_manage.create_refresh_token(user.user_id)
         
+        token_data = {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }
+        
         return CommonResponse(
             status=200,
-            data={
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-                "token_type": "bearer"
-            }
+            data=TokenResponse.model_validate(token_data)
         )
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
         
-@router.post("/login", response_model=CommonResponse)
-async def login(login_data: UserLoginDTO, db: Session = Depends(get_db)):
+@router.post("/login", response_model=CommonResponse[TokenResponse])
+async def login(login_data: UserSignIn, db: Session = Depends(get_db)):
     jwt_manage = JWTManage(db)
     user_login = UserLogin(db, jwt_manage)
     
     try:
-        result = await user_login.login(login_data)
+        token_data = await user_login.login(login_data)
         return CommonResponse(
             status=200,
-            data=result
+            data=token_data
         )
     except HTTPException as http_exc:
         raise http_exc
@@ -72,12 +73,22 @@ async def login(login_data: UserLoginDTO, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/logout", response_model=CommonResponse)
-async def logout(db: Session = Depends(get_db)):
+async def logout(authorization: str = Header(...), db: Session = Depends(get_db)):
     try:
+        if not authorization:
+            raise HTTPException(status_code=401, detail="인증 정보가 존재하지 않습니다.")
+        
+        token_datas = authorization.split()
+        if len(token_datas) != 2 or token_datas[0].lower() != 'bearer':
+            raise HTTPException(status_code=401, detail="JWT 토큰 구조가 옳지 않습니다.")
+        
+        access_token = token_datas[1]
         user_logout = UserLogout(db)
+        logout_data = await user_logout.logout(access_token)
+        
         return CommonResponse(
             status=200,
-            data={"message": "로그아웃 되었습니다."}
+            data=logout_data
         )
     except HTTPException as http_exc:
         raise http_exc
@@ -115,3 +126,36 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.get("/user/me", response_model=CommonResponse[UserInfoResponse])
+async def get_user_info(authorizatiopn: str = Header(...), db: Session = Depends(get_db)):
+    try:
+        if not authorizatiopn:
+            raise HTTPException(status_code=401, detail="JWT 토큰이 존재하지 않습니다.")
+        '''
+        token_datas = "Bearer user_access_token"
+        '''
+        token_datas = authorizatiopn.split()
+        if len(token_datas) != 2 or token_datas[0].lower() != 'bearer':
+            raise HTTPException(status_code=401, detail="JWT 토큰 구조가 옳지 않습니다.")
+    
+        access_token = token_datas[1]
+        jwt_manage = JWTManage(db)
+        payload = jwt_manage.verify_token(access_token)
+        
+        if payload.get('token_type') != "access":
+            raise HTTPException(status_code=401, detail="JWT 토큰 타입이 옳지 않습니다.")
+        
+        user_id = payload.get("user_id")
+        
+        user_info_data = UserInformation(db)
+        user_info = await user_info_data.get_user_info(user_id)
+        
+        return CommonResponse(
+            status=200,
+            data=user_info
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
