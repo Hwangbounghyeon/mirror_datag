@@ -268,7 +268,7 @@ class UserLogin:
         self.jwt_manage = jwt_manage
         self.pwd_context = CryptContext(schemes=["bcrypt"])
 
-    async def login(self, login_data: UserSignIn) -> token:
+    async def login(self, login_data: UserSignIn) -> TokenResponse:
         # 이메일 검증
         user = self.db.query(Users).filter(Users.email == login_data.email).first()
         if not user:
