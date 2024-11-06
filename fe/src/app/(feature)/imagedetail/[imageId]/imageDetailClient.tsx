@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/imagedeatil/header";
 import ClassPanel from "@/components/imagedeatil/classPanel";
@@ -24,7 +24,7 @@ interface ImageDetailClientProps {
         process: string;
         location: string;
         equipmentId: string;
-        createdAt: Date;
+        createdAt: string;
     };
 }
 
@@ -40,9 +40,12 @@ function ImageDetailClient({
     const totalImages = 300;
 
     const { authorities, addAuthorities, removeAuthority } =
-        useAuthorityManager(imageId, initialAuthorities);
+        useAuthorityManager("6729792cae005e3836525cae", initialAuthorities);
 
-    const { tags, addTag, removeTag } = useTagManager(imageId, initialTags);
+    const { tags, addTag, removeTag } = useTagManager(
+        "6729792cae005e3836525cae",
+        initialTags
+    );
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
@@ -54,6 +57,22 @@ function ImageDetailClient({
         },
         [imageId, totalImages, router]
     );
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "ArrowLeft") {
+                handleNavigate("prev");
+            } else if (event.key === "ArrowRight") {
+                handleNavigate("next");
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [handleNavigate]);
 
     const { activePanel, setActivePanel } = usePanelState();
 
