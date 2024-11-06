@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from typing import List
 from sqlalchemy.orm import Session
 
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
 from dto.history_dto import HistoryListResponse
 
@@ -15,10 +15,6 @@ router = APIRouter(prefix="/history", tags=["analysis with dimension reduction"]
 @router.get(
     "/{project_id}", 
     response_model=CommonResponse[HistoryListResponse],
-    responses={
-        400: {"model": CommonResponse[ErrorResponse]},
-        500: {"model": CommonResponse[ErrorResponse]}
-    }
 )
 async def get_history_list(
     project_id: str,
@@ -29,26 +25,12 @@ async def get_history_list(
 ):
     try:
         if not authorization:
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
-            
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
         # Bearer 토큰 형식 검증 및 토큰 추출
         token_parts = authorization.split()
         if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
 
         access_token = token_parts[1]
         jwt = JWTManage(db)
@@ -61,24 +43,15 @@ async def get_history_list(
             status=200,
             data=results
         )
-
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return CommonResponse[ErrorResponse](
-            status=500,
-            error=ErrorResponse(
-                code="INTERNAL_SERVER_ERROR",
-                message="내부 서버 오류가 발생했습니다.",
-                detail=str(e)
-            )
-        )
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get(
     "/detail/{history_id}", 
     response_model=CommonResponse[HistoryData],
-    responses={
-        400: {"model": CommonResponse[ErrorResponse]},
-        500: {"model": CommonResponse[ErrorResponse]}
-    }
 )
 async def get_history_detail(
     history_id: str,
@@ -87,26 +60,12 @@ async def get_history_detail(
 ):
     try:
         if not authorization:
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
-            
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
+
         # Bearer 토큰 형식 검증 및 토큰 추출
         token_parts = authorization.split()
         if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
-            return CommonResponse[ErrorResponse](
-                status=401,
-                error=ErrorResponse(
-                    code="FAILED_VERIFY_TOKEN",
-                    message="토큰 인증에 실패하였습니다.",
-                    detail="토큰 인증에 실패하였습니다."
-                )
-            )
+            raise HTTPException(status_code=401, detail="Verify Token Failed")
 
         access_token = token_parts[1]
         jwt = JWTManage(db)
@@ -120,12 +79,7 @@ async def get_history_detail(
             data=results
         )
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return CommonResponse[ErrorResponse](
-            status=500,
-            error=ErrorResponse(
-                code="INTERNAL_SERVER_ERROR",
-                message="내부 서버 오류가 발생했습니다.",
-                detail=str(e)
-            )
-        )
+        raise HTTPException(status_code=400, detail=str(e))

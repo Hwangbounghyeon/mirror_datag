@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
-from dto.common_dto import CommonResponse, ErrorResponse
+from dto.common_dto import CommonResponse
 from dto.image_detail_dto import ImageDetailTagRequest, ImageDetailTagResponse, ImageDetailAuthRequest, ImageDetailAuthResponse
 from services.image_detail_service import ImageDetailService
 
@@ -22,12 +22,10 @@ async def imageDetailRead(
             status=200,
             data=response
         )
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return ErrorResponse(
-            code="DB_ERROR",
-            message="태그 추가 중 오류가 발생했습니다.",
-            detail=str(e)
-        )
+        raise HTTPException(status_code=400, detail=str(e))
 
 # 2. 해당 이미지에 태그 추가
 # @router.post('', description="프로젝트 생성")
