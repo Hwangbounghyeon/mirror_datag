@@ -6,8 +6,12 @@ import {
 import { Authority } from "@/types/auth";
 import { useState } from "react";
 
-export function useAuthorityManager(imageId: number) {
-    const [authorities, setAuthorities] = useState<Authority[]>([]);
+export function useAuthorityManager(
+    imageId: string,
+    initialAuthorities: Authority[]
+) {
+    const [authorities, setAuthorities] =
+        useState<Authority[]>(initialAuthorities);
 
     const addAuthorities = async (userIds: number[]) => {
         try {

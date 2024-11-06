@@ -104,7 +104,7 @@ export default function AuthModal({
                                     >
                                         {availableUsers.map((user) => (
                                             <SelectItem
-                                                key={user.user_id.toString()}
+                                                key={user.uid.toString()}
                                             >
                                                 {user.name}
                                             </SelectItem>

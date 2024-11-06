@@ -55,7 +55,7 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
                         type="text"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        className="w-full px-2 bg-transparent outline-none text-sm"
+                        className="w-full outline-none text-sm"
                         placeholder="Enter tag..."
                         onKeyDown={handleKeyDown}
                     />
