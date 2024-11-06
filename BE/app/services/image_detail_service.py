@@ -104,7 +104,6 @@ class ImageDetailService:
                 }
             }
         )
-        
         for tag in request.tag_list:
             await collection_tag_images.update_one(
                 {},
