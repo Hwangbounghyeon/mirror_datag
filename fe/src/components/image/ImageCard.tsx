@@ -26,7 +26,7 @@ const ImageContainer: FC<{ src: string; name: string }> = ({ src }) => {
     const [imgError, setImgError] = useState(false);
 
     return (
-        <div className="aspect-square rounded-lg overflow-hidden relative min-w-[120px] min-h-[120px]">
+        <div className="aspect-square rounded-lg overflow-hidden relative w-120px h-120px">
             <Image
                 src={imgError ? fallbackImageSrc : src}
                 alt="No Image"
