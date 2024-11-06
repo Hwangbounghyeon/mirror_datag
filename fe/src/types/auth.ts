@@ -1,7 +1,7 @@
 export interface User {
-    user_id: number;
-    name: string;
-    department_name: string;
+  user_id: number;
+  name: string;
+  department_name: string;
 }
 
 export interface Authority {
@@ -32,5 +32,6 @@ export type UserType = {
 
 export type RefreshResponseType = {
   access_token: string;
+  refresh_token: string;
   token_type: string;
 };
