@@ -9,7 +9,6 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
-from dto.common_dto import ErrorResponse
 from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from typing import List
 
