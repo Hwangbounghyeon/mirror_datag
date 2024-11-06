@@ -159,6 +159,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field }) => (
               <Input
                 {...field}
+                disabled={isOpen}
                 radius="sm"
                 type="text"
                 label="name"
@@ -183,6 +184,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
               <Input
                 {...field}
                 radius="sm"
+                disabled={isOpen}
                 type="email"
                 label="email"
                 isInvalid={!!errors.email}
@@ -210,6 +212,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field }) => (
               <Input
                 {...field}
+                disabled={isOpen}
                 radius="sm"
                 type="password"
                 label="password"
@@ -243,6 +246,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field }) => (
               <Input
                 {...field}
+                disabled={isOpen}
                 radius="sm"
                 type="text"
                 label="duty"
@@ -276,6 +280,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field }) => (
               <Input
                 {...field}
+                disabled={isOpen}
                 radius="sm"
                 type="text"
                 label="location"
@@ -293,6 +298,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field }) => (
               <Select
                 {...field}
+                disabled={isOpen}
                 label="department"
                 isInvalid={!!errors.department_id}
                 errorMessage={errors.department_id?.message}
@@ -316,6 +322,7 @@ export const SignForm = ({ department_list }: SignFormProps) => {
             render={({ field: { value, onChange } }) => (
               <Checkbox
                 isSelected={value}
+                disabled={isOpen}
                 onValueChange={onChange}
                 color="secondary"
                 classNames={{
