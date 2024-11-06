@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse, ErrorResponse
 from dto.project_dto import ProjectRequest, ProjectListRequest
 from services.project_service import ProjectService, ProjectSubService
-
+from services.user_service import JWTManage
 
 
 
@@ -15,12 +15,39 @@ router = APIRouter(prefix="/project", tags=["project"])
 @router.post('', description="프로젝트 생성")
 async def project(
     project_request: ProjectRequest,
+    authorization: str = Header(None),
     db : Session = Depends(get_database_mariadb)
     ):
     try:
+        if not authorization:
+            return CommonResponse[ErrorResponse](
+                status=401,
+                error=ErrorResponse(
+                    code="FAILED_VERIFY_TOKEN",
+                    message="토큰 인증에 실패하였습니다.",
+                    detail="토큰 인증에 실패하였습니다."
+                )
+            )
+            
+        # Bearer 토큰 형식 검증 및 토큰 추출
+        token_parts = authorization.split()
+        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
+            return CommonResponse[ErrorResponse](
+                status=401,
+                error=ErrorResponse(
+                    code="FAILED_VERIFY_TOKEN",
+                    message="토큰 인증에 실패하였습니다.",
+                    detail="토큰 인증에 실패하였습니다."
+                )
+            )
+
+        access_token = token_parts[1]
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(access_token)["user_id"]
+        
         project_service = ProjectService(db)
 
-        response = await project_service.create_project(project_request)
+        response = await project_service.create_project(user_id, project_request)
 
         return CommonResponse(
             status=200,
@@ -36,15 +63,45 @@ async def project(
     
 
 # 2. Project 리스트 조회
-@router.post("/list")
+@router.get("/list")
 async def project_list(
-    project_list : ProjectListRequest,
+    department_name: str | None = None,
+    model_name: str | None = None,
+    page: int = 0,
+    limit: int = 10,
+    authorization: str = Header(None),
     db : Session = Depends(get_database_mariadb)
     ):
     try:
+        if not authorization:
+            return CommonResponse[ErrorResponse](
+                status=401,
+                error=ErrorResponse(
+                    code="FAILED_VERIFY_TOKEN",
+                    message="토큰 인증에 실패하였습니다.",
+                    detail="토큰 인증에 실패하였습니다."
+                )
+            )
+            
+        # Bearer 토큰 형식 검증 및 토큰 추출
+        token_parts = authorization.split()
+        if len(token_parts) != 2 or token_parts[0].lower() != "bearer":
+            return CommonResponse[ErrorResponse](
+                status=401,
+                error=ErrorResponse(
+                    code="FAILED_VERIFY_TOKEN",
+                    message="토큰 인증에 실패하였습니다.",
+                    detail="토큰 인증에 실패하였습니다."
+                )
+            )
+
+        access_token = token_parts[1]
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(access_token)["user_id"]
+        
         project_service = ProjectService(db)
 
-        projects_list = await project_service.get_project_list(project_list)
+        projects_list = await project_service.get_project_list(user_id, department_name, model_name, page, limit)
 
         return CommonResponse(
                 status=200,
