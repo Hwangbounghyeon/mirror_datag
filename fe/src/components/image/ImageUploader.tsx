@@ -70,5 +70,10 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 );
 
 const SupportedFormats: FC = () => (
-    <p className="text-base mt-10">Supported Formats</p>
+    <div className="flex flex-col items-center justify-center text-center">
+        <p className="text-base mt-10 mb-3">Supported Formats</p>
+        <p className="text-base text-opacity-80 text-gray-300">
+            .jpg .jpeg .png .gif .webp .bmp .svg .zip
+        </p>
+    </div>
 );
