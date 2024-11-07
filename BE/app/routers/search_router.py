@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Dict
 
@@ -6,13 +7,14 @@ from services.search_service import TagService
 from dto.search_dto import TagImageResponseDTO, ConditionDTO, SearchConditionDTO, ImageSearchResponseDTO
 from dto.common_dto import CommonResponse
 
-router = APIRouter(
-    prefix="/search",
-    tags=["search"]
-)
+security_scheme = HTTPBearer()
+
+router = APIRouter(prefix="/search", tags=["search"])
 
 @router.get("", response_model=CommonResponse[TagImageResponseDTO])
-async def get_tags_and_images():
+async def get_tags_and_images(
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme)
+):
     """
     태그 목록과 전체 이미지 경로 반환
     """
@@ -26,7 +28,12 @@ async def get_tags_and_images():
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/image", response_model=CommonResponse[ImageSearchResponseDTO])
-async def search_images_by_tags(and_tags: str | None = Query(None), or_tags: str | None = Query(None), not_tags: str | None = Query(None)):
+async def search_images_by_tags(
+    and_tags: str | None = Query(None), 
+    or_tags: str | None = Query(None), 
+    not_tags: str | None = Query(None),
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme)
+):
     try:
         condition = ConditionDTO(
             and_condition=and_tags.split(",") if and_tags else [],

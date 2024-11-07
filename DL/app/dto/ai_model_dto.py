@@ -8,7 +8,7 @@ class AIModelRequest(BaseModel):
     model_name: str
     department_name: Optional[str] = None
     user_id: int
-    project_id: int
+    project_id: str
     is_private: bool
 
     model_config = {

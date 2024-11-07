@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from bson import ObjectId
 
-from dto.history_dto import HistoryListResponse
+from dto.pagination_dto import PaginationDto
+from dto.history_dto import HistoryListResponse, HistoryListData
 from configs.mongodb import collection_histories, collection_project_histories
 from models.history_models import HistoryData, ReductionResults
 
@@ -14,7 +15,7 @@ class HistoryService:
     def __init__(self, db: Session):
         self.db = db
     
-    async def get_histories(self, project_id: str, user_id: int, page: int = 1, limit: int = 10) -> HistoryListResponse:
+    async def get_histories(self, project_id: str, user_id: int, page: int = 1, limit: int = 10) -> PaginationDto[HistoryListData]:
         try:
             project_histories = await collection_project_histories.find_one({})
             if not project_histories or "project" not in project_histories:
@@ -68,8 +69,6 @@ class HistoryService:
                 "total_count": total_histories,
                 "total_pages": total_pages
             }
-        except InvalidId:
-            raise HTTPException(status_code=400, detail="Invalid history ID format")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
         
@@ -83,8 +82,5 @@ class HistoryService:
             history["_id"] = str(history["_id"])
                 
             return {**history}
-
-        except InvalidId:
-            raise HTTPException(status_code=400, detail="Invalid history ID format")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

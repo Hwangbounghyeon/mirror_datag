@@ -11,11 +11,7 @@ router = APIRouter(prefix="/cls", tags=["classification"])
 
 @router.post(
     "", 
-    response_model=CommonResponse[str],
-    responses={
-        400: {"model": CommonResponse[ErrorResponse]},
-        500: {"model": CommonResponse[ErrorResponse]}
-    }
+    response_model=CommonResponse[str]
 )
 async def classify_objects(
     request: AIModelRequest,
@@ -29,12 +25,7 @@ async def classify_objects(
             data="success"
         )
     
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        return CommonResponse[ErrorResponse](
-            status=500,
-            error=ErrorResponse(
-                code="INTERNAL_SERVER_ERROR",
-                message="내부 서버 오류가 발생했습니다.",
-                detail=str(e)
-            )
-        )
+        raise HTTPException(status_code=400, detail=str(e))
