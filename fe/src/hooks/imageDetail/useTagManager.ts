@@ -1,7 +1,7 @@
 "use client";
 
 import { tagApi } from "@/api/detail/tagApi";
-import { TagRequest } from "@/types/tag";
+import { AddTagRequest, DeleteTagRequest } from "@/types/tag";
 import { useState } from "react";
 
 export function useTagManager(imageId: string, initialTags: string[]) {
@@ -9,9 +9,9 @@ export function useTagManager(imageId: string, initialTags: string[]) {
 
     const addTag = async (tagName: string) => {
         try {
-            const request: TagRequest = {
+            const request: AddTagRequest = {
                 image_id: imageId,
-                tag_name: tagName,
+                tag_list: [tagName],
             };
             const newTag = await tagApi.add(request);
             setTags(newTag);
@@ -22,12 +22,12 @@ export function useTagManager(imageId: string, initialTags: string[]) {
 
     const removeTag = async (tagName: string) => {
         try {
-            const request: TagRequest = {
+            const request: DeleteTagRequest = {
                 image_id: imageId,
-                tag_name: tagName,
+                delete_tag_list: [tagName],
             };
-            await tagApi.delete(request);
-            setTags((prevTags) => prevTags.filter((tag) => tag !== tagName));
+            const newTag = await tagApi.delete(request);
+            setTags(newTag);
         } catch (error) {
             console.error("Failed to remove tag:", error);
         }

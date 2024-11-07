@@ -9,15 +9,15 @@ import {
     SelectItem,
     Chip,
 } from "@nextui-org/react";
-import { Authority } from "@/types/auth";
 import { DEPARTMENTS } from "@/lib/constants/mockData";
 import { useAuthoritySelect } from "@/hooks/imageDetail/useAuthoritySelect";
+import { AuthUser } from "@/types/auth";
 
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAdd: (userIds: number[]) => void;
-    existingAuthorities: Authority[];
+    existingAuthorities: AuthUser[];
 }
 
 export default function AuthModal({
@@ -37,7 +37,7 @@ export default function AuthModal({
     } = useAuthoritySelect(existingAuthorities);
 
     const handleConfirm = () => {
-        const userIds = selectedPeople.map((person) => person.id);
+        const userIds = selectedPeople.map((person) => person.user_id);
         onAdd(userIds);
         reset();
         onClose();
@@ -92,10 +92,10 @@ export default function AuthModal({
                                         selectedKeys={selectedPeople
                                             .filter(
                                                 (p) =>
-                                                    p.department ===
+                                                    p.department_name ===
                                                     selectedDepartment
                                             )
-                                            .map((p) => p.id.toString())}
+                                            .map((p) => p.user_id.toString())}
                                         onChange={(e) =>
                                             handlePeopleSelect(
                                                 Array.from(e.target.value)
@@ -116,16 +116,16 @@ export default function AuthModal({
                                     <div className="flex flex-wrap gap-2">
                                         {selectedPeople.map((person) => (
                                             <Chip
-                                                key={person.id}
+                                                key={person.user_id}
                                                 onClose={() =>
                                                     handleRemovePerson(
-                                                        person.id
+                                                        person.user_id
                                                     )
                                                 }
                                                 variant="flat"
                                             >
-                                                {person.name} /{" "}
-                                                {person.department}
+                                                {person.user_name} /{" "}
+                                                {person.department_name}
                                             </Chip>
                                         ))}
                                     </div>

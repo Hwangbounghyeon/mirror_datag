@@ -1,4 +1,5 @@
 export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const ACCESS_TOKEN = process.env.NEXT_PUBLIC_ACCESS_TOKEN;
 
 interface ApiOptions {
     method: string;
@@ -13,6 +14,7 @@ async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
             ...options,
             headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${ACCESS_TOKEN}`,
                 ...options.headers,
             },
         });
