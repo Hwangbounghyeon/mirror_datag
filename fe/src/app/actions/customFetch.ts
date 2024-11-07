@@ -62,6 +62,9 @@ export async function customFetch<T>({
       };
     }
 
+    // console.log(process.env.NEXT_PUBLIC_BACKEND_URL)
+    // console.log(BASE_URL)
+
     // 기본 도메인 URL 설정 - BASE_URL이 없을 시 process.env.NEXT_PUBLIC_BACKEND_URL 사용
     // BASE_URL이나 process.env.NEXT_PUBLIC_BACKEND_URL이 없을 시 에러 발생
     const baseUrl = BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -98,7 +101,7 @@ export async function customFetch<T>({
 
       // JSON 응답 확인
       if (!isJsonResponse(response)) {
-        throw new Error(ERROR_MESSAGES.NO_BASE_URL);
+        throw new Error(ERROR_MESSAGES.NON_JSON_RESPONSE);
       }
 
       return response;

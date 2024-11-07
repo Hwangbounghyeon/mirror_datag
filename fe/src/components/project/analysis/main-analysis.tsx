@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { DataPoint } from "@/types/chartType";
 import { HistoryData } from "@/types/historyType";
 import { Select, SelectItem } from "@nextui-org/react";
-import { customFetch } from "@/app/actions/customFetch";
+import { getHistoryDetail } from "@/api/analysis/getHistoryDetail";
 
 // ScatterPlot 컴포넌트를 동적으로 import
 const ScatterPlot = dynamic(
@@ -34,29 +34,13 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
   const getHistory = async () => {
     if (!selectedHistory) return;
 
-    try {
-      const response = await fetch(
-        `http://localhost:8000/be/api/history/detail/${selectedHistory}`,
-        {
-          headers: {
-            Authorization: `bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJlbWFpbCI6IjU1MTYyMzdAa211LmtyIiwiZGVwYXJ0bWVudF9pZCI6MSwiaXNfc3VwZXJ2aXNlZCI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTczMDg5MzkzOX0.asRcUQvBAr5NoLSXnu7kxabQL4mW5uiNKvtvj2gMHi0`,
-          },
-          cache: "no-store",
-        }
-      );
+    const response = await getHistoryDetail(selectedHistory);
 
-      console.log(response);
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const result = await response.json();
-
-      setSelectedData(result.data);
-    } catch (error) {
-      console.error("Error fetching histories:", error);
+    if (!response.data) {
+      return;
     }
+
+    setSelectedData(response.data.data);
   };
 
   const featureOptions = Array.from({ length: 10 }, (_, i) => ({
@@ -103,6 +87,10 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
   useEffect(() => {
     getHistory();
   }, [selectedHistory]);
+
+  useEffect(() => {
+    console.log(plotData)
+  }, [plotData])
 
   return (
     <div className="flex flex-col max-w-[calc(80%-2rem)] flex-grow bg-gray-300 mx-[1rem]">
