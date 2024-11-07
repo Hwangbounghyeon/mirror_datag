@@ -8,18 +8,18 @@ import umap
 from datetime import datetime, timezone
 from bson import ObjectId
 
-from dto.dimension_reduction_dto import DimensionReductionRequest, DimensionReductionResponse
+from dto.analysis_dto import DimensionReductionRequest, DimensionReductionResponse
 from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata
 from models.history_models import HistoryData, ReductionResults
 
-class DimensionReductionService:
+class AnalysisService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def dimension_reduction(self, request: DimensionReductionRequest) -> DimensionReductionResponse:
+    async def dimension_reduction(self, request: DimensionReductionRequest, user_id: int) -> DimensionReductionResponse:
         # mongodb 저장
         inserted_id = await self._save_history_mongodb(
-            request.user_id,
+            user_id,
             request.project_id,
             request.is_private,
             request.history_name,
@@ -31,9 +31,6 @@ class DimensionReductionService:
 
         # image_ids로 이미지 정보들 가져오기
         image_features = await self._get_image_features(request.image_ids)
-
-        print(len(request.image_ids))
-        print(len(image_features))
 
         concat_image_infos = []
         for i in range(len(image_features)):
@@ -77,7 +74,7 @@ class DimensionReductionService:
         return DimensionReductionResponse(
             history_id=inserted_id,
             project_id=request.project_id,
-            user_id=request.user_id,
+            user_id=user_id,
             history_name=request.history_name
         )
 
@@ -255,26 +252,15 @@ class DimensionReductionService:
                     "project": {}
                 }
                 await collection_project_histories.insert_one(new_document)
-                existing_doc = new_document
-
-            # project_id에 해당하는 배열이 있는지 확인
-            current_histories = existing_doc.get("project", {}).get(str(project_id))
-
-            if current_histories is None:
-                current_histories = []
-
-            # 새로운 image_id를 추가하고 중복 제거
-            updated_histories = list(set(current_histories + [history_id]))
 
             # 업데이트 수행
             await collection_project_histories.update_one(
                 {},
                 {
-                    "$set": {
-                        f"project.{str(project_id)}": updated_histories
+                    "$addToSet": {
+                        f"project.{str(project_id)}": history_id
                     }
                 }
             )
-
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
