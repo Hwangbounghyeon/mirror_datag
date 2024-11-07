@@ -6,14 +6,6 @@ export type HistoryListData = {
   updated_at: string;
 };
 
-export type HistoryListResponse = {
-  data: HistoryListData[];
-  page: number;
-  limit: number;
-  total_count: number;
-  total_pages: number;
-};
-
 export type HistoryResponseType = {
   status: number;
   data: {
@@ -59,3 +51,8 @@ export type HistoryData = {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type HistoryDetailResponseType = {
+  status: number;
+  data: HistoryData;
+};

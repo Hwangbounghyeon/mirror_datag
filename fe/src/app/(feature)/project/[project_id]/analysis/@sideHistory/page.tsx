@@ -23,7 +23,6 @@ const GetHistories = async ({
     endpoint: `/history/${projectId}`,
     searchParams: requestParams,
   });
-  console.log("abcd", response);
   if (!response.data) {
     return <div>데이터가 없습니다.</div>;
   }
