@@ -2,6 +2,16 @@
 import { refreshAccessToken } from "@/app/actions/auth";
 import { cookies } from "next/headers";
 
+// 상수 정의 - 에러메세지 DEFAULT
+const ERROR_MESSAGES = {
+  CACHE_CONFLICT: "cache와 next 옵션은 동시에 사용할 수 없습니다.",
+  NO_BASE_URL: "BASE_URL이 설정되지 않았습니다.",
+  NON_JSON_RESPONSE: "서버가 JSON이 아닌 응답을 반환했습니다.",
+  LOGIN_REQUIRED: "로그인이 필요합니다.",
+  SERVER_ERROR: "서버에서 오류가 발생했습니다.",
+  UNKNOWN_ERROR: "알 수 없는 오류가 발생했습니다.",
+} as const;
+
 // 리턴 타입 정의
 export type DefaultResponseType<T> = {
   status: number;
@@ -27,12 +37,18 @@ interface AuthFetchProps {
 // Fetch 함수
 // T: 응답 데이터 타입 제네릭
 
+// JSON 응답 체크 유틸리티 함수
+const isJsonResponse = (response: Response): boolean => {
+  const contentType = response.headers.get("content-type");
+  return contentType?.includes("application/json") ?? false;
+};
+
 export async function customFetch<T>({
   BASE_URL,
   endpoint,
   method,
   searchParams,
-  cache,
+  cache = "no-store",
   next,
   body,
   ContentType = "application/json",
@@ -42,114 +58,93 @@ export async function customFetch<T>({
     if (cache && next) {
       return {
         status: 400,
-        error: "cache와 next 옵션은 동시에 사용할 수 없습니다.",
+        error: ERROR_MESSAGES.CACHE_CONFLICT,
       };
-    } else if (!cache && !next) {
-      // 기본 캐시 정책 설정 - 아무 설정 없는 경우
-      cache = "no-store";
     }
 
-    // Access Token 가져오기
-    const accessToken = cookies().get("accessToken");
-    const refreshToken = cookies().get("refreshToken");
+    // 기본 도메인 URL 설정 - BASE_URL이 없을 시 process.env.NEXT_PUBLIC_BACKEND_URL 사용
+    // BASE_URL이나 process.env.NEXT_PUBLIC_BACKEND_URL이 없을 시 에러 발생
+    const baseUrl = BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (!baseUrl) {
+      throw new Error("BASE_URL이 설정되지 않았습니다.");
+    }
 
-    // Headers 설정
-    const headers: HeadersInit = {
-      "Content-Type": ContentType,
+    const makeRequest = async (accessToken?: string) => {
+      const headers: HeadersInit = {
+        "Content-Type": ContentType,
+      };
+      if (accessToken) {
+        headers["Authorization"] = `bearer ${accessToken}`;
+      }
+      // Fetch 옵션 설정
+      const fetchOptions: RequestInit = {};
+      if (cache) {
+        fetchOptions.cache = cache;
+      } else if (next) {
+        fetchOptions.next = next;
+      }
+
+      // 요청 URL 설정
+      const url = new URL(`${baseUrl}${endpoint}`);
+      if (searchParams) {
+        url.search = searchParams.toString();
+      }
+      const response = await fetch(url.toString(), {
+        ...fetchOptions,
+        method,
+        headers,
+        body,
+      });
+
+      // JSON 응답 확인
+      if (!isJsonResponse(response)) {
+        throw new Error(ERROR_MESSAGES.NO_BASE_URL);
+      }
+
+      return response;
     };
 
-    if (accessToken) {
-      headers["Authorization"] = `bearer ${accessToken.value}`;
-    }
+    // Token 가져오기
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("accessToken");
+    const refreshToken = cookieStore.get("refreshToken");
 
-    // URL 생성
-    const url = new URL(
-      `${BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`
-    );
+    let response = await makeRequest(accessToken?.value);
 
-    if (searchParams) {
-      url.search = searchParams.toString();
-    }
-
-    // Fetch 옵션 설정
-    const fetchOptions: RequestInit = {};
-    if (cache) {
-      fetchOptions.cache = cache;
-    } else if (next) {
-      fetchOptions.next = next;
-    }
-
-    // Fetch 요청
-    const response = await fetch(url.toString(), {
-      ...fetchOptions,
-      method,
-      headers,
-      body,
-    });
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Unauthorized 에러 처리 영역
-        if (!refreshToken) {
-          // refresh token이 없을 때
-          cookies().delete("accessToken");
-          cookies().delete("refreshToken");
-          return {
-            status: 401,
-            error: "로그인이 필요합니다.",
-          };
-        } else {
-          try {
-            // refresh 시도
-            const refreshTokensResponse = await refreshAccessToken();
-            if (!refreshTokensResponse) {
-              return {
-                status: 401,
-                error: "로그인이 필요합니다.",
-              };
-            } else {
-              const retry_response = await fetch(url.toString(), {
-                ...fetchOptions,
-                headers: {
-                  ...headers,
-                },
-              });
-              const retry_responseData: DefaultResponseType<T> =
-                await retry_response.json();
-              return {
-                status: retry_response.status,
-                data: retry_responseData as T,
-              };
-            }
-          } catch (error) {
-            return {
-              status: 500,
-              error: "알 수 없는 오류가 발생했습니다.",
-            };
-          }
-        }
+    if (response.status === 401 && refreshToken) {
+      const refreshResponse = await refreshAccessToken();
+      if (refreshResponse) {
+        const retryResult = await makeRequest(refreshResponse);
+        response = retryResult;
       } else {
-        // 401 외의 다른 에러 처리 영역
+        cookieStore.delete("accessToken");
+        cookieStore.delete("refreshToken");
         return {
-          status: response.status,
-          error: responseData.detail || "서버에서 오류가 발생했습니다.",
+          status: 401,
+          error: ERROR_MESSAGES.LOGIN_REQUIRED,
         };
       }
     }
 
-    return {
-      status: response.status,
-      data: responseData as T,
-    };
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      return {
+        status: response.status,
+        error: responseData.detail || ERROR_MESSAGES.SERVER_ERROR,
+      };
+    } else {
+      return {
+        status: response.status,
+        data: responseData as T,
+      };
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return {
       status: 500,
       error:
-        error instanceof Error
-          ? error.message
-          : "알 수 없는 오류가 발생했습니다.",
+        error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR,
     };
   }
 }
