@@ -123,7 +123,6 @@ export default function AuthModal({
                                                     )
                                                 }
                                                 variant="flat"
-                                                color="primary"
                                             >
                                                 {person.name} /{" "}
                                                 {person.department}
@@ -134,11 +133,7 @@ export default function AuthModal({
                             </div>
                         </ModalBody>
                         <ModalFooter>
-                            <Button
-                                color="danger"
-                                variant="light"
-                                onPress={handleCancel}
-                            >
+                            <Button color="danger" onPress={handleCancel}>
                                 Close
                             </Button>
                             <Button

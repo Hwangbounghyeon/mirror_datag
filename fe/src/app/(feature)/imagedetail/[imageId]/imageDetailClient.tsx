@@ -14,7 +14,8 @@ import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { Authority } from "@/types/auth";
 
 interface ImageDetailClientProps {
-    imageId: number;
+    imageId: string;
+    imageIdx: number;
     initialAuthorities: Authority[];
     initialTags: string[];
     classes: string[];
@@ -30,6 +31,7 @@ interface ImageDetailClientProps {
 
 function ImageDetailClient({
     imageId,
+    imageIdx,
     initialAuthorities,
     initialTags,
     classes,
@@ -40,22 +42,22 @@ function ImageDetailClient({
     const totalImages = 300;
 
     const { authorities, addAuthorities, removeAuthority } =
-        useAuthorityManager("6729792cae005e3836525cae", initialAuthorities);
+        useAuthorityManager("6729792cae005e3836525cae", initialAuthorities); //TODO imageId로 추후 수정
 
     const { tags, addTag, removeTag } = useTagManager(
-        "6729792cae005e3836525cae",
+        "6729792cae005e3836525cae", //TODO 추후 imageId로 수정
         initialTags
     );
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
-            if (direction === "prev" && imageId > 1) {
-                router.push(`/imagedetail/${imageId - 1}`);
-            } else if (direction === "next" && imageId < totalImages) {
-                router.push(`/imagedetail/${imageId + 1}`);
+            if (direction === "prev" && imageIdx > 1) {
+                router.push(`/imagedetail/${imageIdx - 1}`);
+            } else if (direction === "next" && imageIdx < totalImages) {
+                router.push(`/imagedetail/${imageIdx + 1}`);
             }
         },
-        [imageId, totalImages, router]
+        [imageIdx, router]
     );
 
     useEffect(() => {
@@ -80,7 +82,7 @@ function ImageDetailClient({
         <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-500">
             <Header
                 fileName={imageSrc.split("/").pop() || "Unknown"}
-                currentNumber={imageId}
+                currentNumber={imageIdx}
                 totalCount={totalImages}
                 onNavigate={handleNavigate}
             />

@@ -1,6 +1,7 @@
 "use client";
 
 import { tagApi } from "@/api/detail/tagApi";
+import { TagRequest } from "@/types/tag";
 import { useState } from "react";
 
 export function useTagManager(imageId: string, initialTags: string[]) {
@@ -8,7 +9,7 @@ export function useTagManager(imageId: string, initialTags: string[]) {
 
     const addTag = async (tagName: string) => {
         try {
-            const request = {
+            const request: TagRequest = {
                 image_id: imageId,
                 tag_name: tagName,
             };
@@ -21,7 +22,7 @@ export function useTagManager(imageId: string, initialTags: string[]) {
 
     const removeTag = async (tagName: string) => {
         try {
-            const request = {
+            const request: TagRequest = {
                 image_id: imageId,
                 tag_name: tagName,
             };
