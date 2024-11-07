@@ -9,10 +9,20 @@ import ImageGrid from "@/components/image/ImageGrid";
 import { useState } from "react";
 import { IoFilter } from "react-icons/io5";
 import { FilterModal } from "@/components/loadimage/filterModal";
+import { Pagination } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
 
-export default function LoadImagesPage() {
+export default function LoadImagesPage({
+    searchParams,
+}: {
+    searchParams: { page?: string };
+}) {
+    const router = useRouter();
     const { handlePrevious, handleLoadImage } = useLoadImages();
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const currentPage = Number(searchParams.page) || 1;
+    const itemsPerPage = 12;
+    const totalPages = Math.ceil(300 / itemsPerPage); // TODO 추후에 image배열 받아와서 길이로 바꾸기
 
     const handleDone = () => {
         setIsFilterOpen(false);
@@ -49,6 +59,19 @@ export default function LoadImagesPage() {
                     </div>
                 </div>
             </ContentContainer>
+            <Pagination
+                className="items-center justify-center flex mb-1"
+                total={totalPages}
+                initialPage={1}
+                page={currentPage}
+                onChange={(page) => {
+                    router.push(`/loadimage?page=${page}`);
+                }}
+                showControls
+                boundaries={1}
+                siblings={1}
+                size="lg"
+            />
             <FilterModal
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}

@@ -3,10 +3,10 @@ import { BiPlus } from "react-icons/bi";
 import { MdOutlineClear } from "react-icons/md";
 import AuthModal from "./modal/authModal";
 import { useDisclosure } from "@nextui-org/react";
-import { Authority } from "@/types/auth";
+import { AuthUser } from "@/types/auth";
 
 interface AuthorityPanelProps {
-    authorities: Authority[];
+    authorities: AuthUser[];
     onRemove: (userId: number) => void;
     onAdd: (userIds: number[]) => void;
 }
@@ -27,14 +27,15 @@ function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
                 <div className="flex flex-col gap-2">
                     {authorities.map((authority) => (
                         <div
-                            key={`auth-${authority.id}`}
+                            key={`auth-${authority.user_id}`}
                             className="flex items-center justify-between ps-3 py-1 rounded-full border border-blue-400"
                         >
                             <span className="text-sm text-blue-400">
-                                {authority.name} / {authority.department}
+                                {authority.user_name} /{" "}
+                                {authority.department_name}
                             </span>
                             <button
-                                onClick={() => onRemove(authority.id)}
+                                onClick={() => onRemove(authority.user_id)}
                                 className="text-blue-400 hover:text-blue-300"
                             >
                                 <MdOutlineClear />

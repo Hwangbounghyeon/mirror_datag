@@ -1,14 +1,23 @@
+import { DefaultResponseType } from "./default";
+
 export interface User {
     uid: number;
     name: string;
     department_name: string;
 }
 
-export interface Authority {
-    id: number;
-    name: string;
-    department: string;
+export interface AuthUser {
+    user_id: number;
+    user_name: string;
+    department_name: string;
 }
+
+export interface AuthResponseData {
+    image_id: string;
+    auth_list: AuthUser[];
+}
+
+export type AuthResponse = DefaultResponseType<AuthResponseData>;
 
 export interface LoginResponseType {
     access_token: string;
