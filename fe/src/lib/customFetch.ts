@@ -56,12 +56,12 @@ export async function customFetch<T>({
     };
 
     if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken.value}`;
+      headers["Authorization"] = `bearer ${accessToken.value}`;
     }
 
     // URL 생성
     const url = new URL(
-      `${BASE_URL || process.env.NEXT_PUBLIC_FRONTEND_URL}${endpoint}`
+      `${BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`
     );
 
     if (searchParams) {
@@ -76,12 +76,14 @@ export async function customFetch<T>({
       fetchOptions.next = next;
     }
 
+    // Fetch 요청
     const response = await fetch(url.toString(), {
       ...fetchOptions,
       method,
       headers,
       body,
     });
+    console.log(response);
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -129,7 +131,7 @@ export async function customFetch<T>({
         // 401 외의 다른 에러 처리 영역
         return {
           status: response.status,
-          error: responseData.message || "서버에서 오류가 발생했습니다.",
+          error: responseData.detail || "서버에서 오류가 발생했습니다.",
         };
       }
     }
@@ -139,6 +141,9 @@ export async function customFetch<T>({
       data: responseData as T,
     };
   } catch (error) {
+    console.log("customFetch 치명적 Error");
+    console.log(error);
+
     return {
       status: 500,
       error:

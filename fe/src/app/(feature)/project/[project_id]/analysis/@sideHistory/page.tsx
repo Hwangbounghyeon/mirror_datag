@@ -18,10 +18,12 @@ const GetHistories = async ({
   requestParams.set("page", page.toString());
   const response = await customFetch<HistoryResponseType>({
     method: "GET",
+    cache: "no-store",
+    ContentType: "application/json",
     endpoint: `/history/${projectId}`,
     searchParams: requestParams,
   });
-
+  console.log(response);
   if (!response.data) {
     return <div>데이터가 없습니다.</div>;
   }
