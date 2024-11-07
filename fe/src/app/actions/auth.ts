@@ -88,10 +88,7 @@ export const check_auth = async (formData: FormData) => {
 
 // 쿠키에 담긴 accessToken을 이용하여 사용자의 인증 상태를 확인
 // accessToken이 유효하면 true, 그렇지 않으면 false를 반환 (없는 경우도 고려)
-export const verifyAccessToken = async () => {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get("accessToken");
-  if (!accessToken) return false;
+export const verifyAccessToken = async (accessToken: string) => {
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/me`,
@@ -99,8 +96,8 @@ export const verifyAccessToken = async () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ accessToken: `${accessToken.value}` }),
         cache: "no-store",
       }
     );
