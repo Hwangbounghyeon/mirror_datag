@@ -6,7 +6,6 @@ import numpy as np
 class DimensionReductionRequest(BaseModel):
     algorithm: str
     project_id: str
-    user_id: int
     history_name: str
     is_private: bool
     selected_tags: List[List[str]]

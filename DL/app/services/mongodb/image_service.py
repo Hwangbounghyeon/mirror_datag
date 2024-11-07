@@ -62,7 +62,7 @@ class ImageService:
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
 
-    async def mapping_image_permissions_mongodb(self, user_id: str, department_name: str, project_id: str, image_id: str):
+    async def mapping_image_permissions_mongodb(self, user_id: int, department_name: str, project_id: str, image_id: str):
         try:
             existing_doc = await collection_image_permissions.find_one()
 

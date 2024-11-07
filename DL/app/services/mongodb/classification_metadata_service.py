@@ -19,7 +19,7 @@ class ClassificationMetadataService:
     def create_classification_result_data(
         self,
         user: int,
-        project_id: int,
+        project_id: str,
         is_private: bool,
         ai_model: str,
         prediction: str,
