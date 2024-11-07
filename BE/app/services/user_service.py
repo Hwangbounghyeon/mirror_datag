@@ -10,12 +10,12 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from dto.users_dto import UserSignUp, UserSignIn, UserInfoResponse, TokenResponse
+from dto.users_dto import UserSignUp, UserSignIn, UserInfoResponse, TokenResponse, UserProfileResponse, UserProfileUpdateRequest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
-from models.mariadb_users import Users
+from models.mariadb_users import Users, Departments
 
 load_dotenv()
 
@@ -386,10 +386,6 @@ class UserInformation:
             )
 
 ## 7. 유저 프로필
-class UserProfile:
-    pass
-    
-
 
 
 # 부가 기능
