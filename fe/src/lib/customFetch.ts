@@ -19,10 +19,7 @@ interface AuthFetchProps {
     | "application/json"
     | "application/x-www-form-urlencoded"
     | "multipart/form-data";
-  next?: {
-    revalidate?: number;
-    tags?: (string | number)[];
-  } | null;
+  next?: NextFetchRequestConfig;
 }
 
 export async function customFetch<T>({
@@ -72,15 +69,19 @@ export async function customFetch<T>({
     }
 
     // Fetch 옵션 설정
-    const fetchOptions: RequestInit = {
+    const fetchOptions: RequestInit = {};
+    if (cache) {
+      fetchOptions.cache = cache;
+    } else if (next) {
+      fetchOptions.next = next;
+    }
+
+    const response = await fetch(url.toString(), {
+      ...fetchOptions,
       method,
       headers,
-      ...(body && { body }),
-      ...(cache && { cache }),
-      ...(next && { next }),
-    };
-
-    const response = await fetch(url.toString(), fetchOptions);
+      body,
+    });
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -104,7 +105,12 @@ export async function customFetch<T>({
                 error: "로그인이 필요합니다.",
               };
             } else {
-              const retry_response = await fetch(url.toString(), fetchOptions);
+              const retry_response = await fetch(url.toString(), {
+                ...fetchOptions,
+                headers: {
+                  ...headers,
+                },
+              });
               const retry_responseData: DefaultResponseType<T> =
                 await retry_response.json();
               return {
