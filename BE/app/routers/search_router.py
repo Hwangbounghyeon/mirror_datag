@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, Security
+from fastapi import APIRouter, Query, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -11,10 +11,8 @@ security_scheme = HTTPBearer()
 
 router = APIRouter(prefix="/search", tags=["search"])
 
-@router.get("", response_model=CommonResponse[TagImageResponseDTO])
-async def get_tags_and_images(
-    credentials: HTTPAuthorizationCredentials = Security(security_scheme)
-):
+@router.get("", response_model=CommonResponse[TagImageResponse])
+async def get_tags_and_images(credentials: HTTPAuthorizationCredentials = Security(security_scheme)):
     """
     태그 목록과 전체 이미지 경로 반환
     """
