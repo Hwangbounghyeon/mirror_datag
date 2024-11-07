@@ -15,7 +15,7 @@ class ProjectRequest(BaseModel):
     project_model_name: str
     description: str
     accesscontrol: AccessControl
-    is_private: int
+    is_private: bool
 
 # project 응답 DTO
 class ProjectResponse(BaseModel):
@@ -25,8 +25,7 @@ class ProjectResponse(BaseModel):
     description: Optional[str] = ""
     user_id: int
     department : Optional[str] = ""
-    image_count : Optional[int] = 0
-    is_private: Optional[int] = 0
+    is_private: Optional[bool] = False
     created_at: datetime
     updated_at: datetime
 
