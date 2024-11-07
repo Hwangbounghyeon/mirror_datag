@@ -29,24 +29,24 @@ class Upload:
         return mimetypes is not None and mime_type.startswith("image")
 
     # 메인 로직
-    async def upload_image(self, upload_request: UploadRequest, files: list):
+    async def upload_image(self, upload_request: UploadRequest, files: list, user_id: int):
 
-        inserted_id = await self._before_save_upload_batch(upload_request)
+        inserted_id = await self._before_save_upload_batch(upload_request, user_id)
 
-        await self._mapping_user_upload_batches(upload_request.project_id, upload_request.user_id, inserted_id)
+        await self._mapping_user_upload_batches(upload_request.project_id, user_id, inserted_id)
 
         file_urls = await self._upload_s3(files)
 
-        await self._analysis_data(upload_request, file_urls)
+        await self._analysis_data(upload_request, file_urls, user_id)
 
         await self._after_save_upload_batch(inserted_id)
 
         return file_urls
         
-    async def _before_save_upload_batch(self, upload_request: UploadRequest) -> str:
+    async def _before_save_upload_batch(self, upload_request: UploadRequest, user_id: int) -> str:
         try:
             batch_obj = {
-                "userId": upload_request.user_id,
+                "userId": user_id,
                 "projectId": upload_request.project_id,
                 "isDone": False,
                 "createdAt": datetime.now(timezone.utc),
@@ -109,7 +109,7 @@ class Upload:
 
         return file_urls
     
-    async def _analysis_data(self, upload_request: UploadRequest, file_urls: List[str]):
+    async def _analysis_data(self, upload_request: UploadRequest, file_urls: List[str], user_id: int):
         if upload_request.task == "cls":
             url = "http://localhost:8001/dl/api/cls"
         else:
@@ -125,11 +125,11 @@ class Upload:
             "image_urls": file_urls,
             "model_name": upload_request.model_name,
             "department_name": department_name,
-            "user_id": upload_request.user_id,
+            "user_id": user_id,
             "project_id": upload_request.project_id,
             "is_private": upload_request.is_private
         }
-        
+
         headers = {"Content-Type": "application/json"}
         try:
             result = requests.post(url, json = data, headers=headers)

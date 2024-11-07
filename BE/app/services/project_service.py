@@ -2,12 +2,14 @@ from dto.project_dto import ProjectRequest
 from configs.mongodb import collection_project_permissions, collection_projects
 
 from sqlalchemy.orm import Session
+from utils.timezone import get_current_time
 from datetime import datetime, timezone
 from bson import ObjectId
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from dto.pagination_dto import PaginationDto
 from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
 from models.mariadb_users import Projects, Users, Departments, ProjectImage
 from typing import List
@@ -18,52 +20,73 @@ class ProjectService:
         self.db = db
     
     # 1-1. Project 생성
-    async def create_project(self, user_idx: int, request: ProjectRequest):
+    async def create_project(self, creator_user_id: int, request: ProjectRequest) -> str:
         
-        user_department = self.db.query(Users).filter(Users.user_id == user_idx).first()
+        user_department = self.db.query(Users).filter(Users.user_id == creator_user_id).first()
         if not user_department:
             raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
         project_department = self.db.query(Departments).filter(Departments.department_id == user_department.department_id).first()
         
+        department_name = project_department.department_name if project_department else "None"
+
         # project 생성
         project = {
             'project_name':request.project_name,
             'model_name':request.project_model_name,
             'description':request.description,
-            'user_id':user_idx,
-            'department' : project_department.department_name if project_department else "",
+            'user_id':creator_user_id,
+            'department': department_name,
             'image_count': 0,
             'is_private':request.is_private,
-            'created_at':datetime.now(timezone.utc),
-            'updated_at':datetime.now(timezone.utc)
-            }
+            'created_at':get_current_time(),
+            'updated_at':get_current_time()
+        }
         
         new_project = await collection_projects.insert_one(project)
         project_id = str(new_project.inserted_id)
         
-        document = await collection_project_permissions.find_one({})
+        document = await collection_project_permissions.find_one()
         
         # 문서가 없을 경우 새로운 문서 생성
         if document is None:
             new_document = {
-                "user": {user_id: {"view": [], "edit": []} for user_id in request.accesscontrol.view_users},
-                "department": {dept: {"view": [], "edit": []} for dept in request.accesscontrol.view_departments}
+                "user": {},
+                "department": {}
             }
             await collection_project_permissions.insert_one(new_document)
             document = new_document
-        
-            
+
+        if str(creator_user_id) not in document.get("user", {}):
+            await collection_project_permissions.update_one(
+                {},
+                {"$set": {f"user.{str(creator_user_id)}": {"view": [], "edit": []}}}
+            )
+        await collection_project_permissions.update_one(
+            {},
+            {"$addToSet": {f"user.{str(creator_user_id)}.edit": project_id}}
+        )
+
+        if department_name not in document.get("department", {}):
+            await collection_project_permissions.update_one(
+                {},
+                {"$set": {f"department.{department_name}": {"view": [], "edit": []}}}
+            )
+        await collection_project_permissions.update_one(
+            {},
+            {"$addToSet": {f"department.{department_name}.edit": project_id}}
+        )
+
         for user_id in request.accesscontrol.view_users:
             user_key = f"user.{user_id}"
             if user_id not in document.get("user", {}):
                 # `user` 내에 해당 ID가 없으면 새로운 리스트 추가
                 await collection_project_permissions.update_one(
-                    {"_id": document["_id"]},
+                    {},
                     {"$set": {user_key: {"view": [], "edit": []}}}
                 )
             # view 리스트에 project_id 추가
             await collection_project_permissions.update_one(
-                {"_id": document["_id"]},
+                {},
                 {"$addToSet": {f"{user_key}.view": project_id}}
             )
             
@@ -71,11 +94,11 @@ class ProjectService:
             user_key = f"user.{user_id}"
             if user_id not in document.get("user", {}):
                 await collection_project_permissions.update_one(
-                    {"_id": document["_id"]},
+                    {},
                     {"$set": {user_key: {"view": [], "edit": []}}}
                 )
             await collection_project_permissions.update_one(
-                {"_id": document["_id"]},
+                {},
                 {"$addToSet": {f"{user_key}.edit": project_id}}
             )
 
@@ -112,26 +135,39 @@ class ProjectService:
     async def get_project_list(
         self,
         user_id: int,
-        department_name: str | None = None,
         model_name: str | None = None,
         page: int = 0,
         limit: int = 10
-        ) -> list:
+    ) -> PaginationDto[ProjectResponse]:
 
         skip = (page - 1) * limit
         
-        user_permissions = await collection_project_permissions.find_one({f"user.{user_id}": {"$exists": True}})
-        
-        # 사용자 권한이 없을 경우 빈 리스트 반환
-        if not user_permissions or str(user_id) not in user_permissions["user"]:
-            return []
+        user_department = self.db.query(Users).filter(Users.user_id == user_id).first()
+        if not user_department:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+        project_department = self.db.query(Departments).filter(Departments.department_id == user_department.department_id).first()
+        department_name = project_department.department_name if project_department else "None"
 
-        # 특정 user_id의 view 및 edit 권한 가져오기
-        user_view_permissions = user_permissions["user"].get(str(user_id), {}).get("view", [])
-        user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
+        user_permissions = await collection_project_permissions.find_one({f"user.{user_id}": {"$exists": True}})
+        department_permissions = await collection_project_permissions.find_one({f"department.{department_name}": {"$exists": True}})
+
+        # 사용자 권한이 없을 경우 빈 리스트 반환
+        if user_permissions:
+            # 특정 user_id의 view 및 edit 권한 가져오기
+            user_view_permissions = user_permissions["user"].get(str(user_id), {}).get("view", [])
+            user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
+
+            viewable_project_ids_user = set(user_view_permissions) | set(user_edit_permissions)
+
+        if department_permissions:
+            # 특정 user_id의 view 및 edit 권한 가져오기
+            department_view_permissions = department_permissions["department"].get(str(department_name), {}).get("view", [])
+            department_edit_permissions = department_permissions["department"].get(str(department_name), {}).get("edit", [])
+
+            viewable_project_ids_department = set(department_view_permissions) | set(department_edit_permissions)
 
         # view 및 edit 권한의 프로젝트 ID 합집합 구하기
-        viewable_project_ids = set(user_view_permissions) | set(user_edit_permissions)
+        viewable_project_ids = viewable_project_ids_user | viewable_project_ids_department
 
         # 조회할 프로젝트가 없으면 빈 리스트 반환
         if not viewable_project_ids:
@@ -140,10 +176,8 @@ class ProjectService:
         # MongoDB 쿼리 생성
         query = {"_id": {"$in": [ObjectId(pid) for pid in viewable_project_ids]}}
         
-        # 추가 조건 (department와 model_name 중 하나 또는 모두)
+        # 추가 조건
         conditions = []
-        if department_name:
-            conditions.append({"department": department_name})
         if model_name:
             conditions.append({"model_name": model_name})
 
@@ -152,10 +186,7 @@ class ProjectService:
             query["$or"] = conditions
         
         # MongoDB 쿼리 실행 및 페이지네이션
-        projects_cursor = collection_projects.find(query).skip(skip).limit(limit)
-        projects = await projects_cursor.to_list(length=limit)
-        
-        print(query)
+        projects = await collection_projects.find(query).skip(skip).limit(limit).to_list(length=limit)
 
         # 결과 형식 맞추기
         results = [
@@ -174,7 +205,18 @@ class ProjectService:
             for project in projects
         ]
         
-        return results
+        total_projects = await collection_projects.count_documents(query)
+        total_pages = (total_projects + limit - 1) // limit
+
+        response = {
+            "data": results,
+            "page": page,
+            "limit": limit,
+            "total_count": total_projects,
+            "total_pages": total_pages
+        }
+
+        return response
 
     
     # 1-3. 프로젝트 삭제
