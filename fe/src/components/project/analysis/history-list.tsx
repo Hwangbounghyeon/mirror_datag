@@ -1,6 +1,7 @@
 import PaginationBar from "@/components/common/pagination";
 import HistoryCard from "@/components/project/analysis/history-card";
 import { HistoryResponseType } from "@/types/historyType";
+import { customFetch } from "@/app/actions/customFetch";
 
 const GetHistories = async ({
   projectId,
