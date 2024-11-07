@@ -1,8 +1,13 @@
 import { DefaultResponseType } from "./default";
 
-export interface TagRequest {
+export interface AddTagRequest {
     image_id: string;
-    tag_name: string;
+    tag_list: string[];
+}
+
+export interface DeleteTagRequest {
+    image_id: string;
+    delete_tag_list: string[];
 }
 
 interface TagResponseData {
@@ -10,4 +15,4 @@ interface TagResponseData {
     tag_name_list: string[];
 }
 
-export type AddTagResponse = DefaultResponseType<TagResponseData>;
+export type TagResponse = DefaultResponseType<TagResponseData>;

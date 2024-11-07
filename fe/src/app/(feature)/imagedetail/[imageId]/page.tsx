@@ -8,16 +8,16 @@ export default async function ImageDetailPage({
     params: { imageId: string };
 }) {
     const imageId = params.imageId;
-    const data = await loadImageDetail("6729792cae005e3836525cae"); //TODO 추후 수정
+    const data = await loadImageDetail("672c4ad2d00bbc3d9b3d5d66"); //TODO 추후 수정
 
     if (!data.data) {
         throw new Error("Data is undefined");
     }
 
-    const initialAuthorities = data.data.access_control.user.map((user) => ({
-        id: user.uid,
-        name: user.name,
-        department: user.department_name,
+    const initialAuthorities = data.data.access_control.users.map((user) => ({
+        user_id: user.uid,
+        user_name: user.name,
+        department_name: user.department_name,
     }));
 
     const initialTags =

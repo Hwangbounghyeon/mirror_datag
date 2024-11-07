@@ -2,7 +2,7 @@ import { User } from "./auth";
 import { DefaultResponseType } from "./default";
 
 interface AccessControlResponse {
-    user: User[];
+    users: User[];
     department: string[];
 }
 
