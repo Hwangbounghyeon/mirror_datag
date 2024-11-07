@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Authority } from "@/types/auth";
 import { DEPARTMENTS, USERS } from "@/lib/constants/mockData";
+import { AuthUser } from "@/types/auth";
 
-export function useAuthoritySelect(existingAuthorities: Authority[]) {
+export function useAuthoritySelect(existingAuthorities: AuthUser[]) {
     const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
         null
     );
-    const [selectedPeople, setSelectedPeople] = useState<Authority[]>([]);
+    const [selectedPeople, setSelectedPeople] = useState<AuthUser[]>([]);
 
     const handleDepartmentSelect = (deptId: string) => {
         const dept = DEPARTMENTS.find(
@@ -25,29 +25,29 @@ export function useAuthoritySelect(existingAuthorities: Authority[]) {
                 );
                 if (!user) return null;
                 return {
-                    id: user.uid,
-                    name: user.name,
-                    department: selectedDepartment,
+                    user_id: user.uid,
+                    user_name: user.name,
+                    department_name: selectedDepartment,
                 };
             })
-            .filter((auth): auth is Authority => auth !== null);
+            .filter((auth): auth is AuthUser => auth !== null);
 
         const otherDeptPeople = selectedPeople.filter(
-            (p) => p.department !== selectedDepartment
+            (p) => p.department_name !== selectedDepartment
         );
 
         setSelectedPeople([...otherDeptPeople, ...currentDeptPeople]);
     };
 
     const handleRemovePerson = (id: number) => {
-        setSelectedPeople(selectedPeople.filter((p) => p.id !== id));
+        setSelectedPeople(selectedPeople.filter((p) => p.user_id !== id));
     };
 
     const availableUsers = selectedDepartment
         ? USERS.filter(
               (user) =>
                   user.department_name === selectedDepartment &&
-                  !existingAuthorities.some((auth) => auth.id === user.uid)
+                  !existingAuthorities.some((auth) => auth.user_id === user.uid)
           )
         : [];
 

@@ -1,5 +1,5 @@
 import apiClient from "../client";
-import { TagRequest, AddTagResponse } from "@/types/tag";
+import { AddTagRequest, DeleteTagRequest, TagResponse } from "@/types/tag";
 
 interface TagList {
     image_id: string;
@@ -14,9 +14,23 @@ export const tagApi = {
         });
     },
 
-    add: async (request: TagRequest): Promise<string[]> => {
-        const response = await apiClient<AddTagResponse>(
-            "/imageDetail/tagging",
+    add: async (request: AddTagRequest): Promise<string[]> => {
+        const response = await apiClient<TagResponse>("/imageDetail/addTag", {
+            method: "POST",
+            body: JSON.stringify(request),
+            cache: "no-store",
+        });
+
+        if (!response.data) {
+            throw new Error("No data received");
+        }
+
+        return response.data.tag_name_list;
+    },
+
+    delete: async (request: DeleteTagRequest): Promise<string[]> => {
+        const response = await apiClient<TagResponse>(
+            "/imageDetail/deleteTag",
             {
                 method: "POST",
                 body: JSON.stringify(request),
@@ -29,13 +43,5 @@ export const tagApi = {
         }
 
         return response.data.tag_name_list;
-    },
-
-    delete: async (request: TagRequest): Promise<void> => {
-        return apiClient("/imageDetail/deleteTag", {
-            method: "DELETE",
-            body: JSON.stringify(request),
-            cache: "no-store",
-        });
     },
 };

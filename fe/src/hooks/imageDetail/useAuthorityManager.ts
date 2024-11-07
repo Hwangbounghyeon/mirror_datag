@@ -3,24 +3,24 @@ import {
     DeleteAuthorityRequest,
     authorityApi,
 } from "@/api/detail/authApi";
-import { Authority } from "@/types/auth";
+import { AuthUser } from "@/types/auth";
 import { useState } from "react";
 
 export function useAuthorityManager(
     imageId: string,
-    initialAuthorities: Authority[]
+    initialAuthorities: AuthUser[]
 ) {
     const [authorities, setAuthorities] =
-        useState<Authority[]>(initialAuthorities);
+        useState<AuthUser[]>(initialAuthorities);
 
     const addAuthorities = async (userIds: number[]) => {
         try {
             const request: AddAuthorityRequest = {
                 image_id: imageId,
-                user_id: userIds,
+                user_id_list: userIds,
             };
             const newAuthority = await authorityApi.add(request);
-            setAuthorities((prev) => [...prev, newAuthority]);
+            setAuthorities(newAuthority);
         } catch (error) {
             console.error("Failed to add authorities:", error);
         }
@@ -30,10 +30,10 @@ export function useAuthorityManager(
         try {
             const request: DeleteAuthorityRequest = {
                 image_id: imageId,
-                userId: userId,
+                user_id_list: [userId],
             };
-            await authorityApi.delete(request);
-            setAuthorities((prev) => prev.filter((auth) => auth.id !== userId));
+            const newAuthority = await authorityApi.delete(request);
+            setAuthorities(newAuthority);
         } catch (error) {
             console.error("Failed to remove authority:", error);
         }

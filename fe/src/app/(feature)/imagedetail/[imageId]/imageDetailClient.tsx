@@ -11,12 +11,12 @@ import MetadataPanel from "@/components/imagedeatil/metadataPanel";
 import AuthPanel from "@/components/imagedeatil/authPanel";
 import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
-import { Authority } from "@/types/auth";
+import { AuthUser } from "@/types/auth";
 
 interface ImageDetailClientProps {
     imageId: string;
     imageIdx: number;
-    initialAuthorities: Authority[];
+    initialAuthorities: AuthUser[];
     initialTags: string[];
     classes: string[];
     imageSrc: string;
@@ -42,10 +42,10 @@ function ImageDetailClient({
     const totalImages = 300;
 
     const { authorities, addAuthorities, removeAuthority } =
-        useAuthorityManager("6729792cae005e3836525cae", initialAuthorities); //TODO imageId로 추후 수정
+        useAuthorityManager("672c4ad2d00bbc3d9b3d5d66", initialAuthorities); //TODO imageId로 추후 수정
 
     const { tags, addTag, removeTag } = useTagManager(
-        "6729792cae005e3836525cae", //TODO 추후 imageId로 수정
+        "672c4ad2d00bbc3d9b3d5d66", //TODO 추후 imageId로 수정
         initialTags
     );
 
