@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from utils.timezone import get_current_time
 from dto.users_dto import UserSignUp, UserSignIn, UserInfoResponse, TokenResponse
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -221,7 +222,7 @@ class JWTManage:
     def __init__(self, db: Session):
         self.db = db
         self.secret_key = os.getenv('JWT_SECRET_KEY')
-        self.access_token_expire_minutes = 60
+        self.access_token_expire_minutes = 15
         self.refresh_token_expire_days = 7
         self.algorithm = "HS256"
         
@@ -244,13 +245,15 @@ class JWTManage:
     def create_token(self, data: dict, is_refresh: bool = False):
         to_encode = data.copy()
         
+        current_time = get_current_time()
+
         if is_refresh:
             # Refresh 토큰 생성
-            expire = datetime.now() + timedelta(days=self.refresh_token_expire_days)
+            expire = current_time + timedelta(days=self.refresh_token_expire_days)
             to_encode.update({"token_type": "refresh"})
         else:
             # Access 토큰 생성
-            expire = datetime.now() + timedelta(minutes=self.access_token_expire_minutes)
+            expire = current_time + timedelta(minutes=self.access_token_expire_minutes)
             to_encode.update({"token_type": "access"})
             
         to_encode.update({"exp": expire})
