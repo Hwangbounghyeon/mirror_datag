@@ -98,7 +98,7 @@ export async function customFetch<T>({
 
       // JSON 응답 확인
       if (!isJsonResponse(response)) {
-        throw new Error(ERROR_MESSAGES.NO_BASE_URL);
+        throw new Error(ERROR_MESSAGES.NON_JSON_RESPONSE);
       }
 
       return response;
