@@ -15,7 +15,7 @@ security_scheme = HTTPBearer()
 
 router = APIRouter(prefix="/history", tags=["analysis with dimension reduction"])
 
-@router.get("/{project_id}", response_model=CommonResponse[PaginationDto[HistoryListData]])
+@router.get("/{project_id}", response_model=CommonResponse[PaginationDto[List[HistoryListData]]])
 async def get_history_list(
     project_id: str,
     page: int = 1,
@@ -31,7 +31,7 @@ async def get_history_list(
         history_service = HistoryService(db)
         results = await history_service.get_histories(project_id, user_id, page, limit)
 
-        return CommonResponse[HistoryListResponse](
+        return CommonResponse[PaginationDto[List[HistoryListData]]](
             status=200,
             data=results
         )

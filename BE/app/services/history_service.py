@@ -15,7 +15,7 @@ class HistoryService:
     def __init__(self, db: Session):
         self.db = db
     
-    async def get_histories(self, project_id: str, user_id: int, page: int = 1, limit: int = 10) -> PaginationDto[HistoryListData]:
+    async def get_histories(self, project_id: str, user_id: int, page: int = 1, limit: int = 10) -> PaginationDto[List[HistoryListData]]:
         try:
             project_histories = await collection_project_histories.find_one({})
             if not project_histories or "project" not in project_histories:
@@ -51,16 +51,27 @@ class HistoryService:
 
             histories = await collection_histories.find(base_query).skip(skip).limit(limit).to_list(length=limit)
 
-            return_value = []
+            # return_value = []
 
-            for history in histories:
-                each_history = {}
-                each_history["history_id"] = str(history["_id"])
-                each_history["history_name"] = history["historyName"]
-                each_history["is_done"] = history["isDone"]
-                each_history["created_at"] = history["createdAt"]
-                each_history["updated_at"] = history["updatedAt"]
-                return_value.append(each_history)
+            # for history in histories:
+            #     each_history = {}
+            #     each_history["history_id"] = str(history["_id"])
+            #     each_history["history_name"] = history["historyName"]
+            #     each_history["is_done"] = history["isDone"]
+            #     each_history["created_at"] = history["createdAt"]
+            #     each_history["updated_at"] = history["updatedAt"]
+            #     return_value.append(each_history)
+
+            return_value = [
+                HistoryListData(
+                    history_id=str(history["_id"]),
+                    history_name=history["historyName"],
+                    is_done=history["isDone"],
+                    created_at=history["createdAt"],
+                    updated_at=history["updatedAt"]
+                )
+                for history in histories
+            ]
 
             return {
                 "data": return_value,

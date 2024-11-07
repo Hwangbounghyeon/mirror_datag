@@ -42,10 +42,10 @@ async def project(
     
 
 # 2. Project 리스트 조회
-@router.get("/list", response_model=CommonResponse[PaginationDto[ProjectResponse]])
+@router.get("/list", response_model=CommonResponse[PaginationDto[List[ProjectResponse] | None]])
 async def project_list(
     model_name: str | None = None,
-    page: int = 0,
+    page: int = 1,
     limit: int = 10,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db : Session = Depends(get_database_mariadb)
