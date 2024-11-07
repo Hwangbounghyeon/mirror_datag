@@ -6,6 +6,7 @@ import {
 } from "./lib/constants/token-duration";
 import { DefaultResponseType } from "./types/default";
 import { RefreshResponseType } from "./types/auth";
+import { verifyAccessToken } from "./app/actions/auth";
 
 const publicRoutes = ["/login", "/signup", "/"];
 
@@ -21,15 +22,23 @@ export async function middleware(request: NextRequest) {
 
   // 엑세스 토큰 있을 경우
   if (accessTokenCookie) {
-    if (isPublicRoute) {
-      return NextResponse.redirect(new URL("/project", request.url));
+    const accessTokenVerify = await verifyAccessToken(accessTokenCookie.value);
+
+    // 유효한 토큰인 경우 - 미들웨어 종료
+    if (accessTokenVerify) {
+      if (isPublicRoute) {
+        return NextResponse.redirect(new URL("/project", request.url));
+      }
+      return res;
     }
-    return res;
+    // 유효하지 않은 토큰인 경우
+    else {
+      request.cookies.delete("accessToken");
+    }
   }
 
   // refreshToken이 있고 갱신 시도 중이 아닌 경우
   if (refreshTokenCookie && !isRefreshing) {
-    console.log("refresh START --------");
     try {
       const refreshResponse = NextResponse.next();
       refreshResponse.headers.set("x-refreshing-token", "true");
@@ -47,8 +56,7 @@ export async function middleware(request: NextRequest) {
 
       if (!response.ok) {
         // 리프레시 토큰이 유효하지 않은 경우 쿠키 삭제
-        console.log("refresh FAIL --------");
-        console.log(response);
+        console.error("response result", response.status);
         const loginRedirect = NextResponse.redirect(
           new URL("/login", request.url)
         );

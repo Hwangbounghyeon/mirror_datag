@@ -1,6 +1,6 @@
 import PaginationBar from "@/components/common/pagination";
 import HistoryCard from "@/components/project/analysis/history-card";
-import { customFetch } from "@/lib/customFetch";
+import { customFetch } from "@/app/actions/customFetch";
 import { HistoryResponseType } from "@/types/historyType";
 import { Suspense } from "react";
 
