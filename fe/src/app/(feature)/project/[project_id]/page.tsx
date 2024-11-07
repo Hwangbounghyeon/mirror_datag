@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Button, Modal, ModalContent, useDisclosure } from "@nextui-org/react";
 import Image from "next/image";
 
-
 import { ImagesType } from "@/types/ImagesType";
 import ImageList from "@/components/project/dataset/image-list";
 import FilterModal from "@/components/project/dataset/filter-modal";
@@ -179,7 +178,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
   }
 
   return (
-    <div className="h-full flex flex-col justify-center gap-[1rem] mx-[3rem]">
+    <div className="h-full flex flex-col gap-[1rem] mx-[3rem] pt-[2rem]">
       <div className="w-full h-[3rem] flex justify-between">
         <div className="text-3xl">Dataset (Project ID: {params.project_id})</div>
         <div className="">

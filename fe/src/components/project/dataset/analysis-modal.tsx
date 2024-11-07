@@ -25,7 +25,7 @@ const AnalysisModal = ({ onClose, filterChecked, projectId }: AnalysisModalProps
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/analysis', {
+      const response = await fetch('http://localhost:8000/be/api/analysis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
