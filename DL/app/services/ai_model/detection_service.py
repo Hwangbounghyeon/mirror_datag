@@ -63,7 +63,7 @@ class ObjectDetectionService:
                     url,
                     request.department_name
                 )
-                
+
                 metadata_id = await self.detection_metadata_service.upload_ai_result(metadata)
 
                 features = self.detection_metadata_service.create_feature(model_prediction_result.features)

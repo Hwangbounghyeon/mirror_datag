@@ -19,7 +19,7 @@ class ObjectDetectionMetadataService:
     def create_object_detection_result_data(
         self,
         user: int,
-        project_id: int,
+        project_id: str,
         is_private: bool,
         ai_model: str,
         elapsed_time: float,
@@ -27,7 +27,7 @@ class ObjectDetectionMetadataService:
         confidences: List[float],
         threshold: float,
         bboxes: List[List[float]],
-        url: int,
+        url: str,
         department_name: str
     ) -> AiResultData:
         
