@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from typing import List
+from pydantic import BaseModel
 from models.metadata_models import Metadata
 
 class UserInformation(BaseModel):
@@ -15,11 +15,11 @@ class ImageDetailResponse(BaseModel):
     metadata: Metadata
     access_control: AccessControl
 
-class ImageDetailTaggingRequest(BaseModel):
+class ImageDetailTagAddRequest(BaseModel):
     image_id: str
     tag_list: List[str]
 
-class ImageDetailTaggingResponse(BaseModel):
+class ImageDetailTagAddResponse(BaseModel):
     image_id: str
     tag_name_list: List[str]
 
@@ -34,19 +34,20 @@ class ImageDetailTagDeleteResponse(BaseModel):
 class AuthDetail(BaseModel):
     user_id: int
     user_name: str
+    department_name: str
 
 class ImageDetailAuthAddRequest(BaseModel):
-    user_id: List[int]
+    user_id_list: List[int]
     image_id: str
 
 class ImageDetailAuthAddResponse(BaseModel):
     image_id: str
-    auth: List[AuthDetail]
+    auth_list: List[AuthDetail]
 
 class ImageDetailAuthDeleteRequest(BaseModel):
-    user_id: List[int]
+    user_id_list: List[int]
     image_id: str
 
 class ImageDetailAuthDeleteResponse(BaseModel):
     image_id: str
-    auth: List[AuthDetail]
+    auth_list: List[AuthDetail]
