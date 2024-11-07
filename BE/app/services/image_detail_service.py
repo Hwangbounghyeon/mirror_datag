@@ -312,28 +312,28 @@ class ImageDetailService:
             raise HTTPException(status_code=404, detail="Metadata not found")
         metadata_one["_id"] = str(metadata_one["_id"])
         ###
-
+        
         # 3. metadata에서 권한 삭제
         await collection_metadata.update_one(
             {"_id": ObjectId(metadata_id)},
             {
                 "$pull": {
-                    "metadata.accessControl.users": {"$each": request.user_id_list}
+                    "metadata.accessControl.users": {"$in": request.user_id_list}
                 }
             }
         )
-
+        
         # 4. imagePermissions 에서 권한 삭제
         for user_id in request.user_id_list:
             await collection_image_permissions.update_one(
-                {"_id": ObjectId("6729792cae005e3836525caf")},
+                {"_id": ObjectId("6729792cae005e3836525cb1")},
                 {
                     "$pull": {
                         f"user.{user_id}": request.image_id
                     }
                 }
             )
-
+        
         # 업데이트된 user 데이터 다시 가져오기
         permission_datas = await collection_image_permissions.find_one({"_id": ObjectId("6729792cae005e3836525cb1")})
         
@@ -341,7 +341,7 @@ class ImageDetailService:
         for user_id, images in permission_datas.get("user", {}).items():
             if not images:  # 빈 배열인 경우
                 await collection_image_permissions.update_one(
-                    {"_id": ObjectId("6729792cae005e3836525caf")},
+                    {"_id": ObjectId("6729792cae005e3836525cb1")},
                     {"$unset": {f"user.{user_id}": ""}}
                 )
         
@@ -358,7 +358,7 @@ class ImageDetailService:
             raise HTTPException(status_code=404, detail="Metadata not found")
         metadata_one["_id"] = str(metadata_one["_id"])
         ###
-
+        
         # 3. Access Control 정보 가져오기
         access_control_one = metadata_one.get("metadata").get("accessControl")
         users = access_control_one.get("users")
@@ -367,7 +367,7 @@ class ImageDetailService:
         departments = access_control_one.get("departments")
         if not isinstance(departments, list) or any(department == '' for department in departments):
             departments = []
-
+        
         # 4. Users 정보 조회 및 가공
         auth_list = []
         for user in users:
