@@ -10,11 +10,6 @@ export interface Authority {
     department: string;
 }
 
-export interface Tag {
-    id: number;
-    tag: string;
-}
-
 export interface LoginResponseType {
     access_token: string;
     refresh_token: string;
@@ -31,7 +26,7 @@ export type UserType = {
 };
 
 export type RefreshResponseType = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
 };

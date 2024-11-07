@@ -1,20 +1,5 @@
-import { ImageFile } from "@/types/upload";
+import { UploadImageRequest, UploadResponse } from "@/types/imageUpload";
 import apiClient from "../client";
-
-interface UploadImageRequest {
-    user_id: number;
-    task: string;
-    model_name: string;
-    is_private: boolean;
-    projectId: number;
-    images: ImageFile[];
-}
-
-interface UploadResponse {
-    status: number;
-    data: string[];
-    error: string | null;
-}
 
 export const uploadImage = async (
     request: UploadImageRequest
