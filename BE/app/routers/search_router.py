@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Dict
+
 
 from services.search_service import TagService
-from dto.search_dto import TagImageResponseDTO, ConditionDTO, SearchConditionDTO, ImageSearchResponseDTO
+from dto.search_dto import TagImageResponse, Condition, SearchCondition, ImageSearchResponse
 from dto.common_dto import CommonResponse
 
 router = APIRouter(
@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["search"]
 )
 
-@router.get("", response_model=CommonResponse[TagImageResponseDTO])
+@router.get("", response_model=CommonResponse[TagImageResponse])
 async def get_tags_and_images():
     """
     태그 목록과 전체 이미지 경로 반환
@@ -25,15 +25,15 @@ async def get_tags_and_images():
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/image", response_model=CommonResponse[ImageSearchResponseDTO])
+@router.get("/image", response_model=CommonResponse[ImageSearchResponse])
 async def search_images_by_tags(and_tags: str | None = Query(None), or_tags: str | None = Query(None), not_tags: str | None = Query(None)):
     try:
-        condition = ConditionDTO(
+        condition = Condition(
             and_condition=and_tags.split(",") if and_tags else [],
             or_condition=or_tags.split(",") if or_tags else [],
             not_condition=not_tags.split(",") if not_tags else []
         )
-        search_dto = SearchConditionDTO(conditions=[condition])
+        search_dto = SearchCondition(conditions=[condition])
         tag_service = TagService()
         
         result = await tag_service.search_images_by_conditions(search_dto)

@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from typing import Dict
-from dto.search_dto import TagImageResponseDTO, SearchConditionDTO, ImageSearchResponseDTO
+from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse
 from configs.mongodb import collection_tag_images, collection_metadata, collection_images
 from configs.s3 import get_s3_image_paths
 from bson import ObjectId
@@ -18,7 +18,7 @@ class TagService:
         self.collection_metadata = collection_metadata
         self.collection_images = collection_images
     
-    async def get_tag_and_image_lists(self) -> TagImageResponseDTO:
+    async def get_tag_and_image_lists(self) -> TagImageResponse:
         try:
             tag_doc = await self.collection_tag_images.find_one({})
             if not tag_doc:
@@ -39,7 +39,7 @@ class TagService:
                     images[str(doc["_id"])] = metadata["fileList"][0]
 
             # images 필드가 Dict[str, str] 형식으로 반환
-            return TagImageResponseDTO(
+            return TagImageResponse(
                 tags=sorted(tags),
                 images=images  # {이미지 _id: 이미지 경로}
             )
@@ -56,7 +56,7 @@ class TagService:
     # - 검색 조건으로 image-tag 확인해서 해당 조건에 필터링 되는 image 확인
     # - image의 metadata_id를 통해 image의 path를 찾아서 list로 만들어서 반환
 
-    async def search_images_by_conditions(self, search_dto: SearchConditionDTO) -> ImageSearchResponseDTO:
+    async def search_images_by_conditions(self, search_dto: SearchCondition) -> ImageSearchResponse:
         try:
             # 1. tag document 가져오기
             tag_doc = await self.collection_tag_images.find_one({})
@@ -71,7 +71,7 @@ class TagService:
             }
             '''
             if not tag_doc:
-                ImageSearchResponseDTO(images={})
+                ImageSearchResponse(images={})
 
             matching_metadata_ids = set()  # 최종 결과를 저장할 set
             '''
@@ -107,7 +107,7 @@ class TagService:
                             current_metadata_ids = {"metadata_id1", "metadata_id2"}
                             '''
                         else:
-                            ImageSearchResponseDTO(images={})
+                            ImageSearchResponse(images={})
                                 
                                 
                 # 4. OR 조건 처리
@@ -205,9 +205,9 @@ class TagService:
                         }
                         '''
                 
-                return ImageSearchResponseDTO(images=image_data)
+                return ImageSearchResponse(images=image_data)
 
-            return ImageSearchResponseDTO(images={})
+            return ImageSearchResponse(images={})
 
         except Exception as e:
             raise HTTPException(

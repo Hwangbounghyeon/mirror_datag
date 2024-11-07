@@ -6,23 +6,23 @@ class TagSearchParams(BaseModel):
     or_tags: List[str] = []
     not_tags: List[str] = []
 
-class TagImageResponseDTO(BaseModel):
+class TagImageResponse(BaseModel):
     tags: List[str] 
-    images: List[Dict[str, str]]
+    images: Dict[str, str]
     
-class ImageSearchResponseDTO(BaseModel):
+class ImageSearchResponse(BaseModel):
     images: Dict[str, str]
 
-class ConditionDTO(BaseModel):
+class Condition(BaseModel):
     and_condition: List[str] = []
     or_condition: List[str] = []
     not_condition: List[str] = []
 
-class SearchConditionDTO(BaseModel):
-    conditions: List[ConditionDTO] | None = None
+class SearchCondition(BaseModel):
+    conditions: List[Condition] | None = None
     
     
-"""SearchConditionDTO Request Body 구조
+"""SearchCondition Request Body 구조
     
     {
         "conditions": [
@@ -33,8 +33,8 @@ class SearchConditionDTO(BaseModel):
     }
     """
     
-# class SearchConditionDTO(BaseModel):
-#     conditions: List[ConditionDTO] | None = None
+# class SearchCondition(BaseModel):
+#     conditions: List[Condition] | None = None
 #     page: int = 1
 #     page_size: int = 20
 #     sort_by: str = "created_at"
