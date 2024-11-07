@@ -1,5 +1,4 @@
 import { useRouter } from "next/navigation";
-import { FilterOption } from "../lib/constants/filter";
 
 export const useLoadImages = () => {
     const router = useRouter();
@@ -12,7 +11,7 @@ export const useLoadImages = () => {
         // 이미지 로드 로직
     };
 
-    const handleFilterClick = (filter: FilterOption) => {
+    const handleFilterClick = () => {
         // 필터링 로직
     };
 
