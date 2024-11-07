@@ -224,6 +224,22 @@ class JWTManage:
         self.access_token_expire_minutes = 60
         self.refresh_token_expire_days = 7
         self.algorithm = "HS256"
+        
+        try:
+            redis_host = os.getenv('REDIS_HOST')
+            redis_port = int(os.getenv('REDIS_PORT', 6379))
+            redis_password = os.getenv('REDIS_PASSWORD')
+            
+            self.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                password=redis_password,
+                db=0,
+                decode_responses=True
+            )
+        except Exception as e:
+            print(f"Redis 연결 실패: {str(e)}")
+            self.redis_client = None
     
     def create_token(self, data: dict, is_refresh: bool = False):
         to_encode = data.copy()
@@ -254,6 +270,9 @@ class JWTManage:
         
     def verify_token(self, token: str):
         try:
+            if self.redis_client and self.redis_client.get(f"bl_access_token:{token}"):
+                raise HTTPException(status_code=401, detail="이미 로그아웃된 토큰입니다.")
+            
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
             return payload
         except jwt.ExpiredSignatureError:
@@ -314,6 +333,9 @@ class UserLogout:
         
     async def logout(self, access_token: str):
         try:
+            if self.redis_client.get(f"bl_access_token:{access_token}"):
+                raise HTTPException(status_code=400, detail="이미 로그아웃된 토큰입니다.")
+            
             jwt_manager = JWTManage(self.db)
             payload = jwt_manager.verify_token(access_token)
             

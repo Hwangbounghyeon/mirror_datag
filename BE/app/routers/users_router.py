@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from services.user_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout, UserInformation
@@ -75,10 +75,12 @@ async def login(login_data: UserSignIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/logout", response_model=CommonResponse)
-async def logout(token: str = Security(security_scheme), db: Session = Depends(get_db)):
+async def logout(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_db)):
     try:
+        access_token = credentials.credentials
+        
         user_logout = UserLogout(db)
-        logout_data = await user_logout.logout(token)
+        logout_data = await user_logout.logout(access_token)
         
         return CommonResponse(
             status=200,
@@ -91,10 +93,11 @@ async def logout(token: str = Security(security_scheme), db: Session = Depends(g
 
 # 토큰 재발급
 @router.post("/refresh", response_model=CommonResponse[TokenResponse])
-async def refresh_token(token: str = Security(security_scheme), db: Session = Depends(get_db)):
+async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_db)):
     try:
+        refresh_token = credentials.credentials
         jwt_manage = JWTManage(db)
-        payload = jwt_manage.verify_token(token)
+        payload = jwt_manage.verify_token(refresh_token)
         
         if payload.get("token_type") != "refresh":
             raise HTTPException(status_code=401, detail="유효하지 않은 refreshToken입니다.")
@@ -121,10 +124,11 @@ async def refresh_token(token: str = Security(security_scheme), db: Session = De
         raise HTTPException(status_code=400, detail=str(e))
     
 @router.get("/user/me", response_model=CommonResponse[UserInfoResponse])
-async def get_user_info(token: str = Security(security_scheme), db: Session = Depends(get_db)):
-    try:    
+async def get_user_info(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_db)):
+    try: 
+        access_token = credentials.credentials
         jwt_manage = JWTManage(db)
-        payload = jwt_manage.verify_token(token)
+        payload = jwt_manage.verify_token(access_token)
         
         if payload.get('token_type') != "access":
             raise HTTPException(status_code=401, detail="JWT 토큰 타입이 옳지 않습니다.")
