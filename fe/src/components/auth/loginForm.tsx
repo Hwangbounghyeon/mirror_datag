@@ -4,11 +4,9 @@ import { Button, Input } from "@nextui-org/react";
 import { check_auth } from "@/app/actions/auth";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { setUserInfo } from "@/store/userInfoSlice";
 import { DefaultResponseType } from "@/types/default";
 import { UserType } from "@/types/auth";
 import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
 
 type LoginFormValues = {
   email: string;
@@ -20,7 +18,6 @@ interface LoginResult {
 }
 
 export const LoginForm = () => {
-  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -51,8 +48,6 @@ export const LoginForm = () => {
       console.log(response.error);
       SetErrorMessage(response.error || "An error occurred");
     } else {
-      const data: LoginResult = response.data;
-      dispatch(setUserInfo(data.UserData));
       router.push("/project");
     }
   };
