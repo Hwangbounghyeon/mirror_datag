@@ -161,7 +161,7 @@ class ImageDetailService:
         # tagImages
         for tag in request.delete_tag_list:
             await collection_tag_images.update_one(
-                {"_id": ObjectId("672c4ad2d00bbc3d9b3d5d67")},
+                {},
                 {
                     "$pull": {
                         f"tag.{tag}": image_id
@@ -170,13 +170,13 @@ class ImageDetailService:
             )
 
         # tagImages -> tagDatas
-        tag_datas = await collection_tag_images.find_one({"_id": ObjectId("672c4ad2d00bbc3d9b3d5d67")})
+        tag_datas = await collection_tag_images.find_one()
         
         # 빈 배열이 된 태그 필드 삭제
         for tag, images in tag_datas.get("tag", {}).items():
             if not images:  # 빈 배열인 경우
                 await collection_tag_images.update_one(
-                    {"_id": ObjectId("672c4ad2d00bbc3d9b3d5d67")},
+                    {},
                     {"$unset": {f"tag.{tag}": ""}}
                 )
 
@@ -326,7 +326,7 @@ class ImageDetailService:
         # 4. imagePermissions 에서 권한 삭제
         for user_id in request.user_id_list:
             await collection_image_permissions.update_one(
-                {"_id": ObjectId("672c4ad2d00bbc3d9b3d5d69")},
+                {},
                 {
                     "$pull": {
                         f"user.{user_id}": request.image_id
@@ -335,13 +335,13 @@ class ImageDetailService:
             )
         
         # 업데이트된 user 데이터 다시 가져오기
-        permission_datas = await collection_image_permissions.find_one({"_id": ObjectId("672c4ad2d00bbc3d9b3d5d69")})
+        permission_datas = await collection_image_permissions.find_one()
         
         # 빈 배열이 된 태그 필드 삭제
         for user_id, images in permission_datas.get("user", {}).items():
             if not images:  # 빈 배열인 경우
                 await collection_image_permissions.update_one(
-                    {"_id": ObjectId("672c4ad2d00bbc3d9b3d5d69")},
+                    {},
                     {"$unset": {f"user.{user_id}": ""}}
                 )
         
