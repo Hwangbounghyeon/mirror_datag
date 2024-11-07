@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { DataPoint } from "@/types/chartType";
 import { HistoryData } from "@/types/historyType";
 import { Select, SelectItem } from "@nextui-org/react";
+import { customFetch } from "@/app/actions/customFetch";
 
 // ScatterPlot 컴포넌트를 동적으로 import
 const ScatterPlot = dynamic(
@@ -21,7 +22,10 @@ interface MainAnalysisProps {
 }
 
 export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
-  const [selectedIndices, setSelectedIndices] = useState<SelectedIndices>({x: 0, y: 1});
+  const [selectedIndices, setSelectedIndices] = useState<SelectedIndices>({
+    x: 0,
+    y: 1,
+  });
 
   const [selectedData, setSelectedData] = useState<HistoryData | null>(null);
   const [plotData, setPlotData] = useState<DataPoint[]>([]);
@@ -29,63 +33,63 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
 
   const getHistory = async () => {
     if (!selectedHistory) return;
-    
+
     try {
       const response = await fetch(
         `http://localhost:8000/be/api/history/detail/${selectedHistory}`,
         {
           headers: {
-            'Authorization': `bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJlbWFpbCI6IjU1MTYyMzdAa211LmtyIiwiZGVwYXJ0bWVudF9pZCI6MSwiaXNfc3VwZXJ2aXNlZCI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTczMDg5MzkzOX0.asRcUQvBAr5NoLSXnu7kxabQL4mW5uiNKvtvj2gMHi0`,
+            Authorization: `bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJlbWFpbCI6IjU1MTYyMzdAa211LmtyIiwiZGVwYXJ0bWVudF9pZCI6MSwiaXNfc3VwZXJ2aXNlZCI6dHJ1ZSwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImV4cCI6MTczMDg5MzkzOX0.asRcUQvBAr5NoLSXnu7kxabQL4mW5uiNKvtvj2gMHi0`,
           },
-          cache: 'no-store'
+          cache: "no-store",
         }
       );
-  
+
       console.log(response);
-  
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
-  
+
       const result = await response.json();
 
-      setSelectedData(result.data)
+      setSelectedData(result.data);
     } catch (error) {
-      console.error('Error fetching histories:', error);
+      console.error("Error fetching histories:", error);
     }
-  }
+  };
 
   const featureOptions = Array.from({ length: 10 }, (_, i) => ({
     value: i.toString(),
-    label: `Feature ${i}`
+    label: `Feature ${i}`,
   }));
 
-  const handleIndexChange = (axis: 'x' | 'y', value: string) => {
+  const handleIndexChange = (axis: "x" | "y", value: string) => {
     const numValue = parseInt(value);
-    setSelectedIndices(prev => {
+    setSelectedIndices((prev) => {
       // 다른 축과 같은 값을 선택하려고 할 때
-      if ((axis === 'x' && numValue === prev.y) || 
-          (axis === 'y' && numValue === prev.x)) {
+      if (
+        (axis === "x" && numValue === prev.y) ||
+        (axis === "y" && numValue === prev.x)
+      ) {
         return prev;
       }
       return {
         ...prev,
-        [axis]: numValue
+        [axis]: numValue,
       };
     });
   };
 
-  function extractFeatureData(
-    data: HistoryData
-  ): DataPoint[] {
+  function extractFeatureData(data: HistoryData): DataPoint[] {
     if (data.results) {
-      return data.results.map(result => ({
+      return data.results.map((result) => ({
         id: result.imageId,
         x: result.features[selectedIndices.x],
-        y: result.features[selectedIndices.y], 
-        label: result.predictions.prediction
+        y: result.features[selectedIndices.y],
+        label: result.predictions.prediction,
       }));
-    };
+    }
     return [];
   }
 
@@ -93,19 +97,19 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
     if (selectedData) {
       const extractedData = extractFeatureData(selectedData);
       setPlotData(extractedData);
-    };
-  }, [selectedData, selectedIndices])
+    }
+  }, [selectedData, selectedIndices]);
 
   useEffect(() => {
-    getHistory()
-  }, [selectedHistory])
+    getHistory();
+  }, [selectedHistory]);
 
   return (
     <div className="flex flex-col max-w-[calc(80%-2rem)] flex-grow bg-gray-300 mx-[1rem]">
       <div className="flex flex-col">
         <div className="w-full flex bg-gray-300">
           <div className="w-[60%] h-[45rem]">
-            <ScatterPlot 
+            <ScatterPlot
               data={plotData}
               selectedIndices={selectedIndices}
               onSelectPoints={setSelectedPoints}
@@ -113,7 +117,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
           </div>
           <div className="w-[40%]">
             <h2 className="text-lg font-semibold">Selected Points:</h2>
-            <p>{selectedPoints.join(', ') || 'None'}</p>
+            <p>{selectedPoints.join(", ") || "None"}</p>
           </div>
         </div>
 
@@ -123,7 +127,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
               <Select
                 label="X축 Feature"
                 selectedKeys={[selectedIndices.x.toString()]}
-                onChange={(e) => handleIndexChange('x', e.target.value)}
+                onChange={(e) => handleIndexChange("x", e.target.value)}
                 className="w-full"
                 classNames={{
                   base: "bg-white rounded-xl ",
@@ -147,7 +151,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
               <Select
                 label="Y축 Feature"
                 selectedKeys={[selectedIndices.y.toString()]}
-                onChange={(e) => handleIndexChange('y', e.target.value)}
+                onChange={(e) => handleIndexChange("y", e.target.value)}
                 className="w-full"
                 classNames={{
                   base: "bg-white rounded-xl",
@@ -169,10 +173,8 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
           </div>
         </div>
       </div>
-      
-      <div className="w-full bg-blue-500">
-        Additional Analysis
-      </div>
+
+      <div className="w-full bg-blue-500">Additional Analysis</div>
     </div>
   );
 }

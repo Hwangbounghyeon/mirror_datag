@@ -86,19 +86,48 @@ export const check_auth = async (formData: FormData) => {
   }
 };
 
+// 쿠키에 담긴 accessToken을 이용하여 사용자의 인증 상태를 확인
+// accessToken이 유효하면 true, 그렇지 않으면 false를 반환 (없는 경우도 고려)
+export const verifyAccessToken = async (accessToken: string) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/me`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      }
+    );
+    if (!response.ok) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return false;
+  }
+};
+
+// 쿠키에 담긴 refreshToken을 이용하여 새로운 accessToken을 발급
+// 새로운 accessToken을 반환하며, refreshToken이 유효하지 않은 경우 null을 반환
+// refreshToken이 유효하지 않은 경우, 쿠키에서 refreshToken과 accessToken을 삭제
+// 새로운 accessToken을 발급받은 경우, 쿠키에 새로운 accessToken과 refreshToken을 저장
 export const refreshAccessToken = async (): Promise<string | null> => {
   const cookieStore = cookies();
   const refreshToken = cookieStore.get("refreshToken");
   if (!refreshToken) return null;
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh?refresh_token=${refreshToken.value}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshToken.value}`,
         },
-        cache: "no-store",
       }
     );
 

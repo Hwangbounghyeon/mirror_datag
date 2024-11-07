@@ -4,7 +4,6 @@ import { ThemeProvider } from "next-themes";
 import Sidebar from "@/components/common/sidebar";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-import { ReduxProvider } from "./providers";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -33,14 +32,12 @@ export default function RootLayout({
     >
       <body id="root" className="min-w-[1024px]">
         <ThemeProvider attribute="class">
-          <ReduxProvider>
-            <div className="min-h-screen min-w-screen flex">
-              <Sidebar />
-              <main className="flex-1">
-                <div className="ps-3 ">{children}</div>
-              </main>
-            </div>
-          </ReduxProvider>
+          <div className="min-h-screen min-w-screen flex">
+            <Sidebar />
+            <main className="flex-1">
+              <div className="ps-3 ">{children}</div>
+            </main>
+          </div>
           <ToastContainer />
         </ThemeProvider>
 
