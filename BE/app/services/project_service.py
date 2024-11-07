@@ -31,15 +31,14 @@ class ProjectService:
 
         # project 생성
         project = {
-            'project_name':request.project_name,
-            'model_name':request.project_model_name,
+            'projectName':request.project_name,
+            'modelName':request.project_model_name,
             'description':request.description,
-            'user_id':creator_user_id,
+            'userId':creator_user_id,
             'department': department_name,
-            'image_count': 0,
-            'is_private':request.is_private,
-            'created_at':get_current_time(),
-            'updated_at':get_current_time()
+            'isPrivate':request.is_private,
+            'createdAt':get_current_time(),
+            'updatedAt':get_current_time()
         }
         
         new_project = await collection_projects.insert_one(project)
@@ -136,9 +135,9 @@ class ProjectService:
         self,
         user_id: int,
         model_name: str | None = None,
-        page: int = 0,
+        page: int = 1,
         limit: int = 10
-    ) -> PaginationDto[ProjectResponse]:
+    ) -> PaginationDto[List[ProjectResponse] | None]:
 
         skip = (page - 1) * limit
         
@@ -151,6 +150,8 @@ class ProjectService:
         user_permissions = await collection_project_permissions.find_one({f"user.{user_id}": {"$exists": True}})
         department_permissions = await collection_project_permissions.find_one({f"department.{department_name}": {"$exists": True}})
 
+        viewable_project_ids_user = set()
+
         # 사용자 권한이 없을 경우 빈 리스트 반환
         if user_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
@@ -158,6 +159,8 @@ class ProjectService:
             user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
 
             viewable_project_ids_user = set(user_view_permissions) | set(user_edit_permissions)
+
+        viewable_project_ids_department = set()
 
         if department_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
@@ -171,19 +174,35 @@ class ProjectService:
 
         # 조회할 프로젝트가 없으면 빈 리스트 반환
         if not viewable_project_ids:
-            return []
+            response = {
+                "data": None,
+                "page": page,
+                "limit": limit,
+                "total_count": 0,
+                "total_pages": page
+            }
+            return response
 
         # MongoDB 쿼리 생성
-        query = {"_id": {"$in": [ObjectId(pid) for pid in viewable_project_ids]}}
+        query = {
+            "$and": [
+                {"_id": {"$in": [ObjectId(pid) for pid in viewable_project_ids]}},
+                {
+                    "$or": [
+                        {"isPrivate": False},  # 공개 프로젝트
+                        {
+                            "$and": [
+                                {"isPrivate": True},
+                                {"userId": user_id}  # private이면서 본인 프로젝트
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
         
-        # 추가 조건
-        conditions = []
         if model_name:
-            conditions.append({"model_name": model_name})
-
-        # 조건을 추가한 필터링
-        if conditions:
-            query["$or"] = conditions
+            query["$and"].append({"modelName": model_name})
         
         # MongoDB 쿼리 실행 및 페이지네이션
         projects = await collection_projects.find(query).skip(skip).limit(limit).to_list(length=limit)
@@ -192,15 +211,14 @@ class ProjectService:
         results = [
             ProjectResponse(
                 project_id=str(project["_id"]),
-                project_name=project["project_name"],
-                model_name=project.get("model_name", ""),
+                project_name=project["projectName"],
+                model_name=project.get("modelName", ""),
                 department=project.get("department", ""),
-                user_id=project.get("user_id", ""),
+                user_id=project.get("userId", 0),
                 description=project.get("description", ""),
-                image_count=project.get("image_count", ""),
-                is_private=project.get("is_private", ""),
-                created_at=project.get("created_at", ""),
-                updated_at=project.get("updated_at", "")
+                is_private=project.get("isPrivate", False),
+                created_at=project.get("createdAt", ""),
+                updated_at=project.get("updatedAt", "")
             )
             for project in projects
         ]
