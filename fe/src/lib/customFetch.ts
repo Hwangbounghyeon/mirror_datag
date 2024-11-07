@@ -2,25 +2,30 @@
 import { refreshAccessToken } from "@/app/actions/auth";
 import { cookies } from "next/headers";
 
+// 리턴 타입 정의
 export type DefaultResponseType<T> = {
   status: number;
   data?: T;
   error?: string;
 };
 
+// Fetch 옵션 정의
 interface AuthFetchProps {
-  BASE_URL?: string;
-  endpoint: string;
-  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  cache?: "no-store" | "force-cache" | null;
-  body?: BodyInit;
-  searchParams?: URLSearchParams | null;
-  ContentType?:
-    | "application/json"
+  BASE_URL?: string; // 기본 도메인 URL, 없을 시 process.env.NEXT_PUBLIC_BACKEND_URL 사용
+  endpoint: string; // 요청할 엔드포인트
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"; // 요청 메소드
+  cache?: "no-store" | "force-cache" | null; // 캐시 정책 1
+  next?: NextFetchRequestConfig; // 캐시 정책 2
+  body?: BodyInit; // 요청 바디
+  searchParams?: URLSearchParams | null; // 쿼리스트링
+  ContentType?: // Content-Type
+  | "application/json"
     | "application/x-www-form-urlencoded"
     | "multipart/form-data";
-  next?: NextFetchRequestConfig;
 }
+
+// Fetch 함수
+// T: 응답 데이터 타입 제네릭
 
 export async function customFetch<T>({
   BASE_URL,
@@ -40,10 +45,8 @@ export async function customFetch<T>({
         error: "cache와 next 옵션은 동시에 사용할 수 없습니다.",
       };
     } else if (!cache && !next) {
-      return {
-        status: 400,
-        error: "cache 또는 next 옵션 중 하나는 반드시 사용해야 합니다.",
-      };
+      // 기본 캐시 정책 설정 - 아무 설정 없는 경우
+      cache = "no-store";
     }
 
     // Access Token 가져오기
@@ -83,7 +86,6 @@ export async function customFetch<T>({
       headers,
       body,
     });
-    console.log(response);
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -141,9 +143,7 @@ export async function customFetch<T>({
       data: responseData as T,
     };
   } catch (error) {
-    console.log("customFetch 치명적 Error");
     console.log(error);
-
     return {
       status: 500,
       error:
