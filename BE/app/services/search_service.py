@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from typing import List, Set
-from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse
+from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
@@ -183,7 +183,7 @@ class TagService:
                 detail=f"이미지를 찾는 중 에러가 발생했습니다: {str(e)}"
             )
             
-    async def search_project_images(self, project_id: str, conditions: List[SearchCondition], user_id: int) -> ImageSearchResponse:
+    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> ImageSearchResponse:
         try:
             project_images = await self.collection_project_images.find_one({})
             if not project_images or "project" not in project_images:
@@ -192,16 +192,16 @@ class TagService:
             project_image_ids = set(project_images["project"].get(project_id, []))
             if not project_image_ids:
                 return ImageSearchResponse(images={})
-
-            if conditions:
+            
+            # 검색 조건이 있는 경우에만 필터링 적용
+            if search_request and search_request.conditions:
                 tag_doc = await self.collection_tag_images.find_one({})
                 if tag_doc:
                     matching_ids = set()
-                    for condition in conditions:
+                    for condition in search_request.conditions:
                         group_result = await self._process_condition_group(tag_doc, condition)
                         matching_ids.update(group_result)
                     project_image_ids &= matching_ids
-
 
             image_data = {}
             for image_id in project_image_ids:
