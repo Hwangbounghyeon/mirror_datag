@@ -198,7 +198,7 @@ class EmailValidate:
             self.db.refresh(new_user)
             
             # 인증 완료 후 Redis 데이터 삭제
-            await self._initialize_permissions_collections()
+            await self._initialize_permissions_collections(self.db)
             await self._remove_verification_data(email)
             
             return new_user
