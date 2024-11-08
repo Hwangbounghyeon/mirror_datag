@@ -12,23 +12,26 @@ class AccessControl(BaseModel):
 
 class ProjectRequest(BaseModel):
     project_name: str
+    project_model_task: str
     project_model_name: str
     description: str
     accesscontrol: AccessControl
-    is_private: int
+    is_private: bool
 
 # project 응답 DTO
 class ProjectResponse(BaseModel):
     project_id: str
     project_name: str
+    task: str
     model_name: str
     description: Optional[str] = ""
     user_id: int
     department : Optional[str] = ""
-    image_count : Optional[int] = 0
-    is_private: Optional[int] = 0
+    is_private: Optional[bool] = False
     created_at: datetime
     updated_at: datetime
+    is_editor: bool
+    is_creator: bool
 
     class Config:
         from_attributes = True
@@ -63,6 +66,12 @@ class ProjectListResponse(BaseModel):
         from_attributes = True
         protected_namespaces = ()
 
+
+# User 요청 DTO
+class UserRequet(BaseModel):
+    user_name: Optional[str] = None 
+    page: int = Query(1, ge=1)
+    limit: int = Query(10, ge=1, le=100)
 
 # User 응답 DTO
 class UserResponse(BaseModel):

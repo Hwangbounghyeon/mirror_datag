@@ -10,8 +10,8 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
-from models.mariadb_users import Projects, Users, Departments, ProjectImage
+from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
+from models.mariadb_users import Users, Departments
 from typing import List
 
 # 1. 프로젝트 생성, 삭제 및 불러오기
@@ -31,15 +31,15 @@ class ProjectService:
 
         # project 생성
         project = {
-            'project_name':request.project_name,
-            'model_name':request.project_model_name,
+            'projectName':request.project_name,
+            'task':request.project_model_task,
+            'modelName':request.project_model_name,
             'description':request.description,
-            'user_id':creator_user_id,
+            'userId':creator_user_id,
             'department': department_name,
-            'image_count': 0,
-            'is_private':request.is_private,
-            'created_at':get_current_time(),
-            'updated_at':get_current_time()
+            'isPrivate':request.is_private,
+            'createdAt':get_current_time(),
+            'updatedAt':get_current_time()
         }
         
         new_project = await collection_projects.insert_one(project)
@@ -136,9 +136,9 @@ class ProjectService:
         self,
         user_id: int,
         model_name: str | None = None,
-        page: int = 0,
+        page: int = 1,
         limit: int = 10
-    ) -> PaginationDto[ProjectResponse]:
+    ) -> PaginationDto[List[ProjectResponse] | None]:
 
         skip = (page - 1) * limit
         
@@ -151,56 +151,80 @@ class ProjectService:
         user_permissions = await collection_project_permissions.find_one({f"user.{user_id}": {"$exists": True}})
         department_permissions = await collection_project_permissions.find_one({f"department.{department_name}": {"$exists": True}})
 
+        viewable_project_ids_user = set()
+        user_edit_permissions = set()
         # 사용자 권한이 없을 경우 빈 리스트 반환
         if user_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
-            user_view_permissions = user_permissions["user"].get(str(user_id), {}).get("view", [])
-            user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
+            user_view_permissions = set(user_permissions["user"].get(str(user_id), {}).get("view", []))
+            user_edit_permissions = set(user_permissions["user"].get(str(user_id), {}).get("edit", []))
 
-            viewable_project_ids_user = set(user_view_permissions) | set(user_edit_permissions)
+            viewable_project_ids_user = user_view_permissions | user_edit_permissions
 
+        viewable_project_ids_department = set()
+        department_edit_permissions = set()
         if department_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
-            department_view_permissions = department_permissions["department"].get(str(department_name), {}).get("view", [])
-            department_edit_permissions = department_permissions["department"].get(str(department_name), {}).get("edit", [])
+            department_view_permissions = set(department_permissions["department"].get(str(department_name), {}).get("view", []))
+            department_edit_permissions = set(department_permissions["department"].get(str(department_name), {}).get("edit", []))
 
-            viewable_project_ids_department = set(department_view_permissions) | set(department_edit_permissions)
+            viewable_project_ids_department = department_view_permissions | department_edit_permissions
 
         # view 및 edit 권한의 프로젝트 ID 합집합 구하기
         viewable_project_ids = viewable_project_ids_user | viewable_project_ids_department
+        edit_project_ids = user_edit_permissions | department_edit_permissions
 
         # 조회할 프로젝트가 없으면 빈 리스트 반환
         if not viewable_project_ids:
-            return []
+            response = {
+                "data": None,
+                "page": page,
+                "limit": limit,
+                "total_count": 0,
+                "total_pages": page
+            }
+            return response
 
         # MongoDB 쿼리 생성
-        query = {"_id": {"$in": [ObjectId(pid) for pid in viewable_project_ids]}}
+        query = {
+            "$and": [
+                {"_id": {"$in": [ObjectId(pid) for pid in viewable_project_ids]}},
+                {
+                    "$or": [
+                        {"isPrivate": False},  # 공개 프로젝트
+                        {
+                            "$and": [
+                                {"isPrivate": True},
+                                {"userId": user_id}  # private이면서 본인 프로젝트
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
         
-        # 추가 조건
-        conditions = []
         if model_name:
-            conditions.append({"model_name": model_name})
-
-        # 조건을 추가한 필터링
-        if conditions:
-            query["$or"] = conditions
+            query["$and"].append({"modelName": model_name})
         
         # MongoDB 쿼리 실행 및 페이지네이션
         projects = await collection_projects.find(query).skip(skip).limit(limit).to_list(length=limit)
+        projects.sort(key=lambda x: x['updatedAt'], reverse=True)
 
         # 결과 형식 맞추기
         results = [
             ProjectResponse(
                 project_id=str(project["_id"]),
-                project_name=project["project_name"],
-                model_name=project.get("model_name", ""),
+                project_name=project["projectName"],
+                task=project.get("task", ""),
+                model_name=project.get("modelName", ""),
                 department=project.get("department", ""),
-                user_id=project.get("user_id", ""),
+                user_id=project.get("userId", 0),
                 description=project.get("description", ""),
-                image_count=project.get("image_count", ""),
-                is_private=project.get("is_private", ""),
-                created_at=project.get("created_at", ""),
-                updated_at=project.get("updated_at", "")
+                is_private=project.get("isPrivate", False),
+                created_at=project.get("createdAt", ""),
+                updated_at=project.get("updatedAt", ""),
+                is_editor=str(project["_id"]) in edit_project_ids,
+                is_creator=project.get("userId", 0) == user_id
             )
             for project in projects
         ]
@@ -217,6 +241,7 @@ class ProjectService:
         }
 
         return response
+        
     # 1-3. 프로젝트 삭제
     async def delete_project(self, project_id: str):
         # 1. projects에서 삭제
@@ -299,8 +324,16 @@ class ProjectSubService:
         return [DepartmentResponse.model_validate(dept).model_dump() for dept in departments]
     
     # 2-2. 이름 검색
-    async def search_user_name(self, name: str):
-        users = self.db.query(Users).filter(Users.name.like(f"%{name}%")).all()
+    async def search_user_name(self, user_name: str | None = None, page : int = 1, limit : int = 10) -> PaginationDto[List[ProjectResponse] | None]:
+        skip = (page - 1) * limit
+
+        if user_name:
+            users = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).offset(skip).limit(limit).all()
+            total_user = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).count()
+        else:
+            users = self.db.query(Users).offset(skip).limit(limit).all()
+            total_user = self.db.query(Users).count()
+
         user_list = []
         for user in users:
             user_one = UserResponse(
@@ -310,6 +343,16 @@ class ProjectSubService:
             )
             user_list.append(user_one)
 
-        return user_list
+        total_pages = (total_user + limit - 1) // limit
+
+        response = {
+            "data": user_list,
+            "page": page,
+            "limit": limit,
+            "total_count": total_user,
+            "total_pages": total_pages
+        }
+
+        return response
         
         
