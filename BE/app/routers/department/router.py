@@ -9,13 +9,10 @@ from services.department.department_service import DepartmentService
 
 security_scheme = HTTPBearer()
 
-# 회원 및 인증 관련이므로 auth로 묶음
 router = APIRouter(prefix="/department", tags=["Department"])
 
-# 4. 부서 리스트 조회
 @router.get("/list")
 async def get_department_list(
-    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
