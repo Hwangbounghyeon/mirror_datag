@@ -10,8 +10,8 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, ProjectListRequest, DepartmentResponse, UserResponse, ProjectListResponse
-from models.mariadb_users import Projects, Users, Departments, ProjectImage
+from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
+from models.mariadb_users import Users, Departments
 from typing import List
 
 # 1. 프로젝트 생성, 삭제 및 불러오기
@@ -206,6 +206,7 @@ class ProjectService:
         
         # MongoDB 쿼리 실행 및 페이지네이션
         projects = await collection_projects.find(query).skip(skip).limit(limit).to_list(length=limit)
+        projects.sort(key=lambda x: x['updatedAt'], reverse=True)
 
         # 결과 형식 맞추기
         results = [
@@ -284,8 +285,16 @@ class ProjectSubService:
         return [DepartmentResponse.model_validate(dept).model_dump() for dept in departments]
     
     # 2-2. 이름 검색
-    async def search_user_name(self, name: str):
-        users = self.db.query(Users).filter(Users.name.like(f"%{name}%")).all()
+    async def search_user_name(self, user_name: str | None = None, page : int = 1, limit : int = 10) -> PaginationDto[List[ProjectResponse] | None]:
+        skip = (page - 1) * limit
+
+        if user_name:
+            users = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).offset(skip).limit(limit).all()
+            total_user = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).count()
+        else:
+            users = self.db.query(Users).offset(skip).limit(limit).all()
+            total_user = self.db.query(Users).count()
+
         user_list = []
         for user in users:
             user_one = UserResponse(
@@ -295,6 +304,16 @@ class ProjectSubService:
             )
             user_list.append(user_one)
 
-        return user_list
+        total_pages = (total_user + limit - 1) // limit
+
+        response = {
+            "data": user_list,
+            "page": page,
+            "limit": limit,
+            "total_count": total_user,
+            "total_pages": total_pages
+        }
+
+        return response
         
         
