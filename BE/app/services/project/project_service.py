@@ -1,5 +1,4 @@
 from dto.project_dto import ProjectRequest
-from configs.mongodb import collection_project_images, collection_metadata, collection_project_histories, collection_project_permissions, collection_projects
 
 from sqlalchemy.orm import Session
 from utils.timezone import get_current_time
@@ -8,6 +7,17 @@ from bson import ObjectId
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
+from configs.mongodb import (
+    collection_tag_images, 
+    collection_metadata, 
+    collection_images,
+    collection_image_permissions, 
+    collection_project_images,
+    collection_project_histories, 
+    collection_project_permissions, 
+    collection_projects
+)
 
 from dto.pagination_dto import PaginationDto
 from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
@@ -313,46 +323,77 @@ class ProjectService:
     #             )
 
 
-# 2. 이름 검색 및 부서 불러오기
-class ProjectSubService:
-    def __init__(self, db: Session):
-        self.db = db
-    
-    # 2-1. 부서 리스트 불러오기
-    async def get_department_list(self):
-        departments = self.db.query(Departments).all()
-        return [DepartmentResponse.model_validate(dept).model_dump() for dept in departments]
-    
-    # 2-2. 이름 검색
-    async def search_user_name(self, user_name: str | None = None, page : int = 1, limit : int = 10) -> PaginationDto[List[ProjectResponse] | None]:
-        skip = (page - 1) * limit
+    # 2. 각 그룹별로 Tag 필터링
+    async def _process_condition_group(self, tag_doc: dict, condition: SearchCondition) -> set:
+        result_ids = None
 
-        if user_name:
-            users = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).offset(skip).limit(limit).all()
-            total_user = self.db.query(Users).filter(Users.name.like(f"%{user_name}%")).count()
-        else:
-            users = self.db.query(Users).offset(skip).limit(limit).all()
-            total_user = self.db.query(Users).count()
+        # AND 조건 처리
+        if condition.and_condition:
+            for tag in condition.and_condition:
+                if tag in tag_doc['tag']:
+                    current_ids = set(tag_doc['tag'][tag])
+                    result_ids = current_ids if result_ids is None else result_ids & current_ids
+                else:
+                    return set()  # AND 조건 중 하나라도 매칭되지 않으면 빈 set 반환
 
-        user_list = []
-        for user in users:
-            user_one = UserResponse(
-                user_id = user.user_id,
-                name = user.name,
-                email = user.email
-            )
-            user_list.append(user_one)
+        # OR 조건 처리
+        if condition.or_condition:
+            or_ids = set()
+            for tag in condition.or_condition:
+                if tag in tag_doc['tag']:
+                    or_ids.update(tag_doc['tag'][tag])
+            if result_ids is None:
+                result_ids = or_ids
+            else:
+                result_ids &= or_ids
 
-        total_pages = (total_user + limit - 1) // limit
+        # 아직 result_ids가 None이면 모든 이미지 ID로 초기화
+        if result_ids is None:
+            result_ids = set()
+            for tag_ids in tag_doc['tag'].values():
+                result_ids.update(tag_ids)
 
-        response = {
-            "data": user_list,
-            "page": page,
-            "limit": limit,
-            "total_count": total_user,
-            "total_pages": total_pages
-        }
+        # NOT 조건 처리
+        if condition.not_condition:
+            exclude_ids = set()
+            for tag in condition.not_condition:
+                if tag in tag_doc['tag']:
+                    exclude_ids.update(tag_doc['tag'][tag])
+            result_ids -= exclude_ids
 
-        return response
-        
-        
+        return result_ids
+
+    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> ImageSearchResponse:
+        try:
+            project_images = await collection_project_images.find_one({})
+            if not project_images or "project" not in project_images:
+                return ImageSearchResponse(images={})
+
+            project_image_ids = set(project_images["project"].get(project_id, []))
+            if not project_image_ids:
+                return ImageSearchResponse(images={})
+            
+            # 검색 조건이 있는 경우에만 필터링 적용
+            if search_request and search_request.conditions:
+                tag_doc = await collection_tag_images.find_one({})
+                if tag_doc:
+                    matching_ids = set()
+                    for condition in search_request.conditions:
+                        group_result = await self._process_condition_group(tag_doc, condition)
+                        matching_ids.update(group_result)
+                    project_image_ids &= matching_ids
+
+            image_data = {}
+            for image_id in project_image_ids:
+                image = await collection_images.find_one({"_id": ObjectId(image_id)})
+                if image:
+                    metadata = await collection_metadata.find_one(
+                        {"_id": ObjectId(image["metadataId"])}
+                    )
+                    if metadata and "fileList" in metadata and metadata["fileList"]:
+                        image_data[image_id] = metadata["fileList"][0]
+
+            return ImageSearchResponse(images=image_data)
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

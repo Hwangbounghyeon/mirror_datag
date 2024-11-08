@@ -20,7 +20,7 @@ from configs.s3 import upload_to_s3
 
 BUCKENAME = 'ssafy-project'
 
-class Upload:
+class UploadService:
     def __init__(self, db : Session):
         self.db = db
 
