@@ -1,10 +1,16 @@
 from fastapi import HTTPException
-from typing import Dict
+from typing import List, Set
 from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse
-from configs.mongodb import collection_tag_images, collection_metadata, collection_images
-from configs.s3 import get_s3_image_paths
+from configs.mongodb import (
+    collection_tag_images, 
+    collection_metadata, 
+    collection_images,
+    collection_image_permissions, 
+    collection_project_images
+)
 from bson import ObjectId
-
+from models.mariadb_users import Users, Departments
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,10 +19,13 @@ load_dotenv()
 
 ## 1. tag 목록 불러오기
 class TagService:
-    def __init__(self):
+    def __init__(self, db: Session):
+        self.db = db
         self.collection_tag_images = collection_tag_images
         self.collection_metadata = collection_metadata
         self.collection_images = collection_images
+        self.collection_image_permissions = collection_image_permissions
+        self.collection_project_images = collection_project_images
     
     async def get_tag_and_image_lists(self) -> TagImageResponse:
         try:
@@ -24,7 +33,7 @@ class TagService:
             if not tag_doc:
                 tags = []
             else:
-                tags = list(tag_doc['tag'].keys()) if tag_doc else []
+                tags = list(tag_doc['tag'].keys()) if tag_doc and 'tag' in tag_doc else []
             
             images = {}
             image_docs = await self.collection_images.find({}).to_list(length=None)
@@ -49,17 +58,87 @@ class TagService:
                 status_code=500,
                 detail=f"태그 목록과 이미지 경로 조회 중 오류가 발생했습니다: {str(e)}"
             )
-        
+    
+    # 전체 이미지 유저 접근 권한 설정
+    async def _get_user_permissions(self, user_id: int) -> Set[str]:
+        try:
+            user = self.db.query(Users).filter(Users.user_id == user_id).first()
+            if not user:
+                raise HTTPException(status_code=404, detail="사용자가 존재하지 않습니다.")
+            
+            department = self.db.query(Departments).filter(
+                Departments.department_id == user.department_id
+            ).first()
+            department_name = department.department_name if department else None
 
-    ## 2. 이미지 Tag 필터링하기(고급 검색 기능 - AND, OR, NOT)
-    # - 검색 조건 받아오기
-    # - 검색 조건으로 image-tag 확인해서 해당 조건에 필터링 되는 image 확인
-    # - image의 metadata_id를 통해 image의 path를 찾아서 list로 만들어서 반환
+            permissions = await self.collection_image_permissions.find_one({})
+            if not permissions:
+                return set()
 
-    async def search_images_by_conditions(self, search_dto: SearchCondition) -> ImageSearchResponse:
+            accessible_images = set()
+
+            if 'user' in permissions and str(user_id) in permissions['user']:
+                accessible_images.update(permissions['user'].get(str(user_id), []))
+
+            if department_name and 'department' in permissions:
+                accessible_images.update(permissions['department'].get(department_name, []))
+
+            return accessible_images
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    async def _filter_by_permissions(self, image_ids: Set[str], user_id: int) -> Set[str]:
+        accessible_images = await self._get_user_permissions(user_id)
+        return image_ids & accessible_images
+    
+    # 2. 각 그룹별로 Tag 필터링
+    async def _process_condition_group(self, tag_doc: dict, condition: SearchCondition) -> set:
+        result_ids = None
+
+        # AND 조건 처리
+        if condition.and_condition:
+            for tag in condition.and_condition:
+                if tag in tag_doc['tag']:
+                    current_ids = set(tag_doc['tag'][tag])
+                    result_ids = current_ids if result_ids is None else result_ids & current_ids
+                else:
+                    return set()  # AND 조건 중 하나라도 매칭되지 않으면 빈 set 반환
+
+        # OR 조건 처리
+        if condition.or_condition:
+            or_ids = set()
+            for tag in condition.or_condition:
+                if tag in tag_doc['tag']:
+                    or_ids.update(tag_doc['tag'][tag])
+            if result_ids is None:
+                result_ids = or_ids
+            else:
+                result_ids &= or_ids
+
+        # 아직 result_ids가 None이면 모든 이미지 ID로 초기화
+        if result_ids is None:
+            result_ids = set()
+            for tag_ids in tag_doc['tag'].values():
+                result_ids.update(tag_ids)
+
+        # NOT 조건 처리
+        if condition.not_condition:
+            exclude_ids = set()
+            for tag in condition.not_condition:
+                if tag in tag_doc['tag']:
+                    exclude_ids.update(tag_doc['tag'][tag])
+            result_ids -= exclude_ids
+
+        return result_ids
+    
+    ## 3. 이미지 Tag 필터링하기(고급 검색 기능 - AND, OR, NOT)
+    async def search_images_by_conditions(self, search_dto: List[SearchCondition], user_id: int) -> ImageSearchResponse:
         try:
             # 1. tag document 가져오기
             tag_doc = await self.collection_tag_images.find_one({})
+            if not tag_doc or not search_dto.conditions:
+                ImageSearchResponse(images={})
             '''
             tag_doc = {
                 "_id": ObjectId("67284a7df0b2373f02710c8f"),
@@ -70,150 +149,74 @@ class TagService:
                 }
             }
             '''
-            if not tag_doc:
-                ImageSearchResponse(images={})
-
-            matching_metadata_ids = set()  # 최종 결과를 저장할 set
-            '''
-            matching_metadata_ids = set()  # 초기값: 빈 set
-            '''
-
-            # 2. 각 condition 처리 (conditions는 OR로 연결)
+            
+            # 모든 조건 그룹을 처리하고 결과를 OR 연산으로 결합
+            final_matching_ids = set()
             for condition in search_dto.conditions:
-                '''
-                condition 예시:
-                {
-                    "and_condition": ["dog", "2024"],
-                    "or_condition": ["cat"],
-                    "not_condition": []
-                }
-                '''
-                current_metadata_ids = set()  # 현재 condition의 결과
-                '''
-                current_metadata_ids = set()  # 초기값: 빈 set
-                '''
-
-                # 3. AND 조건 처리
-                if condition.and_condition:
-                    current_metadata_ids = set(tag_doc['tag'].get(condition.and_condition[0], []))
-                    '''
-                    current_metadata_ids = {"metadata_id1", "metadata_id2", "metadata_id3"}
-                    '''
-                    for tag in condition.and_condition[1:]:
-                        if tag in tag_doc['tag']:
-                            current_metadata_ids &= set(tag_doc['tag'][tag])
-                            '''
-                            tag_doc['tag']["2024"] = ["metadata_id1", "metadata_id2"]
-                            current_metadata_ids = {"metadata_id1", "metadata_id2"}
-                            '''
-                        else:
-                            ImageSearchResponse(images={})
-                                
-                                
-                # 4. OR 조건 처리
-                if condition.or_condition:
-                    or_metadata_ids = set()
-                    '''
-                    or_metadata_ids = set()  # 초기값: 빈 set
-                    '''
-                    for tag in condition.or_condition:  # "cat"
-                        if tag in tag_doc['tag']:
-                            or_metadata_ids.update(tag_doc['tag'][tag])
-                            '''
-                            or_metadata_ids = {"metadata_id2", "metadata_id4"}
-                            '''
-                    
-                    if current_metadata_ids:  # AND 조건이 있었다면
-                        current_metadata_ids &= or_metadata_ids
-                        '''
-                        current_metadata_ids = {"metadata_id2"}
-                        # {"metadata_id1", "metadata_id2"} ∩ {"metadata_id2", "metadata_id4"}
-                        '''
-                    else:  
-                        current_metadata_ids = or_metadata_ids
-                        '''
-                        # AND 조건이 없었을 경우
-                        current_metadata_ids = {"metadata_id2", "metadata_id4"}
-                        '''
-
-                # 5. NOT 조건 처리
-                if condition.not_condition:
-                    not_metadata_ids = set()
-                    for tag in condition.not_condition:
-                        if tag in tag_doc['tag']:
-                            not_metadata_ids.update(tag_doc['tag'][tag])
-                            '''
-                            not_metadata_ids = {"metadata_id5", "metadata_id6"}
-                            '''
-                    current_metadata_ids -= current_metadata_ids.difference(not_metadata_ids)
-                    '''
-                    현재 예시에서는 not_condition이 비어있으므로 변화 없음
-                    current_metadata_ids = {"metadata_id2"}
-                    '''
-
-                # 6. 현재 condition의 결과를 전체 결과에 추가 (각 고급 연산 결과 간에는 OR 연산 수행)
-                matching_metadata_ids.update(current_metadata_ids)
-                '''
-                matching_metadata_ids = {"metadata_id2"}
-                '''
-
-            # 7. metadata 아이디로 images 컬렉션에서 image 정보 가져오고, metadata 컬렉션에서 실제 파일 경로 찾기
-            if matching_metadata_ids:
-                query = {"_id": {"$in": [ObjectId(id) for id in matching_metadata_ids]}}
-                image_data = {}
-                '''
-                query = {"_id": {"$in": [ObjectId("metadata_id2")]}
-                '''
-                docs = await self.collection_images.find(query).to_list(length=None)
-                '''
-                docs = [
-                    {
-                        "_id": ObjectId("image_id1"),
-                        "metadataId": "metadata_id1",
-                        "featureId": "feature_id1"
-                    },
-                    {
-                        "_id": ObjectId("image_id2"),
-                        "metadataId": "metadata_id2",
-                        "featureId": "feature_id2"
-                    }
-                ]
-                '''
+                group_result = await self._process_condition_group(tag_doc, condition)
+                final_matching_ids.update(group_result)
+            
+            if not final_matching_ids:
+                return ImageSearchResponse(images={})
                 
-                for doc in docs:
+            allowed_images = await self._filter_by_permissions(final_matching_ids, user_id)
+            if not allowed_images:
+                return ImageSearchResponse(images={})
+            
+
+            # 매칭된 이미지 정보 조회
+            image_data = {}
+            for image_id in final_matching_ids:
+                image = await self.collection_images.find_one({"_id": ObjectId(image_id)})
+                if image:
                     metadata = await self.collection_metadata.find_one(
-                        {"_id": ObjectId(doc["metadataId"])}
+                        {"_id": ObjectId(image["metadataId"])}
                     )
-                    '''
-                    metadata = {
-                        "_id": ObjectId("metadata_id1"),
-                        "fileList": ["s3://bucket/path/to/image1.jpg"],
-                        "metadata": {
-                            "branch": "branch1",
-                            "process": "process1",
-                            ...
-                        }
-                    }
-                    '''
-                    
                     if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[str(doc["_id"])] = metadata["fileList"][0]
-                        '''
-                        image_dict = {
-                            "image_id1": "s3://bucket/path/to/image1.jpg",
-                            "image_id2": "s3://bucket/path/to/image2.jpg"
-                        }
-                        '''
-                
-                return ImageSearchResponse(images=image_data)
+                        image_data[image_id] = metadata["fileList"][0]
 
-            return ImageSearchResponse(images={})
+            return ImageSearchResponse(images=image_data)
 
         except Exception as e:
             raise HTTPException(
                 status_code=500,
                 detail=f"이미지를 찾는 중 에러가 발생했습니다: {str(e)}"
             )
+            
+    async def search_project_images(self, project_id: str, conditions: List[SearchCondition], user_id: int) -> ImageSearchResponse:
+        try:
+            project_images = await self.collection_project_images.find_one({})
+            if not project_images or "project" not in project_images:
+                return ImageSearchResponse(images={})
+
+            project_image_ids = set(project_images["project"].get(project_id, []))
+            if not project_image_ids:
+                return ImageSearchResponse(images={})
+
+            if conditions:
+                tag_doc = await self.collection_tag_images.find_one({})
+                if tag_doc:
+                    matching_ids = set()
+                    for condition in conditions:
+                        group_result = await self._process_condition_group(tag_doc, condition)
+                        matching_ids.update(group_result)
+                    project_image_ids &= matching_ids
+
+
+            image_data = {}
+            for image_id in project_image_ids:
+                image = await self.collection_images.find_one({"_id": ObjectId(image_id)})
+                if image:
+                    metadata = await self.collection_metadata.find_one(
+                        {"_id": ObjectId(image["metadataId"])}
+                    )
+                    if metadata and "fileList" in metadata and metadata["fileList"]:
+                        image_data[image_id] = metadata["fileList"][0]
+
+            return ImageSearchResponse(images=image_data)
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 ### 2-1(Type별로 필터링)
