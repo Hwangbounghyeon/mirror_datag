@@ -6,6 +6,7 @@ from bson import ObjectId
 class Project(BaseModel):
     projectName: str
     description: str
+    task: str
     modelName: str
     imageCount: int
     isPrivate: bool
