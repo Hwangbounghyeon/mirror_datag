@@ -13,6 +13,7 @@ from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthAd
 from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse
 from dto.uploads_dto import UploadRequest
 from services.project.upload_service import UploadService
+import json
 
 
 security_scheme = HTTPBearer()
@@ -93,6 +94,7 @@ async def delete_project(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# 4. project 이미지 리스트 조회
 @router.post("/image/{project_id}/list", response_model=CommonResponse[ImageSearchResponse])
 async def search_project_images(
     project_id: str,
@@ -115,6 +117,7 @@ async def search_project_images(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# 5. 이미지 업로드
 @router.post("/image/upload", description="이미지 업로드(zip, image)")
 async def image_upload(
     upload_request: str = Form(...),
@@ -123,6 +126,7 @@ async def image_upload(
     db : Session = Depends(get_database_mariadb)
 ):
     try:
+        print("file : ",files)
         access_token = credentials.credentials
         jwt = JWTManage(db)
         user_id = jwt.verify_token(access_token)["user_id"]
@@ -130,7 +134,7 @@ async def image_upload(
         parsed_request = json.loads(upload_request)
         upload_request_obj = UploadRequest(**parsed_request)
 
-        upload = Upload(db)
+        upload = UploadService(db)
         file_urls = await upload.upload_image(upload_request_obj, files, user_id)
 
         return CommonResponse(
