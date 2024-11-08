@@ -120,7 +120,7 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(sec
     
 
 
-@router.get("/profile", response_model=CommonResponse[UserProfileResponse])
+@router.get("/user/me", response_model=CommonResponse[UserProfileResponse])
 async def get_my_profile(
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_db)
@@ -142,7 +142,7 @@ async def get_my_profile(
             detail=str(e)
         )
 
-@router.put("/profile", response_model=CommonResponse[UserProfileResponse])
+@router.put("/user/me", response_model=CommonResponse[UserProfileResponse])
 async def update_my_profile(
     profile_data: UserProfileUpdateRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
