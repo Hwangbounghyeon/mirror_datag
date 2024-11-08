@@ -140,7 +140,7 @@ async def get_tags_and_images(
     db: Session = Depends(get_database_mariadb)):
     try:
         image_service = ImageService(db)
-        result = await image_service.get_tag_and_image_lists()
+        result = await image_service.get_tag()
         return CommonResponse(status=200, data=result)
     except HTTPException as http_exc:
         raise http_exc
