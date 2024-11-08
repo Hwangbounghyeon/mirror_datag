@@ -1,0 +1,16 @@
+services:
+  data-version:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY}/data:${GIT_HASH}
+    ports:
+      - "8001:8000"
+
+  data:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY}/data:lts
+    ports:
+      - "8001:8000"
