@@ -2,9 +2,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 class UploadRequest(BaseModel):
-    department_id: Optional[int] = None
-    task: str
-    model_name: str
     project_id: str
     is_private: bool
 
