@@ -63,6 +63,12 @@ class ProjectListResponse(BaseModel):
         protected_namespaces = ()
 
 
+# User 요청 DTO
+class UserRequet(BaseModel):
+    user_name: Optional[str] = None 
+    page: int = Query(1, ge=1)
+    limit: int = Query(10, ge=1, le=100)
+
 # User 응답 DTO
 class UserResponse(BaseModel):
     user_id: int
