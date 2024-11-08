@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Security, Depends
+from fastapi import APIRouter, HTTPException, Security, Depends, Path
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from typing import List
 
 from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
@@ -9,8 +10,9 @@ from services.image.image_service import ImageService
 from services.image.image_extra_service import ImageExtraService
 from services.image.download_service import DownloadService
 from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthAddRequest, ImageDetailTagDeleteRequest, ImageDetailTagAddRequest
-from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse
+from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse, SearchCondition
 from dto.download_dto import DownloadRequest
+from dto.pagination_dto import PaginationDto
 
 security_scheme = HTTPBearer()
 
@@ -147,9 +149,10 @@ async def get_tags_and_images(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/search", response_model=CommonResponse[ImageSearchResponse])
+@router.post("/search/{page}", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
 async def search_images(
-    condition_data: SearchRequest,
+    page: int = Path(..., ge=1, description="페이지 번호"),
+    condition_data: SearchRequest = None,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
@@ -157,8 +160,12 @@ async def search_images(
         jwt = JWTManage(db)
         user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
+        
+        if condition_data is None:
+            condition_data = SearchRequest(conditions=[SearchCondition()])
+        
         image_service = ImageService(db)
-        result = await image_service.search_images_by_conditions(condition_data.conditions, user_id)
+        result = await image_service.search_images_by_conditions(condition_data.conditions, user_id, page)
         
         return CommonResponse(
             status=200,
