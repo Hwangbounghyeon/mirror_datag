@@ -30,16 +30,18 @@ class SearchRequest(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": [
-                {
-                    "and_condition": ["cat", "Seoul"],
-                    "or_condition": ["2024_11"],
-                    "not_condition": ["Zone A"]
-                },
-                {
-                    "and_condition": ["dog", "Busan"],
-                    "or_condition": [],
-                    "not_condition": ["Zone B"]
-                }
-            ]
+            "example": {
+                "conditions": [
+                    {
+                        "and_condition": ["cat", "Seoul"],
+                        "or_condition": ["2024_11"],
+                        "not_condition": ["Zone A"]
+                    },
+                    {
+                        "and_condition": ["dog", "Busan"],
+                        "or_condition": [],
+                        "not_condition": ["Zone B"]
+                    }
+                ]
+            }
         }

@@ -14,9 +14,11 @@ security_scheme = HTTPBearer()
 router = APIRouter(prefix="/search", tags=["search"])
 
 @router.get("", response_model=CommonResponse[TagImageResponse])
-async def get_tags_and_images(credentials: HTTPAuthorizationCredentials = Security(security_scheme)):
+async def get_tags_and_images(
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme), 
+    db: Session = Depends(get_db)):
     try:
-        tag_service = TagService()
+        tag_service = TagService(db)
         result = await tag_service.get_tag_and_image_lists()
         return CommonResponse(status=200, data=result)
     except HTTPException as http_exc:
@@ -24,9 +26,9 @@ async def get_tags_and_images(credentials: HTTPAuthorizationCredentials = Securi
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/image", response_model=CommonResponse[ImageSearchResponse])
+@router.post("/image", response_model=CommonResponse[ImageSearchResponse])
 async def search_images(
-    conditions: SearchRequest,
+    condition_data: SearchRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_db)
 ):
@@ -34,8 +36,8 @@ async def search_images(
         jwt = JWTManage(db)
         user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
-        tag_service = TagService()
-        result = await tag_service.search_images_by_conditions(conditions.conditions, user_id)
+        tag_service = TagService(db)
+        result = await tag_service.search_images_by_conditions(condition_data.conditions, user_id)
         
         return CommonResponse(
             status=200,
