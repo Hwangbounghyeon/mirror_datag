@@ -47,11 +47,12 @@ async def search_images(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-        
-@router.get("/project/{project_id}/images", response_model=CommonResponse[ImageSearchResponse])
+
+    
+@router.post("/project/{project_id}/images", response_model=CommonResponse[ImageSearchResponse])
 async def search_project_images(
     project_id: str,
-    search_request: SearchRequest,
+    search_request: SearchRequest = None,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_db)
 ):
@@ -60,10 +61,11 @@ async def search_project_images(
         user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
         tag_service = TagService(db)
-        result = await tag_service.search_project_images(project_id, search_request.conditions, user_id)
+        result = await tag_service.search_project_images(project_id, search_request, user_id)
         return CommonResponse(
-            status=200, data=result
-            )
+            status=200, 
+            data=result
+        )
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
