@@ -32,6 +32,7 @@ class ProjectService:
         # project 생성
         project = {
             'projectName':request.project_name,
+            'task':request.project_model_task,
             'modelName':request.project_model_name,
             'description':request.description,
             'userId':creator_user_id,
@@ -151,26 +152,27 @@ class ProjectService:
         department_permissions = await collection_project_permissions.find_one({f"department.{department_name}": {"$exists": True}})
 
         viewable_project_ids_user = set()
-
+        user_edit_permissions = set()
         # 사용자 권한이 없을 경우 빈 리스트 반환
         if user_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
-            user_view_permissions = user_permissions["user"].get(str(user_id), {}).get("view", [])
-            user_edit_permissions = user_permissions["user"].get(str(user_id), {}).get("edit", [])
+            user_view_permissions = set(user_permissions["user"].get(str(user_id), {}).get("view", []))
+            user_edit_permissions = set(user_permissions["user"].get(str(user_id), {}).get("edit", []))
 
-            viewable_project_ids_user = set(user_view_permissions) | set(user_edit_permissions)
+            viewable_project_ids_user = user_view_permissions | user_edit_permissions
 
         viewable_project_ids_department = set()
-
+        department_edit_permissions = set()
         if department_permissions:
             # 특정 user_id의 view 및 edit 권한 가져오기
-            department_view_permissions = department_permissions["department"].get(str(department_name), {}).get("view", [])
-            department_edit_permissions = department_permissions["department"].get(str(department_name), {}).get("edit", [])
+            department_view_permissions = set(department_permissions["department"].get(str(department_name), {}).get("view", []))
+            department_edit_permissions = set(department_permissions["department"].get(str(department_name), {}).get("edit", []))
 
-            viewable_project_ids_department = set(department_view_permissions) | set(department_edit_permissions)
+            viewable_project_ids_department = department_view_permissions | department_edit_permissions
 
         # view 및 edit 권한의 프로젝트 ID 합집합 구하기
         viewable_project_ids = viewable_project_ids_user | viewable_project_ids_department
+        edit_project_ids = user_edit_permissions | department_edit_permissions
 
         # 조회할 프로젝트가 없으면 빈 리스트 반환
         if not viewable_project_ids:
@@ -212,13 +214,16 @@ class ProjectService:
             ProjectResponse(
                 project_id=str(project["_id"]),
                 project_name=project["projectName"],
+                task=project.get("task", ""),
                 model_name=project.get("modelName", ""),
                 department=project.get("department", ""),
                 user_id=project.get("userId", 0),
                 description=project.get("description", ""),
                 is_private=project.get("isPrivate", False),
                 created_at=project.get("createdAt", ""),
-                updated_at=project.get("updatedAt", "")
+                updated_at=project.get("updatedAt", ""),
+                is_editor=str(project["_id"]) in edit_project_ids,
+                is_creator=project.get("userId", 0) == user_id
             )
             for project in projects
         ]
@@ -236,7 +241,6 @@ class ProjectService:
 
         return response
 
-    
     # 1-3. 프로젝트 삭제
     async def delete_project(self, project_id: str):
         # MariaDB에서 project 조회 및 삭제

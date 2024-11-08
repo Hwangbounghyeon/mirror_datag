@@ -45,7 +45,8 @@ class AnalysisService:
                 for j in range(len(image_features[i])):  # 클래스 수만큼 반복
                     concat_image_infos.append({
                         "imageId": request.image_ids[i],
-                        "predictions": predictions["detections"][j]
+                        "predictions": predictions["detections"][j],
+                        "imageUrl": image_metadata["fileList"][0]
                     })
             else:
                 for j in range(len(image_features[i])):  # 클래스 수만큼 반복
@@ -54,8 +55,10 @@ class AnalysisService:
                         "predictions": {
                             "prediction": predictions["prediction"],
                             "confidence": predictions["confidence"]
-                        }
+                        },
+                        "imageUrl": image_metadata["fileList"][0]
                     })
+                    
         # features concatenate
         concat_features = self._concatenate_array(image_features)
         
