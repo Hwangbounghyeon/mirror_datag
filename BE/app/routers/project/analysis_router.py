@@ -6,12 +6,12 @@ from sqlalchemy.orm import Session
 from dto.analysis_dto import DimensionReductionRequest, DimensionReductionResponse
 from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
-from services.user_service import JWTManage
-from services.analysis_service import AnalysisService
+from services.auth.auth_service import JWTManage
+from services.project.analysis_service import AnalysisService
 
 security_scheme = HTTPBearer()
 
-router = APIRouter(prefix="/analysis", tags=["analysis with dimension reduction"])
+router = APIRouter(prefix="/analysis")
 
 @router.post("", response_model=CommonResponse[DimensionReductionResponse])
 async def dimension_reduction_umap(

@@ -51,17 +51,6 @@ class HistoryService:
 
             histories = await collection_histories.find(base_query).skip(skip).limit(limit).to_list(length=limit)
 
-            # return_value = []
-
-            # for history in histories:
-            #     each_history = {}
-            #     each_history["history_id"] = str(history["_id"])
-            #     each_history["history_name"] = history["historyName"]
-            #     each_history["is_done"] = history["isDone"]
-            #     each_history["created_at"] = history["createdAt"]
-            #     each_history["updated_at"] = history["updatedAt"]
-            #     return_value.append(each_history)
-
             return_value = [
                 HistoryListData(
                     history_id=str(history["_id"]),

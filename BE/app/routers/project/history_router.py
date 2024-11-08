@@ -8,14 +8,14 @@ from dto.history_dto import HistoryListResponse, HistoryListData
 from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
 from models.history_models import HistoryData
-from services.user_service import JWTManage
-from services.history_service import HistoryService
+from services.auth.auth_service import JWTManage
+from services.project.history_service import HistoryService
 
 security_scheme = HTTPBearer()
 
 router = APIRouter(prefix="/history", tags=["analysis with dimension reduction"])
 
-@router.get("/{project_id}", response_model=CommonResponse[PaginationDto[List[HistoryListData]]])
+@router.get("/{project_id}/list", response_model=CommonResponse[PaginationDto[List[HistoryListData]]])
 async def get_history_list(
     project_id: str,
     page: int = 1,

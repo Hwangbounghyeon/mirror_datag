@@ -12,35 +12,29 @@ from bson import ObjectId
 from models.mariadb_users import Users, Departments
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, UserInformation, AccessControl, ImageDetailResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
 
 load_dotenv()
 
-# 필수 기능
-
 ## 1. tag 목록 불러오기
-class TagService:
+class ImageService:
     def __init__(self, db: Session):
         self.db = db
-        self.collection_tag_images = collection_tag_images
-        self.collection_metadata = collection_metadata
-        self.collection_images = collection_images
-        self.collection_image_permissions = collection_image_permissions
-        self.collection_project_images = collection_project_images
     
     async def get_tag_and_image_lists(self) -> TagImageResponse:
         try:
-            tag_doc = await self.collection_tag_images.find_one({})
+            tag_doc = await collection_tag_images.find_one({})
             if not tag_doc:
                 tags = []
             else:
                 tags = list(tag_doc['tag'].keys()) if tag_doc and 'tag' in tag_doc else []
             
             images = {}
-            image_docs = await self.collection_images.find({}).to_list(length=None)
+            image_docs = await collection_images.find({}).to_list(length=None)
             
             for doc in image_docs:
                 # 메타데이터에서 파일 경로 조회
-                metadata = await self.collection_metadata.find_one(
+                metadata = await collection_metadata.find_one(
                     {"_id": ObjectId(doc["metadataId"])}
                 )
                 if metadata and "fileList" in metadata and metadata["fileList"]:
@@ -71,7 +65,7 @@ class TagService:
             ).first()
             department_name = department.department_name if department else None
 
-            permissions = await self.collection_image_permissions.find_one({})
+            permissions = await collection_image_permissions.find_one({})
             if not permissions:
                 return set()
 
@@ -136,7 +130,7 @@ class TagService:
     async def search_images_by_conditions(self, search_dto: List[SearchCondition], user_id: int) -> ImageSearchResponse:
         try:
             # 1. tag document 가져오기
-            tag_doc = await self.collection_tag_images.find_one({})
+            tag_doc = await collection_tag_images.find_one({})
             if not tag_doc or not search_dto:
                 ImageSearchResponse(images={})
             '''
@@ -167,9 +161,9 @@ class TagService:
             # 매칭된 이미지 정보 조회
             image_data = {}
             for image_id in final_matching_ids:
-                image = await self.collection_images.find_one({"_id": ObjectId(image_id)})
+                image = await collection_images.find_one({"_id": ObjectId(image_id)})
                 if image:
-                    metadata = await self.collection_metadata.find_one(
+                    metadata = await collection_metadata.find_one(
                         {"_id": ObjectId(image["metadataId"])}
                     )
                     if metadata and "fileList" in metadata and metadata["fileList"]:
@@ -182,51 +176,59 @@ class TagService:
                 status_code=500,
                 detail=f"이미지를 찾는 중 에러가 발생했습니다: {str(e)}"
             )
-            
-    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> ImageSearchResponse:
+    
+    # 1. 이미지 정보 가져오기
+    async def read_image_detail(self, image_id: str) -> ImageDetailResponse:
+
+        # images, metadata
+        image_one = await collection_images.find_one({"_id": ObjectId(image_id)})
+        if image_one is None:
+            raise HTTPException(status_code=404, detail="Image not found")
+        image_one["_id"] = str(image_one["_id"])
+
+        metadata_id = image_one.get("metadataId")
+        metadata_one = await collection_metadata.find_one({"_id": ObjectId(metadata_id)})
+        if metadata_one is None:
+            raise HTTPException(status_code=404, detail="Metadata not found")
+        metadata_one["_id"] = str(metadata_one["_id"])
+        ###
+
+        # users, accessControl
+        access_control_one = metadata_one.get("metadata").get("accessControl")
+        users = access_control_one.get("users")
+        departments = access_control_one.get("departments")
+        if not isinstance(departments, list) or any(department == '' for department in departments):
+            departments = []
+
+        user_list = []
+        for user in users:
+            user_one = self.db.query(Users).filter(Users.user_id.like(f"%{user}%")).first()
+            if user_one is None:
+                continue
+            department_id = user_one.department_id
+            department_one = self.db.query(Departments).filter(Departments.department_id == department_id).first()
+            department_name = department_one.department_name if department_one else "Unknown Department"
+
+            user_information = UserInformation(
+                uid=user_one.user_id,
+                name=user_one.name,
+                department_name=department_name
+            )
+            user_list.append(user_information)
+        
+        access_control = AccessControl(
+            users=user_list,
+            departments=departments
+        )
+
+        # result
         try:
-            project_images = await self.collection_project_images.find_one({})
-            if not project_images or "project" not in project_images:
-                return ImageSearchResponse(images={})
-
-            project_image_ids = set(project_images["project"].get(project_id, []))
-            if not project_image_ids:
-                return ImageSearchResponse(images={})
-            
-            # 검색 조건이 있는 경우에만 필터링 적용
-            if search_request and search_request.conditions:
-                tag_doc = await self.collection_tag_images.find_one({})
-                if tag_doc:
-                    matching_ids = set()
-                    for condition in search_request.conditions:
-                        group_result = await self._process_condition_group(tag_doc, condition)
-                        matching_ids.update(group_result)
-                    project_image_ids &= matching_ids
-
-            image_data = {}
-            for image_id in project_image_ids:
-                image = await self.collection_images.find_one({"_id": ObjectId(image_id)})
-                if image:
-                    metadata = await self.collection_metadata.find_one(
-                        {"_id": ObjectId(image["metadataId"])}
-                    )
-                    if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[image_id] = metadata["fileList"][0]
-
-            return ImageSearchResponse(images=image_data)
-
+            return {
+                "metadata": metadata_one,
+                "access_control": access_control
+            }
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
-
-### 2-1(Type별로 필터링)
-### 2-2(기간 선택)
-
-
-# 3. 이미지 batches 가져오기(진행 상황 확인 용도)
-
-
-# 4. 이미지 batches 리스트 가져오기(과거 포함 진행 상황 확인 용도)
-
-
-# 5.태그 수정은 어디에서 하지?
+            raise HTTPException(
+                status_code=500,
+                detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
+            )
