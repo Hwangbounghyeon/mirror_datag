@@ -6,65 +6,9 @@ from models.mariadb_users import Users, Departments
 from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, UserInformation, AccessControl, ImageDetailResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
 from configs.mongodb import collection_metadata, collection_images, collection_tag_images, collection_image_permissions
 
-class ImageDetailService:
+class ImageExtraService:
     def __init__(self, db: Session):
         self.db = db
-    
-    # 1. 이미지 정보 가져오기
-    async def read_image_detail(self, image_id: str) -> ImageDetailResponse:
-
-        # images, metadata
-        image_one = await collection_images.find_one({"_id": ObjectId(image_id)})
-        if image_one is None:
-            raise HTTPException(status_code=404, detail="Image not found")
-        image_one["_id"] = str(image_one["_id"])
-
-        metadata_id = image_one.get("metadataId")
-        metadata_one = await collection_metadata.find_one({"_id": ObjectId(metadata_id)})
-        if metadata_one is None:
-            raise HTTPException(status_code=404, detail="Metadata not found")
-        metadata_one["_id"] = str(metadata_one["_id"])
-        ###
-
-        # users, accessControl
-        access_control_one = metadata_one.get("metadata").get("accessControl")
-        users = access_control_one.get("users")
-        departments = access_control_one.get("departments")
-        if not isinstance(departments, list) or any(department == '' for department in departments):
-            departments = []
-
-        user_list = []
-        for user in users:
-            user_one = self.db.query(Users).filter(Users.user_id.like(f"%{user}%")).first()
-            if user_one is None:
-                continue
-            department_id = user_one.department_id
-            department_one = self.db.query(Departments).filter(Departments.department_id == department_id).first()
-            department_name = department_one.department_name if department_one else "Unknown Department"
-
-            user_information = UserInformation(
-                uid=user_one.user_id,
-                name=user_one.name,
-                department_name=department_name
-            )
-            user_list.append(user_information)
-        
-        access_control = AccessControl(
-            users=user_list,
-            departments=departments
-        )
-
-        # result
-        try:
-            return {
-                "metadata": metadata_one,
-                "access_control": access_control
-            }
-        except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
-            )
     
     # 2. 태그 추가
     async def add_image_tag(self, request: ImageDetailTagAddRequest) -> ImageDetailTagAddResponse:
