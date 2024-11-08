@@ -137,7 +137,7 @@ class TagService:
         try:
             # 1. tag document 가져오기
             tag_doc = await self.collection_tag_images.find_one({})
-            if not tag_doc or not search_dto.conditions:
+            if not tag_doc or not search_dto:
                 ImageSearchResponse(images={})
             '''
             tag_doc = {
@@ -152,7 +152,7 @@ class TagService:
             
             # 모든 조건 그룹을 처리하고 결과를 OR 연산으로 결합
             final_matching_ids = set()
-            for condition in search_dto.conditions:
+            for condition in search_dto:
                 group_result = await self._process_condition_group(tag_doc, condition)
                 final_matching_ids.update(group_result)
             
