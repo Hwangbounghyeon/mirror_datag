@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from typing import List, Set
 from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
+from dto.pagination_dto import PaginationDto
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
@@ -18,6 +19,8 @@ load_dotenv()
 
 ## 1. tag 목록 불러오기
 class ImageService:
+    PAGE_SIZE = 20
+    
     def __init__(self, db: Session):
         self.db = db
     
@@ -127,12 +130,19 @@ class ImageService:
         return result_ids
     
     ## 3. 이미지 Tag 필터링하기(고급 검색 기능 - AND, OR, NOT)
-    async def search_images_by_conditions(self, search_dto: List[SearchCondition], user_id: int) -> ImageSearchResponse:
+    async def search_images_by_conditions(self, search_dto: List[SearchCondition], user_id: int, page: int = 1) -> PaginationDto[List[ImageSearchResponse]]:
         try:
             # 1. tag document 가져오기
             tag_doc = await collection_tag_images.find_one({})
             if not tag_doc or not search_dto:
-                ImageSearchResponse(images={})
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": self.PAGE_SIZE,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
+
             '''
             tag_doc = {
                 "_id": ObjectId("67284a7df0b2373f02710c8f"),
@@ -151,25 +161,51 @@ class ImageService:
                 final_matching_ids.update(group_result)
             
             if not final_matching_ids:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": self.PAGE_SIZE,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
                 
             allowed_images = await self._filter_by_permissions(final_matching_ids, user_id)
             if not allowed_images:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": self.PAGE_SIZE,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
+            object_ids = [ObjectId(id) for id in allowed_images]
             
+            # 전체 개수 조회
+            base_query = {"_id": {"$in": object_ids}}
+            total_count = await collection_images.count_documents(base_query)
+            total_pages = (total_count + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+
+            # 페이지네이션을 위한 정렬 추가
+            skip = (page - 1) * self.PAGE_SIZE
+            paginated_images = await collection_images.find(base_query).sort('_id', 1).skip(skip).limit(self.PAGE_SIZE).to_list(length=None)
+
 
             # 매칭된 이미지 정보 조회
-            image_data = {}
-            for image_id in final_matching_ids:
-                image = await collection_images.find_one({"_id": ObjectId(image_id)})
-                if image:
-                    metadata = await collection_metadata.find_one(
-                        {"_id": ObjectId(image["metadataId"])}
-                    )
-                    if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[image_id] = metadata["fileList"][0]
+            image_list = []
+            for image in paginated_images:
+                metadata = await collection_metadata.find_one({"_id": ObjectId(image["metadataId"])})
+                if metadata and "fileList" in metadata and metadata["fileList"]:
+                    image_list.append(ImageSearchResponse(
+                        images={str(image["_id"]): metadata["fileList"][0]}
+                    ))
 
-            return ImageSearchResponse(images=image_data)
+            return {
+                "data": image_list,
+                "page": page,
+                "limit": self.PAGE_SIZE,
+                "total_count": total_count,
+                "total_pages": total_pages
+            }
 
         except Exception as e:
             raise HTTPException(
