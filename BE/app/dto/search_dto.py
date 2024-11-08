@@ -3,7 +3,6 @@ from typing import List, Dict
 
 class TagImageResponse(BaseModel):
     tags: List[str] 
-    images: Dict[str, str]
     
     
 class ImageSearchResponse(BaseModel):

@@ -19,7 +19,13 @@ class HistoryService:
         try:
             project_histories = await collection_project_histories.find_one({})
             if not project_histories or "project" not in project_histories:
-                raise HTTPException(status_code=404, detail="Project histories not found")
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": page
+                }
             
             project_history_ids = project_histories["project"].get(project_id, [])
             if not project_history_ids:
@@ -50,17 +56,6 @@ class HistoryService:
             total_pages = (total_histories + limit - 1) // limit
 
             histories = await collection_histories.find(base_query).skip(skip).limit(limit).to_list(length=limit)
-
-            # return_value = []
-
-            # for history in histories:
-            #     each_history = {}
-            #     each_history["history_id"] = str(history["_id"])
-            #     each_history["history_name"] = history["historyName"]
-            #     each_history["is_done"] = history["isDone"]
-            #     each_history["created_at"] = history["createdAt"]
-            #     each_history["updated_at"] = history["updatedAt"]
-            #     return_value.append(each_history)
 
             return_value = [
                 HistoryListData(

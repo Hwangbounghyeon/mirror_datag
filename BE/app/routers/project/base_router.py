@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
 from sqlalchemy.orm import Session
@@ -7,15 +7,21 @@ from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse
 from dto.pagination_dto import PaginationDto
 from dto.project_dto import ProjectRequest, ProjectResponse, UserRequet
-from services.project_service import ProjectService, ProjectSubService
-from services.user_service import JWTManage
+from services.project.project_service import ProjectService
+from services.auth.auth_service import JWTManage
+from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthAddRequest, ImageDetailTagDeleteRequest, ImageDetailTagAddRequest
+from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse
+from dto.uploads_dto import UploadRequest
+from services.project.upload_service import UploadService
+import json
+
 
 security_scheme = HTTPBearer()
 
-router = APIRouter(prefix="/project", tags=["project"])
+router = APIRouter(prefix="")
 
 # 1. Project 생성
-@router.post('', description="프로젝트 생성", response_model=CommonResponse[str])
+@router.post("/create", description="프로젝트 생성", response_model=CommonResponse[str])
 async def project(
     project_request: ProjectRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
@@ -70,7 +76,7 @@ async def project_list(
         raise HTTPException(status_code=400, detail=str(e))
 
 # 3. Project 삭제
-@router.delete("/{project_id}")
+@router.delete("/delete/{project_id}")
 async def delete_project(
     project_id: str,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
@@ -88,40 +94,52 @@ async def delete_project(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# 4. 부서 리스트 조회
-@router.get("/departments")
-async def get_department_list(
+# 4. project 이미지 리스트 조회
+@router.post("/image/{project_id}/list", response_model=CommonResponse[ImageSearchResponse])
+async def search_project_images(
+    project_id: str,
+    search_request: SearchRequest = None,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
-        project_sub_service = ProjectSubService(db)
-        departments = await project_sub_service.get_department_list()
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(credentials.credentials)["user_id"]
+        
+        project_service = ProjectService(db)
+        result = await project_service.search_project_images(project_id, search_request, user_id)
         return CommonResponse(
-            status=200,
-            data=departments
+            status=200, 
+            data=result
         )
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# 5. 사용자 이름 검색
-@router.get("/users/search")
-async def search_user_name(
-    user_name: str | None = None,
-    page: int = 1,
-    limit: int = 10,
+# 5. 이미지 업로드
+@router.post("/image/upload", description="이미지 업로드(zip, image)")
+async def image_upload(
+    upload_request: str = Form(...),
+    files: list[UploadFile] = File(...),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
-    db: Session = Depends(get_database_mariadb)
+    db : Session = Depends(get_database_mariadb)
 ):
     try:
-        project_sub_service = ProjectSubService(db)
-        users = await project_sub_service.search_user_name(user_name, page, limit)
+        print("file : ",files)
+        access_token = credentials.credentials
+        jwt = JWTManage(db)
+        user_id = jwt.verify_token(access_token)["user_id"]
+
+        parsed_request = json.loads(upload_request)
+        upload_request_obj = UploadRequest(**parsed_request)
+
+        upload = UploadService(db)
+        file_urls = await upload.upload_image(upload_request_obj, files, user_id)
+
         return CommonResponse(
             status=200,
-            data=users
+            data=file_urls
         )
     except HTTPException as http_exc:
         raise http_exc

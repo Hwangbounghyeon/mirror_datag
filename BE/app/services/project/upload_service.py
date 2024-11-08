@@ -20,7 +20,7 @@ from configs.s3 import upload_to_s3
 
 BUCKENAME = 'ssafy-project'
 
-class Upload:
+class UploadService:
     def __init__(self, db : Session):
         self.db = db
 
@@ -87,9 +87,12 @@ class Upload:
                                 continue
                             # ZIP 파일 내부에서 각 파일 읽기
                             with zip_file.open(filename) as extracted_file:
+                                file_extension = os.path.splitext(extracted_file.name)[1]
+                                file_name = f"{str(uuid.uuid4())}{file_extension}"
+
                                 # S3에 파일 업로드
-                                upload_to_s3(extracted_file, BUCKENAME, filename)
-                                s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{filename}"
+                                upload_to_s3(extracted_file, BUCKENAME, file_name)
+                                s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
                                 file_urls.append(s3_url)
 
                 except zipfile.BadZipFile:

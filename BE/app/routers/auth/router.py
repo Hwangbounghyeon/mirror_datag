@@ -2,22 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from services.user_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout, UserProfile
+from services.auth.auth_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout
 from dto.common_dto import CommonResponse
 from dto.users_dto import UserSignUp, UserSignIn, TokenResponse, UserProfileUpdateRequest, UserProfileResponse
 from models.mariadb_users import Users
-from configs.mariadb import get_database_mariadb as get_db
+from configs.mariadb import get_database_mariadb
 
 security_scheme = HTTPBearer()
 
-# 회원 및 인증 관련이므로 auth로 묶음
-router = APIRouter(
-    prefix="/auth",
-    tags=["authentication"],
-)
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/signup", response_model=CommonResponse)
-async def signup(user_data: UserSignUp, db: Session = Depends(get_db)):
+async def signup(user_data: UserSignUp, db: Session = Depends(get_database_mariadb)):
     try:
         user_create = UserCreate(db)
         email_validate = EmailValidate(db)
@@ -36,7 +32,7 @@ async def signup(user_data: UserSignUp, db: Session = Depends(get_db)):
         
 
 @router.post("/verification", response_model=CommonResponse[TokenResponse])
-async def verification(email: str, code: str, db: Session = Depends(get_db)):
+async def verification(email: str, code: str, db: Session = Depends(get_database_mariadb)):
     try:
         email_validate = EmailValidate(db)
         user = await email_validate.verify_and_create_user(email, code)
@@ -57,7 +53,7 @@ async def verification(email: str, code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
         
 @router.post("/login", response_model=CommonResponse[TokenResponse])
-async def login(login_data: UserSignIn, db: Session = Depends(get_db)):
+async def login(login_data: UserSignIn, db: Session = Depends(get_database_mariadb)):
     try:
         jwt_manage = JWTManage(db)
         user_login = UserLogin(db, jwt_manage)
@@ -73,7 +69,7 @@ async def login(login_data: UserSignIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/logout", response_model=CommonResponse)
-async def logout(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_db)):
+async def logout(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_database_mariadb)):
     try:        
         user_logout = UserLogout(db)
         logout_data = await user_logout.logout(credentials.credentials)
@@ -89,7 +85,7 @@ async def logout(credentials: HTTPAuthorizationCredentials = Security(security_s
 
 # 토큰 재발급
 @router.post("/refresh", response_model=CommonResponse[TokenResponse])
-async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_db)):
+async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security_scheme), db: Session = Depends(get_database_mariadb)):
     try:
         jwt_manage = JWTManage(db)
         payload = jwt_manage.verify_token(credentials.credentials)
@@ -118,52 +114,3 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(sec
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-
-
-@router.get("/user/me", response_model=CommonResponse[UserProfileResponse])
-async def get_my_profile(
-    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
-    db: Session = Depends(get_db)
-):
-    try:
-        jwt = JWTManage(db)
-        current_user = jwt.verify_token(credentials.credentials)
-        
-        profile_service = UserProfile(db)
-        profile = profile_service.get_profile(current_user["user_id"])
-
-        return CommonResponse(
-            status=200,
-            data=profile
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
-
-@router.put("/user/me", response_model=CommonResponse[UserProfileResponse])
-async def update_my_profile(
-    profile_data: UserProfileUpdateRequest,
-    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
-    db: Session = Depends(get_db)
-):
-    try:
-        jwt = JWTManage(db)
-        current_user = jwt.verify_token(credentials.credentials)
-
-        profile_service = UserProfile(db)
-        updated_profile = profile_service.update_profile(
-            current_user["user_id"], 
-            profile_data
-        )
-
-        return CommonResponse(
-            status=200,
-            data=updated_profile
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
