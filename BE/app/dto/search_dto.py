@@ -1,41 +1,47 @@
 from pydantic import BaseModel
 from typing import List, Dict
 
-class TagSearchParams(BaseModel):
-    and_tags: List[str] = []
-    or_tags: List[str] = []
-    not_tags: List[str] = []
-
-class TagImageResponseDTO(BaseModel):
+class TagImageResponse(BaseModel):
     tags: List[str] 
-    images: List[Dict[str, str]]
+    images: Dict[str, str]
     
-class ImageSearchResponseDTO(BaseModel):
+    
+class ImageSearchResponse(BaseModel):
     images: Dict[str, str]
 
-class ConditionDTO(BaseModel):
+
+class SearchCondition(BaseModel):
     and_condition: List[str] = []
     or_condition: List[str] = []
     not_condition: List[str] = []
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "and_condition": ["cat", "Seoul"],
+                "or_condition": ["2024_11"],
+                "not_condition": ["Zone A"]
+            }
+        }
 
-class SearchConditionDTO(BaseModel):
-    conditions: List[ConditionDTO] | None = None
-    
-    
-"""SearchConditionDTO Request Body 구조
-    
-    {
-        "conditions": [
-            {"and_condition": ["tag1", "tag2", ...]},
-            {"or_condition": ["tag3", "tag4", ...]},
-            {"not_condition": ["tag5", "tag6", ...]}
-        ]
-    }
-    """
-    
-# class SearchConditionDTO(BaseModel):
-#     conditions: List[ConditionDTO] | None = None
-#     page: int = 1
-#     page_size: int = 20
-#     sort_by: str = "created_at"
-#     sort_order: str = "desc"
+
+class SearchRequest(BaseModel):
+    conditions: List[SearchCondition]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "conditions": [
+                    {
+                        "and_condition": ["cat", "Seoul"],
+                        "or_condition": ["2024_11"],
+                        "not_condition": ["Zone A"]
+                    },
+                    {
+                        "and_condition": ["dog", "Busan"],
+                        "or_condition": [],
+                        "not_condition": ["Zone B"]
+                    }
+                ]
+            }
+        }

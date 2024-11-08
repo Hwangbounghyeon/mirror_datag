@@ -12,9 +12,9 @@ import os
 import json
 from bson import ObjectId
 
-from configs.mongodb import collection_upload_batches, collection_user_upload_batches
+from configs.mongodb import collection_upload_batches, collection_user_upload_batches, collection_projects
 from models.uploadbatch_models import UploadBatch
-from models.mariadb_users import Departments
+from models.mariadb_users import Departments, Users
 from dto.uploads_dto import UploadRequest
 from configs.s3 import upload_to_s3
 
@@ -30,6 +30,14 @@ class Upload:
 
     # 메인 로직
     async def upload_image(self, upload_request: UploadRequest, files: list, user_id: int):
+        user_department = self.db.query(Users).filter(Users.user_id == user_id).first()
+        if not user_department:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+        department_id = user_department.department_id
+
+        project = await collection_projects.find_one({"_id": ObjectId(upload_request.project_id)})
+        task = project.get("task", "")
+        model_name = project.get("modelName", "")
 
         inserted_id = await self._before_save_upload_batch(upload_request, user_id)
 
@@ -37,7 +45,7 @@ class Upload:
 
         file_urls = await self._upload_s3(files)
 
-        await self._analysis_data(upload_request, file_urls, user_id)
+        await self._analysis_data(upload_request, model_name, task, file_urls, user_id, department_id)
 
         await self._after_save_upload_batch(inserted_id)
 
@@ -109,21 +117,29 @@ class Upload:
 
         return file_urls
     
-    async def _analysis_data(self, upload_request: UploadRequest, file_urls: List[str], user_id: int):
-        if upload_request.task == "cls":
+    async def _analysis_data(
+        self, 
+        upload_request: UploadRequest, 
+        model_name: str, 
+        task: str, 
+        file_urls: List[str], 
+        user_id: int, 
+        department_id: int
+    ):
+        if task == "cls":
             url = "http://localhost:8001/dl/api/cls"
         else:
             url = "http://localhost:8001/dl/api/det"
 
-        if upload_request.department_id:
-            department = self.db.query(Departments).filter(Departments.department_id == upload_request.department_id).first()
+        if department_id:
+            department = self.db.query(Departments).filter(Departments.department_id == department_id).first()
             department_name = department.department_name if department else "None"
         else:
             department_name = "None"
 
         data = {
             "image_urls": file_urls,
-            "model_name": upload_request.model_name,
+            "model_name": model_name,
             "department_name": department_name,
             "user_id": user_id,
             "project_id": upload_request.project_id,

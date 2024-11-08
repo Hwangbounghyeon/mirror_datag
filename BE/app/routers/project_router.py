@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectListRequest, ProjectResponse
+from dto.project_dto import ProjectRequest, ProjectResponse, UserRequet
 from services.project_service import ProjectService, ProjectSubService
 from services.user_service import JWTManage
 
@@ -42,10 +42,10 @@ async def project(
     
 
 # 2. Project 리스트 조회
-@router.get("/list", response_model=CommonResponse[PaginationDto[ProjectResponse]])
+@router.get("/list", response_model=CommonResponse[PaginationDto[List[ProjectResponse] | None]])
 async def project_list(
     model_name: str | None = None,
-    page: int = 0,
+    page: int = 1,
     limit: int = 10,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db : Session = Depends(get_database_mariadb)
@@ -110,13 +110,15 @@ async def get_department_list(
 # 5. 사용자 이름 검색
 @router.get("/users/search")
 async def search_user_name(
-    name: str,
+    user_name: str | None = None,
+    page: int = 1,
+    limit: int = 10,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
         project_sub_service = ProjectSubService(db)
-        users = await project_sub_service.search_user_name(name)
+        users = await project_sub_service.search_user_name(user_name, page, limit)
         return CommonResponse(
             status=200,
             data=users
