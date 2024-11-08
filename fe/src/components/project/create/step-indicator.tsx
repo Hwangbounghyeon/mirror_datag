@@ -1,3 +1,5 @@
+import React from "react";
+
 interface StepIndicatorProps {
   currentStep: number;
   handleMove: (stepNumber: number) => void;
@@ -6,14 +8,13 @@ interface StepIndicatorProps {
 const StepIndicator = ({ currentStep, handleMove }: StepIndicatorProps) => {
   const steps = [
     { id: 1, title: "주제 선택" },
-    { id: 2, title: "모델 선택" },
-    { id: 3, title: "프로젝트 정보 입력" },
-    { id: 4, title: "권한 설정" },
+    { id: 2, title: "정보 입력" },
+    { id: 3, title: "권한 설정" },
   ];
 
   return (
-    <div className="w-full px-6 py-8">
-      <div className=" grid grid-cols-4 ">
+    <div className="w-full px-6 py-2 border border-red-400 ">
+      <div className="grid grid-cols-3 gap-[40px]">
         {steps.map((step) => (
           <div
             key={step.id}
@@ -54,4 +55,4 @@ const StepIndicator = ({ currentStep, handleMove }: StepIndicatorProps) => {
   );
 };
 
-export default StepIndicator;
+export default React.memo(StepIndicator);

@@ -17,7 +17,7 @@ export type ProjectType = {
   project_name: string;
   model_name: string;
   description: string;
-  user_id: string; // 생성한 사람 이름
+  user_id: number; // 생성한 사람 이름
   department: string; // 생성한 사람의 부서 이름
   is_private: boolean; // 0 : 공개, 1 : 비공개
   created_at: string;
@@ -25,7 +25,9 @@ export type ProjectType = {
 };
 
 export interface StepProps {
-  handleMove?: (stepNumber: number) => void;
   projectItem: CreateProjectType;
-  setProjectItem: React.Dispatch<React.SetStateAction<CreateProjectType>>;
+  setProjectItem: (updates: Partial<CreateProjectType>) => void;
+  handleMove: (step: number) => void;
+  category?: string; // Step1에만 필요
+  setCategory?: (category: string) => void; // Step1에만 필요
 }

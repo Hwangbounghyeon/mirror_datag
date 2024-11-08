@@ -4,7 +4,6 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 import { PiNotebookFill } from "react-icons/pi"; // description logo
 import { BsPersonLinesFill } from "react-icons/bs"; //department logo
-import { AiFillDatabase } from "react-icons/ai"; // data logo
 import { IoIosCube } from "react-icons/io"; // model logo
 import ProjectItemInfoCard from "./project-item-infocard";
 import { ProjectType } from "@/types/projectType";
@@ -45,7 +44,7 @@ export function ProjectItem({ project }: ProjectCardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         <ProjectItemInfoCard
           title={"Description"}
           description={project.description}
@@ -53,17 +52,9 @@ export function ProjectItem({ project }: ProjectCardProps) {
         />
 
         <ProjectItemInfoCard
-          title={"Department / Manager"}
-          description={`${project.department_name} / ${project.user_name}`}
+          title={"Department"}
+          description={`${project.department}`}
           Icon={BsPersonLinesFill}
-        />
-
-        <ProjectItemInfoCard
-          title={"Data"}
-          description={`${
-            project.data_count > 0 ? `${project.data_count}` : "Emtpy"
-          }`}
-          Icon={AiFillDatabase}
         />
 
         <ProjectItemInfoCard

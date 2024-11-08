@@ -2,6 +2,7 @@
 import { Input } from "@nextui-org/react";
 import { useState, useEffect, useRef } from "react";
 import { FaSearch } from "react-icons/fa";
+import { StepProps } from "@/types/projectType";
 
 interface Department {
   id: number;
@@ -9,7 +10,11 @@ interface Department {
   selected: boolean;
 }
 
-export default function DepartmentSearch() {
+export default function DepartmentSearch({
+  handleMove,
+  projectItem,
+  setProjectItem,
+}: StepProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Department[]>([]);
   const [isSearching, setIsSearching] = useState(false);
