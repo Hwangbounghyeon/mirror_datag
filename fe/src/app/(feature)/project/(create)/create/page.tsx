@@ -1,31 +1,93 @@
 "use client";
-import StepIndicator from "@/components/project/create/step-indicator";
-import React, { useState } from "react";
-import { CreateProjectType } from "@/types/projectType";
 
+import React, { useCallback, useState, memo, useEffect, use } from "react";
+import StepIndicator from "@/components/project/create/step-indicator";
+import useCreateProject from "@/hooks/useCreateProject";
 import Step1 from "@/components/project/create/step1";
-import Step2 from "@/components/project/create/step2";
 import Step3 from "@/components/project/create/step3";
 import Step4 from "@/components/project/create/step4";
+import { CreateProjectType } from "@/types/projectType";
+import { useRouter } from "next/navigation";
+
+// Memoize step components
+const MemoizedStep1 = memo(Step1);
+const MemoizedStep3 = memo(Step3);
+const MemoizedStep4 = memo(Step4);
 
 const Page = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  useEffect(() => {
+    setIsMounted(true);
+
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      router.prefetch("/project");
+    }
+  }, [isMounted]);
   const [step, setStep] = useState(1);
+  const { state, dispatch } = useCreateProject();
 
-  const [projectItem, setProjectItem] = useState<CreateProjectType>({
-    category: null,
-    model_name: null,
-    project_name: "",
-    description: "",
-    additional_permission: [],
-    is_private: false,
-  });
+  const handleMove = useCallback((stepNumber: number) => {
+    setStep(stepNumber);
+  }, []);
 
-  const handleMove = (stepNumber: number) => {
-    // 이동 방향 설정
-    if (stepNumber < 1) setStep(1);
-    else if (stepNumber > 4) setStep(4);
-    else setStep(stepNumber);
-  };
+  const handleProjectItemChange = useCallback(
+    (updates: Partial<CreateProjectType>) => {
+      dispatch({
+        type: "SET_PROJECT_ITEM",
+        payload: updates,
+      });
+    },
+    []
+  );
+
+  const handleCategoryChange = useCallback((category: string) => {
+    dispatch({
+      type: "SET_CATEGORY",
+      payload: category,
+    });
+  }, []);
+
+  // Memoize the step rendering logic
+  const renderStep = useCallback(() => {
+    // 공통 props
+    const commonProps = {
+      projectItem: state.createProjectItem,
+      setProjectItem: handleProjectItemChange,
+      handleMove: handleMove,
+    };
+
+    // Step에 따라 다른 컴포넌트를 렌더링
+    switch (step) {
+      case 1:
+        return (
+          <MemoizedStep1
+            {...commonProps}
+            category={state.category}
+            setCategory={handleCategoryChange}
+          />
+        );
+      case 2:
+        return <MemoizedStep3 {...commonProps} />;
+      case 3:
+        return <MemoizedStep4 {...commonProps} />;
+      default:
+        return null;
+    }
+  }, [
+    step,
+    state.createProjectItem,
+    state.category,
+    handleProjectItemChange,
+    handleMove,
+    handleCategoryChange,
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -36,34 +98,12 @@ const Page = () => {
             <StepIndicator currentStep={step} handleMove={handleMove} />
           </div>
         </header>
-
         <div className="w-full flex justify-center items-center">
-          {step === 1 && (
-            <Step1
-              projectItem={projectItem}
-              setProjectItem={setProjectItem}
-              handleMove={handleMove}
-            />
-          )}
-          {step === 2 && (
-            <Step2
-              projectItem={projectItem}
-              setProjectItem={setProjectItem}
-              handleMove={handleMove}
-            />
-          )}
-          {step === 3 && (
-            <Step3
-              projectItem={projectItem}
-              setProjectItem={setProjectItem}
-              handleMove={handleMove}
-            />
-          )}
-          {step === 4 && <Step4 />}
+          {renderStep()}
         </div>
       </div>
     </div>
   );
 };
 
-export default Page;
+export default memo(Page);
