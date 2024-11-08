@@ -19,7 +19,13 @@ class HistoryService:
         try:
             project_histories = await collection_project_histories.find_one({})
             if not project_histories or "project" not in project_histories:
-                raise HTTPException(status_code=404, detail="Project histories not found")
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": page
+                }
             
             project_history_ids = project_histories["project"].get(project_id, [])
             if not project_history_ids:
