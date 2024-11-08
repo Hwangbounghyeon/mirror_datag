@@ -12,6 +12,7 @@ class AccessControl(BaseModel):
 
 class ProjectRequest(BaseModel):
     project_name: str
+    project_model_task: str
     project_model_name: str
     description: str
     accesscontrol: AccessControl
@@ -21,6 +22,7 @@ class ProjectRequest(BaseModel):
 class ProjectResponse(BaseModel):
     project_id: str
     project_name: str
+    task: str
     model_name: str
     description: Optional[str] = ""
     user_id: int
@@ -28,6 +30,8 @@ class ProjectResponse(BaseModel):
     is_private: Optional[bool] = False
     created_at: datetime
     updated_at: datetime
+    is_editor: bool
+    is_creator: bool
 
     class Config:
         from_attributes = True
