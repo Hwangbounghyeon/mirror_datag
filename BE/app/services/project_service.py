@@ -1,5 +1,5 @@
 from dto.project_dto import ProjectRequest
-from configs.mongodb import collection_metadata, collection_project_histories, collection_project_permissions, collection_projects
+from configs.mongodb import collection_project_images, collection_metadata, collection_project_histories, collection_project_permissions, collection_projects
 
 from sqlalchemy.orm import Session
 from utils.timezone import get_current_time
@@ -231,7 +231,7 @@ class ProjectService:
         )
         await collection_project_permissions.update_many(
             {},
-            {"$pull": {f"department.$[].view": project_id, f"department.$[].edit": project_id}}
+            {"$pull": {f"department.Production Management.view": project_id, f"department.Production Management.edit": project_id}}
         )
         
         # 3. projectHistories에서 삭제
@@ -239,12 +239,19 @@ class ProjectService:
             {},
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
-        
-        # 4. metadata 에서 삭제
+
+        # 4. projectImages에서 삭제
+        await collection_project_images.update_one(
+            {},
+            {"$pull": {f"project.{project_id}": {"$exists": True}}}
+        )
+
+        # 5. metadata 에서 삭제
         await collection_metadata.update_many(
             {},
             {"$pull": {"metadata.accessControl.projects": project_id}}
         )
+
     # # 1-3. 프로젝트 삭제
     # async def delete_project(self, project_id: str):
     #     # MariaDB에서 project 조회 및 삭제
@@ -254,7 +261,7 @@ class ProjectService:
     #             status_code=404,
     #             detail="프로젝트를 찾을 수 없습니다."
     #         )
-            
+
     #     document = await collection_project_permissions.find_one({})
 
     #     if document:
