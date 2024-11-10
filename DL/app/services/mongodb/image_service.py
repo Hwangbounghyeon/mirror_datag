@@ -9,20 +9,21 @@ class ImageService:
     def __init__(self):
         pass
 
-    def _create_images(self, metadata_id: str, feature_id: str) -> ImageData:
+    def _create_images(self, metadata_id: str, feature_id: str, label_id: str = None) -> ImageData:
         image_obj = {
             "metadataId": metadata_id,
             "featureId": feature_id,
+            "labelId": label_id,
             "createdAt": datetime.now(timezone.utc),
             "updatedAt": datetime.now(timezone.utc)
-        }   
+        }
 
         return ImageData.model_validate(image_obj)
 
     # 차원축소 기록 저장 (mongodb)
-    async def save_images_mongodb(self, metadata_id: str, feature_id: str):
+    async def save_images_mongodb(self, metadata_id: str, feature_id: str, label_id: str = None):
         try:
-            image_obj = self._create_images(metadata_id, feature_id)
+            image_obj = self._create_images(metadata_id, feature_id, label_id)
             result = await collection_images.insert_one(image_obj.model_dump())
 
             if result.inserted_id:

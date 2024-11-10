@@ -4,7 +4,7 @@ import numpy as np
 
 # 모델 추론 공통 Request Dto
 class AIModelRequest(BaseModel):
-    image_urls: List[str]
+    image_data: List[dict]
     model_name: str
     department_name: Optional[str] = None
     user_id: int
