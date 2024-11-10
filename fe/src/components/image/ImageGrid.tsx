@@ -1,20 +1,26 @@
-import { ImageGridProps } from "@/types/upload";
+import { FC } from "react";
+import { BaseImageGrid } from "./BaseImageGrid";
 import { ImageCard } from "./ImageCard";
 
-const ImageGrid = ({ images, onDeleteImage }: ImageGridProps) => {
-  return (
-    <div className="grid grid-cols-6 gap-4">
-      {images.map((image, index) => (
-        <ImageCard
-          key={image.name}
-          src={image.src}
-          name={image.name}
-          index={index + 1}
-          onDelete={() => onDeleteImage(index)}
-        />
-      ))}
-    </div>
-  );
-};
+interface UploadImageType {
+    name: string;
+    src: string;
+}
 
-export default ImageGrid;
+export const ImageGrid: FC<{
+    images: UploadImageType[];
+    onDeleteImage: (index: number) => void;
+}> = ({ images, onDeleteImage }) => (
+    <BaseImageGrid
+        images={images}
+        renderItem={(image, index) => (
+            <ImageCard
+                key={image.name}
+                src={image.src}
+                name={image.name}
+                index={index + 1}
+                onDelete={() => onDeleteImage(index)}
+            />
+        )}
+    />
+);
