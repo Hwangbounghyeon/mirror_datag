@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_REGISTRY}/backend:${IMAGE_TAG:-lts}
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - be-redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s # 30초마다 체크
+      timeout: 10s # 10초 안에 응답이 없으면 실패
+      retries: 3 # 3번 연속 실패하면 unhealthy로 판단
+      start_period: 40s # 컨테이너 시작 후 40초는 체크 제외
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  be-redis:
+    external: true
