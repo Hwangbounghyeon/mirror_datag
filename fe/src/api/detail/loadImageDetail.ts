@@ -5,7 +5,7 @@ export const loadImageDetail = async (
     imageId: string
 ): Promise<ImageDetailResponse> => {
     const response = await apiClient<ImageDetailResponse>(
-        `/imageDetail/detail?image_id=${imageId}`,
+        `/image/detail/${imageId}`,
         {
             method: "GET",
             cache: "no-store",

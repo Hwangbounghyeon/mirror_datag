@@ -13,7 +13,7 @@ export interface DeleteAuthorityRequest {
 
 export const authorityApi = {
     add: async (request: AddAuthorityRequest): Promise<AuthUser[]> => {
-        const response = await apiClient<AuthResponse>("/imageDetail/addAuth", {
+        const response = await apiClient<AuthResponse>("/image/permission/add", {
             method: "POST",
             body: JSON.stringify(request),
             cache: "no-store",
@@ -30,7 +30,7 @@ export const authorityApi = {
 
     delete: async (request: DeleteAuthorityRequest): Promise<AuthUser[]> => {
         const response = await apiClient<AuthResponse>(
-            "/imageDetail/deleteAuth",
+            "/image/permission/remove",
             {
                 method: "POST",
                 body: JSON.stringify(request),
