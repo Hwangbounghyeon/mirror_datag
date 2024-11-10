@@ -8,7 +8,7 @@ import CheckMark from "@/public/check-mark.svg";
 
 interface ImageListProps {
   images: ImagesType[];
-  selectImage: (e: React.MouseEvent, targetId: number) => void;
+  selectImage: (e: React.MouseEvent, targetId: string) => void;
   selectedCount: number;
   selectImageAll: () => void;
   unSelectImageAll: () => void;
@@ -16,9 +16,11 @@ interface ImageListProps {
 
 const ImageList = ({ images, selectImage, selectedCount, selectImageAll, unSelectImageAll }: ImageListProps) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
-  const detailOpen = (imageId: number) => {
+  
+
+  const detailOpen = (imageId: string) => {
     setSelectedImageId(imageId)
     setIsDetailOpen(true)
   };
