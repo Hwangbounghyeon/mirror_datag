@@ -9,9 +9,9 @@ import {
     SelectItem,
     Chip,
 } from "@nextui-org/react";
-import { DEPARTMENTS } from "@/lib/constants/mockData";
 import { useAuthoritySelect } from "@/hooks/imageDetail/useAuthoritySelect";
 import { AuthUser } from "@/types/auth";
+import { Suspense } from "react";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -27,6 +27,7 @@ export default function AuthModal({
     existingAuthorities,
 }: AuthModalProps) {
     const {
+        departments,
         selectedDepartment,
         selectedPeople,
         availableUsers,
@@ -65,24 +66,48 @@ export default function AuthModal({
                         <ModalHeader>Add Authority</ModalHeader>
                         <ModalBody>
                             <div className="space-y-4">
-                                <Select
-                                    label="Department"
-                                    placeholder="Select a department"
-                                    selectedKeys={
-                                        selectedDepartment
-                                            ? [selectedDepartment.toString()]
-                                            : []
-                                    }
-                                    onChange={(e) =>
-                                        handleDepartmentSelect(e.target.value)
+                                <Suspense
+                                    fallback={
+                                        <div className="flex items-center justify-center">
+                                            <div>Loading departments...</div>
+                                        </div>
                                     }
                                 >
-                                    {DEPARTMENTS.map((dept) => (
-                                        <SelectItem key={dept.department_name}>
-                                            {dept.department_name}
-                                        </SelectItem>
-                                    ))}
-                                </Select>
+                                    {Array.isArray(departments) &&
+                                    departments.length > 0 ? (
+                                        <Select
+                                            label="Department"
+                                            placeholder="Select a department"
+                                            selectedKeys={
+                                                selectedDepartment
+                                                    ? [selectedDepartment]
+                                                    : []
+                                            }
+                                            onChange={(e) => {
+                                                handleDepartmentSelect(
+                                                    e.target.value
+                                                );
+                                            }}
+                                        >
+                                            {departments.map((dept) => {
+                                                return (
+                                                    <SelectItem
+                                                        key={
+                                                            dept.department_name
+                                                        }
+                                                        value={
+                                                            dept.department_name
+                                                        }
+                                                    >
+                                                        {dept.department_name}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </Select>
+                                    ) : (
+                                        <div>No departments available</div>
+                                    )}
+                                </Suspense>
 
                                 {selectedDepartment && (
                                     <Select

@@ -1,15 +1,31 @@
-import { useState } from "react";
-import { DEPARTMENTS, USERS } from "@/lib/constants/mockData";
+import { useEffect, useState } from "react";
+import { USERS } from "@/lib/constants/mockData";
 import { AuthUser } from "@/types/auth";
+import { departmentApi } from "@/api/detail/departmentUser";
+import { DepartmentType } from "@/types/departmentType";
 
 export function useAuthoritySelect(existingAuthorities: AuthUser[]) {
+    const [departments, setDepartments] = useState<DepartmentType[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
         null
     );
     const [selectedPeople, setSelectedPeople] = useState<AuthUser[]>([]);
 
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            try {
+                const departmentList = await departmentApi();
+                setDepartments(departmentList);
+            } catch (error) {
+                console.error("Failed to fetch departments:", error);
+                setDepartments([]);
+            }
+        };
+        fetchDepartments();
+    }, []);
+
     const handleDepartmentSelect = (deptId: string) => {
-        const dept = DEPARTMENTS.find(
+        const dept = departments.find(
             (d) => d.department_name.toString() === deptId
         );
         if (dept) setSelectedDepartment(dept.department_name);
@@ -57,6 +73,7 @@ export function useAuthoritySelect(existingAuthorities: AuthUser[]) {
     };
 
     return {
+        departments,
         selectedDepartment,
         selectedPeople,
         availableUsers,
