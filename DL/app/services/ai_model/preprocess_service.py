@@ -19,7 +19,7 @@ class PreprocessService:
         except requests.RequestException as e:
             raise HTTPException(
                 status_code=400,
-                detail=f"Failed to download image from {image_url}: {str(e)}"
+                detail=f"Failed to download image from {url}: {str(e)}"
             )
 
     def process_image(self, image_data: PILImage, target_size: tuple, use_normalize: bool = False) -> torch.Tensor:

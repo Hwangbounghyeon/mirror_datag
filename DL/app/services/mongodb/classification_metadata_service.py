@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from typing import List
-from configs.mongodb import collection_metadata, collection_features, collection_tag_images
+from typing import List, Dict
+from configs.mongodb import collection_metadata, collection_features, collection_tag_images, collection_labels
 from models.feature_models import Feature
 from models.classification_models import AiResultData
 from datetime import datetime, timezone
@@ -163,3 +163,18 @@ class ClassificationMetadataService:
             )
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
+        
+    async def upload_label_data(self, label: List, bounding_boxes: List[Dict[str, int]]):
+        try:
+            label_document = {
+                "label": label,
+                "bounding_boxes": bounding_boxes,
+                "createdAt": datetime.now(timezone.utc).isoformat()
+            }
+            result = await collection_labels.insert_one(label_document)
+            if result.inserted_id:
+                return str(result.inserted_id)
+            else:
+                raise HTTPException(status_code=500, detail="Failed to save label data.")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Label data upload failed: {str(e)}")

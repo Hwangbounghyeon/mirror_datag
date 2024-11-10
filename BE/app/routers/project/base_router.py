@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from configs.mariadb import get_database_mariadb
@@ -121,12 +121,11 @@ async def search_project_images(
 @router.post("/image/upload", description="이미지 업로드(zip, image)")
 async def image_upload(
     upload_request: str = Form(...),
-    files: list[UploadFile] = File(...),
+    files: Optional[list[UploadFile]] = File(None),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db : Session = Depends(get_database_mariadb)
 ):
     try:
-        print("file : ",files)
         access_token = credentials.credentials
         jwt = JWTManage(db)
         user_id = jwt.verify_token(access_token)["user_id"]
@@ -135,7 +134,10 @@ async def image_upload(
         upload_request_obj = UploadRequest(**parsed_request)
 
         upload = UploadService(db)
-        file_urls = await upload.upload_image(upload_request_obj, files, user_id)
+        if not files or len(files) == 0:
+            file_urls = []
+        else:
+            file_urls = await upload.upload_image(upload_request_obj, files, user_id)
 
         return CommonResponse(
             status=200,
@@ -145,3 +147,22 @@ async def image_upload(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+# 6. Model 선택 리스트
+@router.get("/model/list", description="Model List 호출")
+async def model_list(
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
+    db : Session = Depends(get_database_mariadb)
+):
+    try:
+        project_service = ProjectService(db)
+        model_list = await project_service.get_model_list()
+        return CommonResponse(
+            status=200,
+            data=model_list
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    

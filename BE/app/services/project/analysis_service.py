@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.analysis_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata
+from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata, collection_labels
 from models.history_models import HistoryData, ReductionResults
 
 class AnalysisService:
@@ -36,7 +36,8 @@ class AnalysisService:
         for i in range(len(image_features)):
             image_info = await collection_images.find_one({"_id": ObjectId(request.image_ids[i])})
             image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
-
+            label_info = await collection_labels.find_one({"_id": ObjectId(image_info.get("labelId"))}) if image_info.get("labelId") else None
+            
             ai_results = image_metadata["aiResults"][0]
             predictions = ai_results["predictions"][0]
             
@@ -46,7 +47,8 @@ class AnalysisService:
                     concat_image_infos.append({
                         "imageId": request.image_ids[i],
                         "predictions": predictions["detections"][j],
-                        "imageUrl": image_metadata["fileList"][0]
+                        "label": label_info["label"] if label_info else None,
+                        "imageUrl": image_metadata["fileList"][0],
                     })
             else:
                 for j in range(len(image_features[i])):  # 클래스 수만큼 반복
@@ -56,6 +58,7 @@ class AnalysisService:
                             "prediction": predictions["prediction"],
                             "confidence": predictions["confidence"]
                         },
+                        "label": label_info["label"] if label_info else None,
                         "imageUrl": image_metadata["fileList"][0]
                     })
                     
