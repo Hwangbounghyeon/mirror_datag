@@ -38,9 +38,11 @@ class ObjectDetectionService:
 
             model = self._set_model_YOLO(request.model_name)
 
-            temp_result = []
+            for image_entry in request.image_data:
+                url = image_entry['url']
+                label = image_entry.get('label')
+                bounding_boxes = image_entry.get('bounding_boxes', [])
 
-            for url in request.image_urls:
                 image_data = self.preprocess_service.load_image_from_s3(url)
                 image_data = Image.open(BytesIO(image_data))
                 image_tensor = self.preprocess_service.process_image(image_data, (640, 640))
@@ -70,7 +72,12 @@ class ObjectDetectionService:
 
                 features_id = await self.detection_metadata_service.upload_feature(features)
 
-                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id)
+                if label:
+                    label_id = await self.detection_metadata_service.upload_label_data(label, bounding_boxes)
+                else:
+                    label_id = None
+
+                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id, label_id)
 
                 for tag in tags:
                     await self.detection_metadata_service.mapping_image_tags_mongodb(tag, image_id)
@@ -113,6 +120,7 @@ class ObjectDetectionService:
 
             boxes = results.boxes
             orig_img = results.orig_img
+            orig_img_height, orig_img_width = orig_img.shape[:2]
 
             class_names = results.names
 
@@ -120,6 +128,12 @@ class ObjectDetectionService:
                 x1, y1, x2, y2 = box.xyxy[0]
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 
+                input_img_width, input_img_height = image_tensor.shape[3], image_tensor.shape[2]
+                x1 = int(x1 * (orig_img_width / input_img_width))
+                y1 = int(y1 * (orig_img_height / input_img_height))
+                x2 = int(x2 * (orig_img_width / input_img_width))
+                y2 = int(y2 * (orig_img_height / input_img_height))
+            
                 cls = int(box.cls)
                 class_name = class_names[cls] if cls in class_names else f"Class {cls}"
                 

@@ -397,3 +397,12 @@ class ProjectService:
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+    
+    # 3. 모델 리스트 호출
+    async def get_model_list(self):
+        model_list = {
+            "cls": ["vgg19_bn", "mobilenetv2_x1_4", "repvgg_a2"],
+            "det": ["yolov5n", "yolov8n", "yolo11n"]
+        }
+        
+        return model_list
