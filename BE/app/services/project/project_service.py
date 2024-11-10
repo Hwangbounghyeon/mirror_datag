@@ -363,15 +363,34 @@ class ProjectService:
 
         return result_ids
 
-    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> ImageSearchResponse:
+    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> PaginationDto[ImageSearchResponse]:
         try:
+            if not search_request:
+                page = 1
+                limit = 10
+            else:
+                page = search_request.page
+                limit = search_request.limit
+
             project_images = await collection_project_images.find_one({})
             if not project_images or "project" not in project_images:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": {},
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
 
             project_image_ids = set(project_images["project"].get(project_id, []))
             if not project_image_ids:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": {},
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
             
             # 검색 조건이 있는 경우에만 필터링 적용
             if search_request and search_request.conditions:
@@ -383,8 +402,16 @@ class ProjectService:
                         matching_ids.update(group_result)
                     project_image_ids &= matching_ids
 
+            total_images = len(project_image_ids)
+            total_pages = (total_images + limit - 1) // limit
+
+            start_idx = (page - 1) * limit
+            end_idx = start_idx + limit
+
+            paginated_image_ids = list(project_image_ids)[start_idx:end_idx]
+
             image_data = {}
-            for image_id in project_image_ids:
+            for image_id in paginated_image_ids:
                 image = await collection_images.find_one({"_id": ObjectId(image_id)})
                 if image:
                     metadata = await collection_metadata.find_one(
@@ -392,8 +419,14 @@ class ProjectService:
                     )
                     if metadata and "fileList" in metadata and metadata["fileList"]:
                         image_data[image_id] = metadata["fileList"][0]
-
-            return ImageSearchResponse(images=image_data)
+            
+            return {
+                "data": ImageSearchResponse(images=image_data),
+                "page": page,
+                "limit": limit,
+                "total_count": total_images,
+                "total_pages": total_pages
+            }
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
