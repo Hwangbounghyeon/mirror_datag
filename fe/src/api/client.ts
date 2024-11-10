@@ -1,3 +1,6 @@
+import { getAccessToken } from "@/app/actions/auth";
+import { access } from "fs";
+
 export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const ACCESS_TOKEN = process.env.NEXT_PUBLIC_ACCESS_TOKEN;
 
@@ -10,11 +13,14 @@ interface ApiOptions {
 
 async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
     try {
+        const accessToken = await getAccessToken()
+        console.log(accessToken)
+
         const response = await fetch(`${BASE_URL}${endpoint}`, {
             ...options,
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${ACCESS_TOKEN}`,
+                Authorization: `bearer ${accessToken}`,
                 ...options.headers,
             },
         });
