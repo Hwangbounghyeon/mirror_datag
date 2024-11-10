@@ -1,5 +1,5 @@
 services:
-  backend:
+  backend-version:
     build:
       context: .
       dockerfile: Dockerfile
@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
 
-  backend-lts:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
