@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Security, Depends, Path
+from fastapi import APIRouter, HTTPException, Security, Depends, Query, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List
@@ -52,10 +52,11 @@ async def download(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/search/{page}", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
+@router.post("/search", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
 async def search_images(
-    page: int = Path(..., ge=1, description="페이지 번호"),
-    condition_data: SearchRequest = None,
+    conditions: SearchRequest = Body(default=None),
+    page: int = Query(1, ge=1, description="페이지 번호"),
+    limit: int = Query(10, ge=1, le=100, description="페이지당 항목 수"),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
@@ -63,12 +64,15 @@ async def search_images(
         jwt = JWTManage(db)
         user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
-        
-        if condition_data is None:
-            condition_data = SearchRequest(conditions=[SearchCondition()])
+        conditions = conditions or SearchRequest()
         
         image_service = ImageService(db)
-        result = await image_service.search_images_by_conditions(condition_data.conditions, user_id, page)
+        result = await image_service.search_images_by_conditions(
+            conditions.conditions, 
+            user_id,
+            page,
+            limit
+        )
         
         return CommonResponse(
             status=200,
