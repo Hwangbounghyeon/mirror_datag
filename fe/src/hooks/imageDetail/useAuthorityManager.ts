@@ -13,11 +13,11 @@ export function useAuthorityManager(
     const [authorities, setAuthorities] =
         useState<AuthUser[]>(initialAuthorities);
 
-    const addAuthorities = async (userIds: number[]) => {
+    const addAuthorities = async (department_name: string[]) => {
         try {
             const request: AddAuthorityRequest = {
                 image_id: imageId,
-                user_id_list: userIds,
+                user_id_list: department_name,
             };
             const newAuthority = await authorityApi.add(request);
             setAuthorities(newAuthority);

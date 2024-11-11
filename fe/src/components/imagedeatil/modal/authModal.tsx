@@ -16,30 +16,21 @@ import { Suspense } from "react";
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (userIds: number[]) => void;
+    onAdd: (departmentName: string[]) => void;
     existingAuthorities: AuthUser[];
 }
 
-export default function AuthModal({
-    isOpen,
-    onClose,
-    onAdd,
-    existingAuthorities,
-}: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, onAdd }: AuthModalProps) {
     const {
         departments,
-        selectedDepartment,
-        selectedPeople,
-        availableUsers,
+        selectedDepartments,
         handleDepartmentSelect,
-        handlePeopleSelect,
-        handleRemovePerson,
+        handleRemoveDepartment,
         reset,
-    } = useAuthoritySelect(existingAuthorities);
+    } = useAuthoritySelect();
 
     const handleConfirm = () => {
-        const userIds = selectedPeople.map((person) => person.user_id);
-        onAdd(userIds);
+        onAdd(selectedDepartments);
         reset();
         onClose();
     };
@@ -55,8 +46,8 @@ export default function AuthModal({
             isOpen={isOpen}
             onClose={handleCancel}
             classNames={{
-                base: "min-h-[50%]",
-                wrapper: "min-h-[50%]",
+                base: "min-h-[30%]",
+                wrapper: "min-h-[30%]",
                 body: "flex-grow",
             }}
         >
@@ -77,15 +68,16 @@ export default function AuthModal({
                                     departments.length > 0 ? (
                                         <Select
                                             label="Department"
-                                            placeholder="Select a department"
-                                            selectedKeys={
-                                                selectedDepartment
-                                                    ? [selectedDepartment]
-                                                    : []
-                                            }
-                                            onChange={(e) => {
+                                            placeholder="Select departments"
+                                            selectionMode="multiple"
+                                            selectedKeys={selectedDepartments}
+                                            onSelectionChange={(keys) => {
+                                                const selectedValues =
+                                                    Array.from(
+                                                        keys as Set<string>
+                                                    );
                                                 handleDepartmentSelect(
-                                                    e.target.value
+                                                    selectedValues
                                                 );
                                             }}
                                         >
@@ -109,48 +101,19 @@ export default function AuthModal({
                                     )}
                                 </Suspense>
 
-                                {selectedDepartment && (
-                                    <Select
-                                        label="People"
-                                        placeholder="Select people"
-                                        selectionMode="multiple"
-                                        selectedKeys={selectedPeople
-                                            .filter(
-                                                (p) =>
-                                                    p.department_name ===
-                                                    selectedDepartment
-                                            )
-                                            .map((p) => p.user_id.toString())}
-                                        onChange={(e) =>
-                                            handlePeopleSelect(
-                                                Array.from(e.target.value)
-                                            )
-                                        }
-                                    >
-                                        {availableUsers.map((user) => (
-                                            <SelectItem
-                                                key={user.uid.toString()}
-                                            >
-                                                {user.name}
-                                            </SelectItem>
-                                        ))}
-                                    </Select>
-                                )}
-
-                                {selectedPeople.length > 0 && (
+                                {selectedDepartments.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
-                                        {selectedPeople.map((person) => (
+                                        {selectedDepartments.map((deptName) => (
                                             <Chip
-                                                key={person.user_id}
+                                                key={deptName}
                                                 onClose={() =>
-                                                    handleRemovePerson(
-                                                        person.user_id
+                                                    handleRemoveDepartment(
+                                                        deptName
                                                     )
                                                 }
                                                 variant="flat"
                                             >
-                                                {person.user_name} /{" "}
-                                                {person.department_name}
+                                                {deptName}
                                             </Chip>
                                         ))}
                                     </div>
@@ -164,7 +127,7 @@ export default function AuthModal({
                             <Button
                                 color="primary"
                                 onPress={handleConfirm}
-                                isDisabled={selectedPeople.length === 0}
+                                isDisabled={selectedDepartments.length === 0}
                             >
                                 Add
                             </Button>
