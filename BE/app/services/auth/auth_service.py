@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from utils.timezone import get_current_time
-from dto.users_dto import UserSignUp, UserSignIn, TokenResponse, UserProfileResponse, UserProfileUpdateRequest
+from dto.users_dto import UserSignUp, UserSignIn, TokenResponse
 from configs.mongodb import collection_project_permissions, collection_image_permissions
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -289,7 +289,7 @@ class JWTManage:
     def __init__(self, db: Session):
         self.db = db
         self.secret_key = os.getenv('JWT_SECRET_KEY')
-        self.access_token_expire_minutes = 15
+        self.access_token_expire_minutes = 60
         self.refresh_token_expire_days = 7
         self.algorithm = "HS256"
         

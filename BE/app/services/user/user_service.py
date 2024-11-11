@@ -1,30 +1,16 @@
-import json
-import jwt
-import redis
-import os
-import secrets
-import smtplib
-
-from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 from utils.timezone import get_current_time
-from dto.users_dto import UserSignUp, UserSignIn, TokenResponse, UserProfileResponse, UserProfileUpdateRequest
-from configs.mongodb import collection_project_permissions, collection_image_permissions, collection_project_images, collection_metadata, collection_project_histories, collection_project_permissions, collection_projects
+from dto.users_dto import UserProfileResponse, UserProfileUpdateRequest
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
 from models.mariadb_users import Users, Departments
-from dto.project_dto import ProjectRequest
 from utils.timezone import get_current_time
-from bson import ObjectId
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
-from models.mariadb_users import Users, Departments
+from dto.project_dto import ProjectResponse, UserResponse
 from typing import List
 
 load_dotenv()

@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Any
-import numpy as np
+from pydantic import BaseModel
+from typing import List
 
 # 모델 추론 공통 Request Dto
 class DimensionReductionRequest(BaseModel):
