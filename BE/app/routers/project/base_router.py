@@ -18,7 +18,7 @@ import json
 
 security_scheme = HTTPBearer()
 
-router = APIRouter(prefix="")
+router = APIRouter(prefix="/project", tags=["Project"])
 
 # 1. Project 생성
 @router.post("/create", description="프로젝트 생성", response_model=CommonResponse[str])

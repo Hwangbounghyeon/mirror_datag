@@ -1,10 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel
 from datetime import datetime
-from bson import ObjectId
 
 class ImageData(BaseModel):
-    metadataId: Optional[str]
-    featureId: Optional[str]
+    metadataId: str | None = None
+    featureId: str  | None
     createdAt: datetime
     updatedAt: datetime

@@ -6,11 +6,15 @@ from configs.mariadb import get_database_mariadb
 from configs.s3 import upload_to_s3
 from configs.mongodb import get_database_mongodb
 from contextlib import asynccontextmanager
-from routers.auth.router import router as auth_router
-from routers.department.router import router as department_router
-from routers.image.router import router as image_router
-from routers.project.router import router as project_router
-from routers.user.router import router as user_router
+from routers.auth.auth_router import router as auth_router
+from routers.department.department_router import router as department_router
+from routers.image.image_router import router as image_router
+from routers.image.permission_router import router as permission_router
+from routers.image.tag_router import router as tag_router
+from routers.project.analysis_router import router as analysis_router
+from routers.project.base_router import router as base_router
+from routers.project.history_router import router as history_router
+from routers.user.user_router import router as user_router
 
 import asyncio
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, UploadFile, File
@@ -37,7 +41,11 @@ app.add_middleware(
 main_router.include_router(auth_router)
 main_router.include_router(department_router)
 main_router.include_router(image_router)
-main_router.include_router(project_router)
+main_router.include_router(permission_router)
+main_router.include_router(tag_router)
+main_router.include_router(analysis_router)
+main_router.include_router(base_router)
+main_router.include_router(history_router)
 main_router.include_router(user_router)
 
 app.include_router(main_router)
