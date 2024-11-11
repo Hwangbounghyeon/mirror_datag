@@ -15,22 +15,12 @@ const MemoizedStep3 = memo(Step3);
 const MemoizedStep4 = memo(Step4);
 
 const Page = () => {
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  useEffect(() => {
-    setIsMounted(true);
 
-    return () => {
-      setIsMounted(false);
-    };
+  useEffect(() => {
+    router.prefetch("/project");
   }, []);
-
-  useEffect(() => {
-    if (isMounted) {
-      router.prefetch("/project");
-    }
-  }, [isMounted]);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(3);
   const { state, dispatch } = useCreateProject();
 
   const handleMove = useCallback((stepNumber: number) => {
