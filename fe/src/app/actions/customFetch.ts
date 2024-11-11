@@ -143,7 +143,7 @@ export async function customFetch<T>({
       };
     }
   } catch (error) {
-    console.error(error);
+    console.error("치명적 에러", error);
     return {
       status: 500,
       error:

@@ -1,4 +1,31 @@
+import { DepartmentType } from "./departmentType";
+
+export type SearchUserType = {
+  user_id: number;
+  name: string;
+  email: string;
+};
+
+export type SearchUserWithAuthType = SearchUserType & {
+  Auth: ProjectAuthType;
+};
+
+export type SearchDepartmentWithAutyType = DepartmentType & {
+  Auth: ProjectAuthType;
+};
+
 export type CreateProjectType = {
+  project_name: string;
+  project_model_name: string;
+  description: string;
+  accesscontrol: {
+    users: Map<number, SearchUserWithAuthType>;
+    departments: Map<number, SearchDepartmentWithAutyType>;
+  };
+  is_private: boolean;
+};
+
+export type CreateProjectRequestType = {
   project_name: string;
   project_model_name: string;
   description: string;
@@ -31,3 +58,5 @@ export interface StepProps {
   category?: string; // Step1에만 필요
   setCategory?: (category: string) => void; // Step1에만 필요
 }
+
+export type ProjectAuthType = "ReadOnly" | "Read&Write" | "None";
