@@ -25,11 +25,15 @@ class SearchCondition(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    conditions: List[SearchCondition]
+    page: int
+    limit: int
+    conditions: List[SearchCondition] | None = None
 
     class Config:
         json_schema_extra = {
             "example": {
+                "page": 1,
+                "limit": 10,
                 "conditions": [
                     {
                         "and_condition": ["cat", "Seoul"],
