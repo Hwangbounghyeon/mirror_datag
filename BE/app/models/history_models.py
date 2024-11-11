@@ -12,6 +12,7 @@ class ReductionResults(BaseModel):
     imageUrl: str
     features: List[float]
     predictions: Any
+    label: Any
 
 class HistoryData(BaseModel):
     userId: int

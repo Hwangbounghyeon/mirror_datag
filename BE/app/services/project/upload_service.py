@@ -121,11 +121,14 @@ class UploadService:
                                 file_extension = os.path.splitext(extracted_file.name)[1]
                                 file_name = f"{str(uuid.uuid4())}{file_extension}"
 
+                                filename = os.path.basename(filename)
+
                                 # S3에 파일 업로드
                                 upload_to_s3(extracted_file, BUCKENAME, file_name)
                                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
                                 file_data["urls"].append(s3_url)
-                                label_info = json_labels.get(filename, {"label": [], "bounding_boxes": []})
+                                label_info = json_labels.get(filename, {"labels": [], "bounding_boxes": []})
+
                                 file_data["labels"].append({
                                     "url": s3_url,
                                     "label": label_info.get("labels", []),
@@ -154,7 +157,7 @@ class UploadService:
     
                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
                 file_data["urls"].append(s3_url)
-                label_info = json_labels.get(file.filename, {"label": [], "bounding_boxes": []})
+                label_info = json_labels.get(file.filename, {"labels": [], "bounding_boxes": []})
                 file_data["labels"].append({
                     "url": s3_url,
                     "label": label_info.get("labels", []),

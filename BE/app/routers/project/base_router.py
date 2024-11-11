@@ -6,11 +6,10 @@ from sqlalchemy.orm import Session
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, UserRequet
+from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest
 from services.project.project_service import ProjectService
 from services.auth.auth_service import JWTManage
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthAddRequest, ImageDetailTagDeleteRequest, ImageDetailTagAddRequest
-from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse
+from dto.search_dto import SearchRequest, ImageSearchResponse
 from dto.uploads_dto import UploadRequest
 from services.project.upload_service import UploadService
 import json
@@ -167,3 +166,17 @@ async def model_list(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+# 7. 선택한 이미지를 project에 저장
+@router.post("/image/add", description="선택한 이미지 project에 저장")
+async def image_add(
+    request: AddImageRequest,
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
+):
+    try:
+        project_service = ProjectService()
+
+        return
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
