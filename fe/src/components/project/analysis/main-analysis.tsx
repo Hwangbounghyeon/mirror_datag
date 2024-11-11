@@ -5,6 +5,7 @@ import { DataPoint } from "@/types/chartType";
 import { HistoryData } from "@/types/historyType";
 import { Select, SelectItem } from "@nextui-org/react";
 import { getHistoryDetail } from "@/api/analysis/getHistoryDetail";
+import { data } from "framer-motion/client";
 
 // ScatterPlot 컴포넌트를 동적으로 import
 const ScatterPlot = dynamic(
@@ -40,7 +41,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
       return;
     }
 
-    setSelectedData(response.data.data);
+    setSelectedData(response.data);
   };
 
   const featureOptions = Array.from({ length: 10 }, (_, i) => ({

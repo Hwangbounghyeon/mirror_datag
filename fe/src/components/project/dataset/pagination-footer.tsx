@@ -1,4 +1,5 @@
 import React from "react";
+import { Button, Pagination } from "@nextui-org/react";
 
 interface PaginationFooterProps {
   currentPage: number;
@@ -8,43 +9,21 @@ interface PaginationFooterProps {
 
 const PaginationFooter = ({ currentPage, totalPage, setCurrentPage }: PaginationFooterProps) => {
   return (
-    <div className="flex items-center justify-center gap-2 my-4">
-      {currentPage > 1 ? (
-        <div
-          onClick={() => setCurrentPage(currentPage - 1)}
-          className="px-3 py-1 border rounded-md cursor-pointer"
-        >
-          {" <"}
-        </div>
-      ) : (
-        <div className="px-3 py-1 border rounded-md opacity-50 bg-gray-800">
-          X
-        </div>
-      )}
-      {Array.from({ length: totalPage }, (_, i) => i + 1).map((page) => (
-        <div
-        key={page}
-        onClick={() => setCurrentPage(page)}
-          className={`px-3 py-1 border rounded-md cursor-pointer ${
-            currentPage === page ? "bg-blue-500 text-white" : ""
-          }`}
-        >
-          {page}
-        </div>
-      ))}
-
-      {currentPage < totalPage ? (
-        <div
-          onClick={() => setCurrentPage(currentPage + 1)}
-          className="px-3 py-1 border rounded-md cursor-pointer"
-        >
-          {" >"}
-        </div>
-      ) : (
-        <div className="px-3 py-1 border rounded-md opacity-50 bg-gray-800">
-          X
-        </div>
-      )}
+    <div className="flex justify-center mt-8 overflow-x-auto py-4">
+      <Pagination
+        total={totalPage}
+        page={currentPage}
+        onChange={setCurrentPage}
+        color="primary"
+        showControls
+        size="lg"
+        className="gap-1 sm:gap-2"
+        radius="lg"
+        classNames={{
+          wrapper: "overflow-visible",
+          item: "w-8 h-8 sm:w-10 sm:h-10",
+        }}
+      />
     </div>
   );
 };
