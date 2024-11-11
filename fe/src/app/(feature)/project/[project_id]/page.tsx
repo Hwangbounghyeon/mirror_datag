@@ -1,120 +1,22 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Button, Modal, ModalContent, useDisclosure } from "@nextui-org/react";
 import Image from "next/image";
 
-import { ImagesType } from "@/types/ImagesType";
+import { ImagesType, ImageListResponse } from "@/types/ImagesType";
 import ImageList from "@/components/project/dataset/image-list";
+import PaginationFooter from "@/components/project/dataset/pagination-footer";
 import FilterModal from "@/components/project/dataset/filter-modal";
 import AnalysisModal from "@/components/project/dataset/analysis-modal";
-
 import Filter from "@/public/filter.svg";
+
+import { getProjectImages } from "@/api/project/getProjectImages";
+import { DefaultPaginationType } from "@/types/default";
 
 type SizeType = "md" | "xs" | "sm" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
 
 const Page = ({ params }: { params: { project_id: string } }) => {
-  const [images, setImages] = useState<ImagesType[]>([
-    {
-      id: 20,
-      imageUrl: "https://img.freepik.com/free-photo/panoramic-sea_1048-2667.jpg?semt=ais_hybrid",
-      checked: false
-    },
-    {
-      id: 21,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 22,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 23,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 24,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 25,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 26,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 27,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 28,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 29,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 30,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 31,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 32,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 33,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 34,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 35,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 36,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 37,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 38,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    },
-    {
-      id: 39,
-      imageUrl: "https://img.animalplanet.co.kr/news/2019/08/10/700/2w4w02ks9531p3v874c7.jpg",
-      checked: false
-    }
-  ]);
+  const [images, setImages] = useState<ImagesType[]>([]);
 
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [size, setSize] = useState<SizeType>('3xl');
@@ -122,7 +24,14 @@ const Page = ({ params }: { params: { project_id: string } }) => {
 
   const [selectedCount, setSelectedCount] = useState(0);
 
-  const selectImage = (e: React.MouseEvent, targetId: number) => {
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const [limit, setLimit] = useState(30);
+  const [conditions, setConditions] = useState([]);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const selectImage = (e: React.MouseEvent, targetId: string) => {
     e.stopPropagation();
     const currentImage = images.find(image => image.id === targetId);
     setSelectedCount(prev => currentImage?.checked ? prev - 1 : prev + 1);
@@ -177,6 +86,33 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     }
   }
 
+  const getImages = async () => {
+    setIsLoading(true);
+    const searchParams = {
+      page: page,
+      limit: limit
+    }
+
+    const response: DefaultPaginationType<ImageListResponse> = await getProjectImages(params.project_id, searchParams)
+
+    if (response.data) {
+      const transformedImages: ImagesType[] = Object.entries(response.data.data.images).map(([id, imageUrl]) => ({
+        id: id,
+        imageUrl: imageUrl,
+        checked: false
+      }));
+      
+      setTotalPage(response.data.total_pages)
+      setImages(transformedImages);
+    }
+
+    setIsLoading(false);
+  }
+
+  useEffect(() => {
+    getImages()
+  }, [page])
+
   return (
     <div className="h-full flex flex-col gap-[1rem] mx-[3rem] pt-[2rem]">
       <div className="w-full h-[3rem] flex justify-between">
@@ -191,7 +127,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         </div>
         <div className="flex-grow ms-1">추가된 필터 여기에</div>
       </div>
-      <div className="w-full h-[calc(100%-10rem)] p-[2rem] rounded-lg bg-gray-300">
+      <div className="relative flex flex-col justify-between w-full h-[calc(100%-10rem)] p-[2rem] rounded-lg bg-gray-300">
         <ImageList 
           images={images} 
           selectImage={selectImage} 
@@ -199,6 +135,8 @@ const Page = ({ params }: { params: { project_id: string } }) => {
           selectImageAll={selectImageAll}
           unSelectImageAll={unSelectImageAll}
         />
+        <PaginationFooter currentPage={page} totalPage={totalPage} setCurrentPage={(targetPage: number) => {setPage(targetPage)}}/>
+        { isLoading ? <div className="absolute top-0 left-0 flex justify-center items-center w-full h-full rounded-lg bg-black/50 text-white">로딩중</div> : <></> }
       </div>
 
       <Modal 

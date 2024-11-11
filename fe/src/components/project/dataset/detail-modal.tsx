@@ -1,5 +1,5 @@
 interface DetailModalProps {
-  imageId: number | null;
+  imageId: string | null;
   modalClose: () => void;
 }
 
