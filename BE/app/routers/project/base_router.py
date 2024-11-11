@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security, Query, Body
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -6,11 +6,10 @@ from sqlalchemy.orm import Session
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, UserRequet
+from dto.project_dto import ProjectRequest, ProjectResponse
 from services.project.project_service import ProjectService
 from services.auth.auth_service import JWTManage
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthAddRequest, ImageDetailTagDeleteRequest, ImageDetailTagAddRequest
-from dto.search_dto import TagImageResponse, SearchRequest, ImageSearchResponse
+from dto.search_dto import SearchRequest, ImageSearchResponse, SearchCondition
 from dto.uploads_dto import UploadRequest
 from services.project.upload_service import UploadService
 import json
@@ -95,19 +94,25 @@ async def delete_project(
         raise HTTPException(status_code=400, detail=str(e))
 
 # 4. project 이미지 리스트 조회
-@router.post("/image/{project_id}/list", response_model=CommonResponse[PaginationDto[ImageSearchResponse]])
+@router.post("/image/{project_id}/list", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
 async def search_project_images(
     project_id: str,
-    search_request: SearchRequest = None,
+    conditions: List[SearchCondition] = Body(default=[]),
+    page: int = Query(1, ge=1, description="페이지 번호"),
+    limit: int = Query(10, ge=1, le=100, description="페이지당 항목 수"),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
         jwt = JWTManage(db)
-        user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
         project_service = ProjectService(db)
-        result = await project_service.search_project_images(project_id, search_request, user_id)
+        result = await project_service.search_project_images(
+            project_id, 
+            conditions,
+            page,
+            limit
+        )
 
         return CommonResponse(
             status=200, 
