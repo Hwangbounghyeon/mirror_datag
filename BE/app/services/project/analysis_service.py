@@ -37,17 +37,26 @@ class AnalysisService:
             image_info = await collection_images.find_one({"_id": ObjectId(request.image_ids[i])})
             image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
             label_info = await collection_labels.find_one({"_id": ObjectId(image_info.get("labelId"))}) if image_info.get("labelId") else None
-            
+
             ai_results = image_metadata["aiResults"][0]
             predictions = ai_results["predictions"][0]
-            
+            iou = None
+
             # feature의 클래스 수만큼 반복
             if ai_results["task"] == "det":
                 for j in range(len(image_features[i])):  # 클래스 수만큼 반복
+                    if len(label_info["bounding_boxes"]) != 0:
+                        iou = 0
+                        for k in range(len(label_info["bounding_boxes"])):
+                            iou = max(iou, self._iou(predictions["detections"][j]["bbox"], label_info["bounding_boxes"][k]))
+                        if iou < 0.6:
+                            iou = None
+
                     concat_image_infos.append({
                         "imageId": request.image_ids[i],
                         "predictions": predictions["detections"][j],
                         "label": label_info["label"] if label_info else None,
+                        "iou": iou,
                         "imageUrl": image_metadata["fileList"][0],
                     })
             else:
@@ -58,7 +67,7 @@ class AnalysisService:
                             "prediction": predictions["prediction"],
                             "confidence": predictions["confidence"]
                         },
-                        "label": label_info["label"] if label_info else None,
+                        "label": label_info["label"][0] if label_info else None,
                         "imageUrl": image_metadata["fileList"][0]
                     })
                     
@@ -75,7 +84,7 @@ class AnalysisService:
             concat_image_infos[i]["features"] = reduction_features[i]
 
         # 작업 완료
-        await self._save_history_completed_mongodb(request.project_id, inserted_id, concat_image_infos)
+        await self._save_history_completed_mongodb(inserted_id, concat_image_infos)
 
         return DimensionReductionResponse(
             history_id=inserted_id,
@@ -224,7 +233,6 @@ class AnalysisService:
     # 차원축소 기록 완료 저장 (mongodb)
     async def _save_history_completed_mongodb(
         self,
-        project_id: str,
         history_id: str,
         image_infos: List[ReductionResults]
     ):
@@ -270,3 +278,25 @@ class AnalysisService:
             )
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
+        
+
+    # IOU 계산
+    def _iou(self, box1, box2):
+        try:
+            box2 = [box2["x_min"],box2["y_min"],box2["x_max"],box2["y_max"]]
+            box1_area = (box1[2] - box1[0] + 1) * (box1[3] - box1[1] + 1)
+            box2_area = (box2[2] - box2[0] + 1) * (box2[3] - box2[1] + 1)
+
+            x1 = max(box1[0], box2[0])
+            y1 = max(box1[1], box2[1])
+            x2 = min(box1[2], box2[2])
+            y2 = min(box1[3], box2[3])
+
+            w = max(0, x2 - x1 + 1)
+            h = max(0, y2 - y1 + 1)
+
+            inter = w * h
+            iou = inter / (box1_area + box2_area - inter)
+            return iou
+        except Exception as e:
+            raise Exception(f"Failed to IOU: {str(e)}")

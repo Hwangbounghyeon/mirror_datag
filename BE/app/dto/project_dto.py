@@ -89,3 +89,8 @@ class DepartmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# AddImage 응답 DTO
+class AddImageRequest(BaseModel):
+    project_id: str
+    image_ids: List
