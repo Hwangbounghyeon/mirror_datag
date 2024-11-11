@@ -8,7 +8,7 @@ interface AnalysisModalProps {
   projectId: string;
 }
 
-const AnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalProps) => {
+const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalProps) => {
   const [isBtnDisabled, setIsBtnDisaled] = useState(true);
   const [historyName, setHistoryName] = useState(`History_${new Date().toUTCString()}`)
   const [algorithm, setAlgorithm] = useState("tsne");
@@ -174,4 +174,4 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalPr
   );
 };
 
-export default AnalysisModal;
+export default AutoAnalysisModal;
