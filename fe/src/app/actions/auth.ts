@@ -91,7 +91,7 @@ export const check_auth = async (formData: FormData) => {
 export const verifyAccessToken = async (accessToken: string) => {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/user/me`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/profile`,
       {
         method: "GET",
         headers: {
