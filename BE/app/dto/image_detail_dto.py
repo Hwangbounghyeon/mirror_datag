@@ -37,7 +37,7 @@ class AuthDetail(BaseModel):
     department_name: str
 
 class ImageDetailAuthAddRequest(BaseModel):
-    user_id_list: List[int]
+    department_name_list: List[str]
     image_id: str
 
 class ImageDetailAuthAddResponse(BaseModel):

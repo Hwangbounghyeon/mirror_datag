@@ -168,18 +168,25 @@ class ImageExtraService:
         metadata_one["_id"] = str(metadata_one["_id"])
         ###
 
+        user_id_list = []
+        for department_name in request.department_name_list:
+            department_one = self.db.query(Departments).filter(Departments.department_name == department_name).first()
+            department_one_id = department_one.department_id
+            user_one = self.db.query(Users).filter(Users.department_id.like(f"%{department_one_id}%")).first()
+            user_one_id = user_one.user_id
+            user_id_list.append(user_one_id)
         # metadata -> users
         await collection_metadata.update_one(
             {"_id": ObjectId(metadata_id)},
             {
                 "$addToSet": {
-                    "metadata.accessControl.users": {"$each": request.user_id_list}
+                    "metadata.accessControl.users": {"$each": user_id_list}
                 }
             }
         )
 
         # imagePermissions -> user
-        for user_id in request.user_id_list:
+        for user_id in user_id_list:
             await collection_image_permissions.update_one(
                 {},
                 {
