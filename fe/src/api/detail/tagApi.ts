@@ -1,21 +1,53 @@
+import {
+    LoadImageByFilterResponse,
+    TagFilterResponse,
+} from "@/types/imageLoad";
 import apiClient from "../client";
-import { AddTagRequest, DeleteTagRequest, TagResponse } from "@/types/tag";
-
-interface TagList {
-    image_id: string;
-    tag_name: string[];
-}
+import {
+    AddTagRequest,
+    DeleteTagRequest,
+    TagBySearchRequest,
+    TagResponse,
+} from "@/types/tag";
 
 export const tagApi = {
-    getTag: async (): Promise<TagList> => {
-        return apiClient<TagList>("/search", {
+    getTag: async (): Promise<TagFilterResponse> => {
+        const response = await apiClient<TagFilterResponse>("/image/tag/list", {
             method: "GET",
             cache: "no-store",
         });
+
+        if (!response.data) {
+            throw new Error("No data received");
+        }
+
+        console.log(response.data);
+
+        return response;
+    },
+
+    searchByTag: async (
+        filterConditions: TagBySearchRequest,
+        page: number = 1
+    ): Promise<LoadImageByFilterResponse> => {
+        const response = await apiClient<LoadImageByFilterResponse>(
+            `/image/search/${page}`,
+            {
+                method: "POST",
+                body: JSON.stringify(filterConditions),
+                cache: "no-store",
+            }
+        );
+
+        if (!response.data) {
+            throw new Error("No data received");
+        }
+
+        return response;
     },
 
     add: async (request: AddTagRequest): Promise<string[]> => {
-        const response = await apiClient<TagResponse>("/imageDetail/addTag", {
+        const response = await apiClient<TagResponse>("/image/tag/add", {
             method: "POST",
             body: JSON.stringify(request),
             cache: "no-store",
@@ -29,14 +61,11 @@ export const tagApi = {
     },
 
     delete: async (request: DeleteTagRequest): Promise<string[]> => {
-        const response = await apiClient<TagResponse>(
-            "/imageDetail/deleteTag",
-            {
-                method: "POST",
-                body: JSON.stringify(request),
-                cache: "no-store",
-            }
-        );
+        const response = await apiClient<TagResponse>("/image/tag/remove", {
+            method: "POST",
+            body: JSON.stringify(request),
+            cache: "no-store",
+        });
 
         if (!response.data) {
             throw new Error("No data received");
