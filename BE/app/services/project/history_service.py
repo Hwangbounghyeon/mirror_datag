@@ -1,15 +1,12 @@
 from fastapi import HTTPException
 from typing import List
-import numpy as np
-import time
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.pagination_dto import PaginationDto
-from dto.history_dto import HistoryListResponse, HistoryListData
+from dto.history_dto import HistoryListData
 from configs.mongodb import collection_histories, collection_project_histories
-from models.history_models import HistoryData, ReductionResults
+from models.history_models import HistoryData
 
 class HistoryService:
     def __init__(self, db: Session):

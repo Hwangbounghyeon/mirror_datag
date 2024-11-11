@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
-from bson import ObjectId
+from pydantic import BaseModel
+from typing import List, Dict
 
 class ProjectHistory(BaseModel):
     project: Dict[str, List[str]]

@@ -1,16 +1,6 @@
-from dto.project_dto import ProjectRequest
-from configs.mongodb import collection_project_images, collection_metadata, collection_project_histories, collection_project_permissions, collection_projects
-
 from sqlalchemy.orm import Session
-from utils.timezone import get_current_time
-from datetime import datetime, timezone
-from bson import ObjectId
-
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
+from dto.project_dto import ProjectResponse, DepartmentResponse, UserResponse
 from models.mariadb_users import Users, Departments
 from typing import List
 
