@@ -30,8 +30,12 @@ export const tagApi = {
         filterConditions: TagBySearchRequest,
         page: number = 1
     ): Promise<LoadImageByFilterResponse> => {
+        const searchParams = new URLSearchParams({
+            page: page.toString(),
+        });
+
         const response = await apiClient<LoadImageByFilterResponse>(
-            `/image/search/${page}`,
+            `/image/search?${searchParams.toString()}`,
             {
                 method: "POST",
                 body: JSON.stringify(filterConditions),
