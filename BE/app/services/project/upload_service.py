@@ -11,6 +11,7 @@ import io
 import os
 import json
 from bson import ObjectId
+from dotenv import load_dotenv
 
 from configs.mongodb import collection_upload_batches, collection_user_upload_batches, collection_projects
 from models.uploadbatch_models import UploadBatch
@@ -20,6 +21,7 @@ from configs.s3 import upload_to_s3
 
 BUCKENAME = 'ssafy-project'
 
+load_dotenv()
 class UploadService:
     def __init__(self, db : Session):
         self.db = db
@@ -173,9 +175,9 @@ class UploadService:
         department_id: int
     ):
         if task == "cls":
-            url = "http://localhost:8001/dl/api/cls"
+            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/cls"
         else:
-            url = "http://localhost:8001/dl/api/det"
+            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/det"
 
         if department_id:
             department = self.db.query(Departments).filter(Departments.department_id == department_id).first()
