@@ -71,6 +71,8 @@ export const check_auth = async (formData: FormData) => {
       maxAge: accessTokenDuration,
     });
 
+    console.log()
+
     return {
       status: response.status,
       data: {

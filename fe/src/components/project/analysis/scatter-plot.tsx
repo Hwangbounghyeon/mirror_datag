@@ -34,20 +34,6 @@ interface LabelColors {
   [key: string]: string;
 }
 
-interface ChartDataset {
-  label: string;
-  data: Array<{
-    x: number;
-    y: number;
-    id: string;
-  }>;
-  backgroundColor: string;
-  pointBackgroundColor: string[];
-  borderColor: string;
-  pointRadius: number;
-  pointHoverRadius: number;
-}
-
 interface DragStatus {
   isDragging: boolean;
 }
@@ -122,6 +108,11 @@ const ScatterPlot = ({ data, selectedIndices, onSelectPoints }: ScatterPlotProps
             weight: 'bold',
           },
           padding: { top: 10, bottom: 0 }
+        },
+        ticks: {
+          stepSize: 0.2,      // 단위 간격
+          maxTicksLimit: 10,  // 최대 눈금 수
+          precision: 2       // 소수점 자릿수
         }
       },
       y: {
@@ -136,6 +127,11 @@ const ScatterPlot = ({ data, selectedIndices, onSelectPoints }: ScatterPlotProps
             weight: 'bold',
           },
           padding: { top: 0, bottom: 10 }
+        },
+        ticks: {
+          stepSize: 0.2,      // 단위 간격
+          maxTicksLimit: 10,  // 최대 눈금 수
+          precision: 2       // 소수점 자릿수
         }
       },
     },

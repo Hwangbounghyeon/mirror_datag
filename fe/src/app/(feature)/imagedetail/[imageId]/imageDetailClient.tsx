@@ -12,6 +12,7 @@ import AuthPanel from "@/components/imagedeatil/authPanel";
 import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { AuthUser } from "@/types/auth";
+import { Detection } from "@/types/metadata";
 
 interface ImageDetailClientProps {
     imageId: string;
@@ -27,6 +28,7 @@ interface ImageDetailClientProps {
         equipmentId: string;
         createdAt: string;
     };
+    detections: Detection[];
 }
 
 function ImageDetailClient({
@@ -37,15 +39,16 @@ function ImageDetailClient({
     classes,
     imageSrc,
     metadata,
+    detections,
 }: ImageDetailClientProps) {
     const router = useRouter();
     const totalImages = 300;
 
     const { authorities, addAuthorities, removeAuthority } =
-        useAuthorityManager("672c4ad2d00bbc3d9b3d5d66", initialAuthorities); //TODO imageId로 추후 수정
+        useAuthorityManager("672d73396eb2c6ffde3bee1a", initialAuthorities); //TODO imageId로 추후 수정
 
     const { tags, addTag, removeTag } = useTagManager(
-        "672c4ad2d00bbc3d9b3d5d66", //TODO 추후 imageId로 수정
+        "672d73396eb2c6ffde3bee1a", //TODO 추후 imageId로 수정
         initialTags
     );
 
@@ -142,7 +145,7 @@ function ImageDetailClient({
                 </div>
 
                 <div className="w-[80%]">
-                    <ImagePanel imageSrc={imageSrc} />
+                    <ImagePanel imageSrc={imageSrc} detections={detections} />
                 </div>
             </div>
         </div>
