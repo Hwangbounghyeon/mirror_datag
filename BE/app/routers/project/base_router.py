@@ -94,7 +94,7 @@ async def delete_project(
         raise HTTPException(status_code=400, detail=str(e))
 
 # 4. project 이미지 리스트 조회
-@router.post("/image/{project_id}/list", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
+@router.post("/image/{project_id}/list", response_model=CommonResponse[PaginationDto[ImageSearchResponse]])
 async def search_project_images(
     project_id: str,
     conditions: SearchRequest = Body(default=None),
@@ -105,7 +105,7 @@ async def search_project_images(
 ):
     try:
         conditions = conditions or SearchRequest()
-        
+
         project_service = ProjectService(db)
         result = await project_service.search_project_images(
             project_id, 
