@@ -8,6 +8,24 @@ pipeline {
     }
     
     stages {
+        stage('변경사항 감지') {
+                steps {
+                    script {
+                        // 이전 커밋과 현재 커밋 사이의 변경된 파일 목록 가져오기
+                        def changes = sh(
+                            script: "git diff --name-only HEAD^..HEAD | grep '^DL/app/' || true",
+                            returnStdout: true
+                        ).trim()
+                        
+                        // DL/app/ 디렉토리 내 변경사항이 없으면 파이프라인 중단
+                        if (changes.isEmpty()) {
+                            currentBuild.result = 'SUCCESS'
+                            echo "DL/app/ 디렉토리에 변경사항이 없습니다. 파이프라인을 건너뜁니다."
+                            return
+                        }
+                    }
+                }
+        }
         stage('체크아웃') {
             steps {
                 checkout scm
