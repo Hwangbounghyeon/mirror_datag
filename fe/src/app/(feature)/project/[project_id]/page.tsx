@@ -95,6 +95,12 @@ const Page = ({ params }: { params: { project_id: string } }) => {
 
     const response: DefaultPaginationType<ImageListResponse> = await getProjectImages(params.project_id, searchParams)
 
+    if (!response.data) {
+      setPage(1);
+      setTotalPage(1);
+      setImages([]);
+    }
+
     if (response.data) {
       const transformedImages: ImagesType[] = Object.entries(response.data.data.images).map(([id, imageUrl]) => ({
         id: id,
