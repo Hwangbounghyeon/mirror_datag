@@ -295,6 +295,22 @@ class ProjectService:
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
 
+        # 6. 빈 배열 삭제
+        project_histories = await collection_project_histories.find_one()
+        for project, image in project_histories.get("project", {}).items():
+            if not image:
+                await collection_project_histories.update_one(
+                    {},
+                    {"$unset": {f"project.{project}": ""}}
+                )
+        project_images = await collection_project_images.find_one()
+        for project, image in project_images.get("project", {}).items():
+            if not image:
+                await collection_project_images.update_one(
+                    {},
+                    {"$unset": {f"project.{project}": ""}}
+                )
+
     # 2. 각 그룹별로 Tag 필터링
     async def _process_condition_group(self, tag_doc: dict, condition: SearchCondition) -> set:
         result_ids = None
