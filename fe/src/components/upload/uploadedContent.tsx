@@ -1,8 +1,8 @@
 import React from "react";
-import ImageGrid from "@/components/image/ImageGrid";
+import { ImageGrid } from "../image/ImageGrid";
 
 interface UploadedContentProps {
-    images: Array<{ src: string; name: string; data:File }>;
+    images: Array<{ src: string; name: string; data: File }>;
     onDeleteAllImages: () => void;
     onDeleteImage: (index: number) => void;
     onSelectFiles: () => void;
