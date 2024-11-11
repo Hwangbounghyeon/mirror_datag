@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 
 interface AnalysisModalProps {
   onClose: () => void;
-  filterChecked: () => number[];
+  filterChecked: () => string[];
   projectId: number;
 }
 
 const AnalysisModal = ({ onClose, filterChecked, projectId }: AnalysisModalProps) => {
-  const [selectedImagesId, setSelectedImagesId] = useState<number[]>([]);
+  const [selectedImagesId, setSelectedImagesId] = useState<string[]>([]);
   const [isBtnDisabled, setIsBtnDisaled] = useState(true);
   const [historyName, setHistoryName] = useState(`History_${new Date().toUTCString()}`)
   const [algorithm, setAlgorithm] = useState("tsne");
