@@ -1,5 +1,5 @@
 import { StepProps } from "@/types/projectType";
-import { Input, Textarea } from "@nextui-org/react";
+import { Button, Input, Textarea } from "@nextui-org/react";
 import { memo } from "react";
 
 const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
@@ -15,10 +15,9 @@ const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
         radius="md"
         size="md"
         onChange={(e) => {
-          setProjectItem((prev) => ({
-            ...prev,
+          setProjectItem({
             project_name: e.target.value || "",
-          }));
+          });
         }}
       />
 
@@ -32,26 +31,25 @@ const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
         size="md"
         name="description"
         onChange={(e) => {
-          setProjectItem((prev) => ({
-            ...prev,
+          setProjectItem({
             description: e.target.value || "",
-          }));
+          });
         }}
       />
 
-      <button
+      <Button
         disabled={
           projectItem.project_name.length === 0 ||
           projectItem.description.length === 0
         }
         onClick={() => {
           if (handleMove) {
-            handleMove(4);
+            handleMove(3);
           }
         }}
       >
         Next
-      </button>
+      </Button>
     </div>
   );
 };
