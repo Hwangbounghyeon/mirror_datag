@@ -3,7 +3,7 @@ import { AuthResponse, AuthUser } from "@/types/auth";
 
 export interface AddAuthorityRequest {
     image_id: string;
-    user_id_list: number[];
+    user_id_list: string[];
 }
 
 export interface DeleteAuthorityRequest {
@@ -13,11 +13,14 @@ export interface DeleteAuthorityRequest {
 
 export const authorityApi = {
     add: async (request: AddAuthorityRequest): Promise<AuthUser[]> => {
-        const response = await apiClient<AuthResponse>("/image/permission/add", {
-            method: "POST",
-            body: JSON.stringify(request),
-            cache: "no-store",
-        });
+        const response = await apiClient<AuthResponse>(
+            "/image/permission/add",
+            {
+                method: "POST",
+                body: JSON.stringify(request),
+                cache: "no-store",
+            }
+        );
 
         if (!response.data) {
             throw new Error("No data received");
