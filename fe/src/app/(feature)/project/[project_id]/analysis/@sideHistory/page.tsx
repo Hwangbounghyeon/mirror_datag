@@ -20,10 +20,9 @@ const GetHistories = async ({
     method: "GET",
     cache: "no-store",
     ContentType: "application/json",
-    endpoint: `/history/${projectId}`,
+    endpoint: `/project/history/${projectId}/list`,
     searchParams: requestParams,
   });
-  console.log("abcd", response);
   if (!response.data) {
     return <div>데이터가 없습니다.</div>;
   }

@@ -1,32 +1,53 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-const ACCESS_TOKEN = process.env.NEXT_PUBLIC_ACCESS_TOKEN;
+import { customFetch } from "@/app/actions/customFetch";
 
 interface ApiOptions {
-    method: string;
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     headers?: HeadersInit;
     body?: BodyInit;
-    cache?: RequestCache;
+    cache?: "no-store" | null;
+    ContentType?: "application/json" | "multipart/form-data";
+    searchParams?: URLSearchParams | null;
 }
 
 async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
     try {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
-            ...options,
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${ACCESS_TOKEN}`,
-                ...options.headers,
-            },
+        const response = await customFetch<T>({
+            endpoint,
+            method: options.method,
+            cache: options.cache,
+            body: options.body,
+            ContentType:
+                options.body instanceof FormData
+                    ? undefined
+                    : options.ContentType || "application/json",
+            searchParams: options.searchParams,
         });
 
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
+        if (response.error || !response.data) {
+            const errorMessage = response.error
+                ? typeof response.error === "string"
+                    ? response.error
+                    : JSON.stringify(response.error)
+                : "No data returned from API";
+            throw new Error(errorMessage);
         }
 
-        return await response.json();
+        return response.data;
     } catch (error) {
-        console.error(`API Error (${endpoint}):`, error);
-        throw error;
+        console.error(`API Error (${endpoint}):`, {
+            message: error instanceof Error ? error.message : "Unknown error",
+            error,
+        });
+
+        if (error instanceof Error) {
+            throw error;
+        } else {
+            throw new Error(
+                typeof error === "object"
+                    ? JSON.stringify(error)
+                    : String(error)
+            );
+        }
     }
 }
 

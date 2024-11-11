@@ -24,7 +24,7 @@ interface Metadata {
     mode: string;
 }
 
-interface Detection {
+export interface Detection {
     prediction: string;
     confidence: number;
     threshold: number;
