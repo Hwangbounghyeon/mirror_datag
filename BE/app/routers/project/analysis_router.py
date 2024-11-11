@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException, Security, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
 from sqlalchemy.orm import Session
@@ -13,9 +13,10 @@ security_scheme = HTTPBearer()
 
 router = APIRouter(prefix="/project", tags=["Project"])
 
-@router.post("/analysis", response_model=CommonResponse[DimensionReductionResponse])
+@router.post("/analysis", response_model=CommonResponse[dict])
 async def dimension_reduction_umap(
     request: DimensionReductionRequest,
+    background_tasks: BackgroundTasks,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
@@ -28,10 +29,15 @@ async def dimension_reduction_umap(
         user_id = jwt.verify_token(access_token)["user_id"]
 
         analysis_service = AnalysisService(db)
-        results = await analysis_service.dimension_reduction(request, user_id)
-        return CommonResponse[DimensionReductionResponse](
+        background_tasks.add_task(
+            analysis_service.dimension_reduction,
+            request,
+            user_id
+        )
+        
+        return CommonResponse[dict](
             status=200,
-            data=results
+            data={"message": "분석이 시작되었습니다. 잠시 후 결과를 확인할 수 있습니다."}
         )
     except HTTPException as http_exc:
         raise http_exc

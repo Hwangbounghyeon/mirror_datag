@@ -7,6 +7,7 @@ import umap
 from datetime import datetime, timezone
 from bson import ObjectId
 
+from dto.search_dto import SearchCondition
 from dto.analysis_dto import DimensionReductionRequest, DimensionReductionResponse
 from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata, collection_labels
 from models.history_models import HistoryData, ReductionResults
@@ -157,7 +158,7 @@ class AnalysisService:
         is_private: bool,
         history_name: str,
         selected_algorithm: str,
-        selected_tags: List[List[str]],
+        selected_tags: List[SearchCondition],
     ) -> HistoryData:
 
         # 필수 파라미터가 누락되었는지 확인
@@ -199,7 +200,7 @@ class AnalysisService:
         is_private: bool,
         history_name: str,
         selected_algorithm: str,
-        selected_tags: List[List[str]],
+        selected_tags: List[SearchCondition],
     ):
         try:
             history_obj = self._create_history_mongodb(
