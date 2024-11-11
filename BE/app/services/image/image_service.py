@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from typing import List, Set
-from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse
+from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
 from dto.pagination_dto import PaginationDto
 from configs.mongodb import (
     collection_tag_images, 
@@ -117,7 +117,7 @@ class ImageService:
         return result_ids
     
     ## 3. 이미지 Tag 필터링하기(고급 검색 기능 - AND, OR, NOT)
-    async def search_images_by_conditions(self, search_conditions: List[SearchCondition], user_id: int, page: int = 1,limit: int = 10) -> PaginationDto[List[ImageSearchResponse]]:
+    async def search_images_by_conditions(self, search_conditions: List[SearchCondition] | None, user_id: int, page: int = 1, limit: int = 10) -> PaginationDto[List[ImageSearchResponse]]:
         try:
             # 1. tag document 가져오기
             tag_doc = await collection_tag_images.find_one({})

@@ -54,7 +54,7 @@ async def download(
 
 @router.post("/search", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
 async def search_images(
-    conditions: List[SearchCondition] = Body(default=[]),
+    conditions: SearchRequest = Body(default=None),
     page: int = Query(1, ge=1, description="페이지 번호"),
     limit: int = Query(10, ge=1, le=100, description="페이지당 항목 수"),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
@@ -64,8 +64,15 @@ async def search_images(
         jwt = JWTManage(db)
         user_id = jwt.verify_token(credentials.credentials)["user_id"]
         
+        conditions = conditions or SearchRequest()
+        
         image_service = ImageService(db)
-        result = await image_service.search_images_by_conditions(conditions, user_id, page, limit)
+        result = await image_service.search_images_by_conditions(
+            conditions.conditions, 
+            user_id,
+            page,
+            limit
+        )
         
         return CommonResponse(
             status=200,

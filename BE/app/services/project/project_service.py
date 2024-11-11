@@ -5,7 +5,7 @@ from utils.timezone import get_current_time
 from bson import ObjectId
 
 from fastapi import HTTPException
-from dto.search_dto import SearchCondition, ImageSearchResponse, SearchRequest
+from dto.search_dto import SearchCondition, ImageSearchResponse
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
@@ -360,7 +360,7 @@ class ProjectService:
 
         return result_ids
 
-    async def search_project_images(self, project_id: str, search_conditions: List[SearchCondition] | None, page: int = 1, limit: int = 10) -> PaginationDto[ImageSearchResponse]:
+    async def search_project_images(self, project_id: str, search_conditions: List[SearchCondition] | None, page: int = 1,limit: int = 10) -> PaginationDto[ImageSearchResponse]:
         try:
             # 1. project_images 가져오기
             project_images = await collection_project_images.find_one({})
