@@ -3,13 +3,16 @@ import React, { useState, useEffect } from "react";
 import { Button, Modal, ModalContent, useDisclosure, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
 import Image from "next/image";
 
+import { TagBySearchRequest } from "@/types/tag";
+import { createInitialRow, FilterRow } from "@/components/loadimage/filterBox";
 import { ImagesType, ImageListResponse } from "@/types/ImagesType";
 import ImageList from "@/components/project/dataset/image-list";
 import PaginationFooter from "@/components/project/dataset/pagination-footer";
-import FilterModal from "@/components/project/dataset/filter-modal";
+import { FilterModal } from "@/components/project/dataset/filter-modal";
 import AnalysisModal from "@/components/project/dataset/analysis-modal";
 import AutoAnalysisModal from "@/components/project/dataset/auto-analysis-modal";
 import Filter from "@/public/filter.svg";
+import { tagApi } from "@/api/detail/tagApi";
 
 import { getProjectImages } from "@/api/project/getProjectImages";
 import { DefaultPaginationType } from "@/types/default";
@@ -29,7 +32,11 @@ const Page = ({ params }: { params: { project_id: string } }) => {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
   const [limit, setLimit] = useState(30);
-  const [conditions, setConditions] = useState([]);
+
+  const [tags, setTags] = useState<string[]>([]);
+  const [filterRows, setFilterRows] = useState<FilterRow[]>([
+      createInitialRow(),
+  ]);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,12 +88,27 @@ const Page = ({ params }: { params: { project_id: string } }) => {
 
   const getImages = async () => {
     setIsLoading(true);
+    const conditions = filterRows
+      .filter(row => 
+        row.AND.length > 0 || 
+        row.OR.length > 0 || 
+        row.NOT.length > 0
+      )
+      .map(row => ({
+        and_condition: row.AND,
+        or_condition: row.OR,
+        not_condition: row.NOT
+      }));
+
     const searchParams = {
       page: page,
-      limit: limit
+      limit: limit,
+      ...(conditions.length > 0 && { conditions })
     }
 
     const response: DefaultPaginationType<ImageListResponse> = await getProjectImages(params.project_id, searchParams)
+
+    console.log(response.data)
 
     if (response.data) {
       const transformedImages: ImagesType[] = Object.entries(response.data.data.images).map(([id, imageUrl]) => ({
@@ -106,10 +128,32 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     setIsLoading(false);
   }
 
+  const getTags = async () => {
+    try {
+        setIsLoading(true);
+        const response = await tagApi.getTag();
+        if (response.data) {
+            setTags(response.data.tags);
+        }
+    } catch (error) {
+        console.error("Failed to fetch images:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
+
   useEffect(() => {
-    setImages([])
-    getImages()
-  }, [page])
+    getTags();
+  }, [])
+
+  useEffect(() => {
+    setImages([]);
+    getImages();
+  }, [page, filterRows])
+
+  useEffect(() => {
+    console.log(tags)
+  }, [tags])
 
   const handleModalOpen = (componentName: string) => {
     setSelectedModal(componentName)
@@ -126,7 +170,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         break;
     }
   };
-    
+  
   const getModalBody = () => {
     switch(selectedModal) {
       case 'analysis':
@@ -146,7 +190,15 @@ const Page = ({ params }: { params: { project_id: string } }) => {
           />
         );
       case 'filter':
-        return <FilterModal onClose={onClose} />;
+        return (
+          <FilterModal 
+            isOpen={selectedModal==='filter'}
+            onClose={onClose} 
+            tags={tags}
+            filterRows={filterRows}
+            setFilterRows={setFilterRows}
+          />
+        );
       default:
         return null;
     }
