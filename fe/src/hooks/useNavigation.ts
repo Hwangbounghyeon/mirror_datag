@@ -17,11 +17,8 @@ export const useNavigation = () => {
         async (images: ImageFile[]) => {
             try {
                 const uploadProcess = uploadImage({
-                    user_id: 5,
-                    task: "cls",
-                    model_name: "vgg19_bn",
                     is_private: true,
-                    projectId: 17,
+                    project_id: "672d6cb4da504f5b140ecffc",
                     images,
                 });
                 router.push("/loadimage");
