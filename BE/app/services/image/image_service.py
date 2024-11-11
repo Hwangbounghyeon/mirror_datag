@@ -1,19 +1,18 @@
 from fastapi import HTTPException
 from typing import List, Set
-from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
+from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse
 from dto.pagination_dto import PaginationDto
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
     collection_images,
     collection_image_permissions, 
-    collection_project_images
 )
 from bson import ObjectId
 from models.mariadb_users import Users, Departments
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, UserInformation, AccessControl, ImageDetailResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
+from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailResponse
 
 load_dotenv()
 
@@ -31,18 +30,6 @@ class ImageService:
                 tags = []
             else:
                 tags = list(tag_doc['tag'].keys()) if tag_doc and 'tag' in tag_doc else []
-            
-            # images = {}
-            # image_docs = await collection_images.find({}).to_list(length=None)
-            
-            # for doc in image_docs:
-            #     # 메타데이터에서 파일 경로 조회
-            #     metadata = await collection_metadata.find_one(
-            #         {"_id": ObjectId(doc["metadataId"])}
-            #     )
-            #     if metadata and "fileList" in metadata and metadata["fileList"]:
-            #         # 이미지의 _id와 경로 매칭하여 딕셔너리에 추가
-            #         images[str(doc["_id"])] = metadata["fileList"][0]
 
             # images 필드가 Dict[str, str] 형식으로 반환
             return TagImageResponse(

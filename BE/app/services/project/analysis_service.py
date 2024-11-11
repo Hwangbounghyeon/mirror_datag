@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from typing import List
 import numpy as np
-import time
 from sklearn.manifold import TSNE
 from sqlalchemy.orm import Session
 import umap

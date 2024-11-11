@@ -11,9 +11,9 @@ from services.project.analysis_service import AnalysisService
 
 security_scheme = HTTPBearer()
 
-router = APIRouter(prefix="/analysis")
+router = APIRouter(prefix="/project", tags=["Project"])
 
-@router.post("", response_model=CommonResponse[DimensionReductionResponse])
+@router.post("/analysis", response_model=CommonResponse[DimensionReductionResponse])
 async def dimension_reduction_umap(
     request: DimensionReductionRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),

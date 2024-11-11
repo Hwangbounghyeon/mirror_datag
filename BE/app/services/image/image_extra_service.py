@@ -1,9 +1,8 @@
-from typing import List
 from bson import ObjectId
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from models.mariadb_users import Users, Departments
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, UserInformation, AccessControl, ImageDetailResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
+from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
 from configs.mongodb import collection_metadata, collection_images, collection_tag_images, collection_image_permissions
 
 class ImageExtraService:
