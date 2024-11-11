@@ -1,23 +1,25 @@
 from fastapi import HTTPException
 from typing import List, Set
 from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
+from dto.pagination_dto import PaginationDto
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
     collection_images,
     collection_image_permissions, 
-    collection_project_images
 )
 from bson import ObjectId
 from models.mariadb_users import Users, Departments
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, UserInformation, AccessControl, ImageDetailResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
+from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailResponse
 
 load_dotenv()
 
 ## 1. tag 목록 불러오기
 class ImageService:
+    PAGE_SIZE = 20
+    
     def __init__(self, db: Session):
         self.db = db
     
@@ -28,18 +30,6 @@ class ImageService:
                 tags = []
             else:
                 tags = list(tag_doc['tag'].keys()) if tag_doc and 'tag' in tag_doc else []
-            
-            # images = {}
-            # image_docs = await collection_images.find({}).to_list(length=None)
-            
-            # for doc in image_docs:
-            #     # 메타데이터에서 파일 경로 조회
-            #     metadata = await collection_metadata.find_one(
-            #         {"_id": ObjectId(doc["metadataId"])}
-            #     )
-            #     if metadata and "fileList" in metadata and metadata["fileList"]:
-            #         # 이미지의 _id와 경로 매칭하여 딕셔너리에 추가
-            #         images[str(doc["_id"])] = metadata["fileList"][0]
 
             # images 필드가 Dict[str, str] 형식으로 반환
             return TagImageResponse(
@@ -127,49 +117,88 @@ class ImageService:
         return result_ids
     
     ## 3. 이미지 Tag 필터링하기(고급 검색 기능 - AND, OR, NOT)
-    async def search_images_by_conditions(self, search_dto: List[SearchCondition], user_id: int) -> ImageSearchResponse:
+    async def search_images_by_conditions(self, search_conditions: List[SearchCondition] | None, user_id: int, page: int = 1, limit: int = 10) -> PaginationDto[List[ImageSearchResponse]]:
         try:
             # 1. tag document 가져오기
             tag_doc = await collection_tag_images.find_one({})
-            if not tag_doc or not search_dto:
-                ImageSearchResponse(images={})
-            '''
-            tag_doc = {
-                "_id": ObjectId("67284a7df0b2373f02710c8f"),
-                "tag": {
-                    "dog": ["metadata_id1", "metadata_id2", "metadata_id3"],
-                    "cat": ["metadata_id2", "metadata_id4"],
-                    "2024-01": ["metadata_id1", "metadata_id2"]
+            if not tag_doc:
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": self.PAGE_SIZE,
+                    "total_count": 0,
+                    "total_pages": 0
                 }
-            }
-            '''
-            
-            # 모든 조건 그룹을 처리하고 결과를 OR 연산으로 결합
-            final_matching_ids = set()
-            for condition in search_dto:
-                group_result = await self._process_condition_group(tag_doc, condition)
-                final_matching_ids.update(group_result)
-            
-            if not final_matching_ids:
-                return ImageSearchResponse(images={})
+            if not search_conditions:
+                allowed_images = await self._get_user_permissions(user_id)
+                if not allowed_images:
+                    return {
+                        "data": [],
+                        "page": page,
+                        "limit": limit,
+                        "total_count": 0,
+                        "total_pages": 0
+                    }
+                object_ids = [ObjectId(id) for id in allowed_images]
+            else:
+                # 모든 조건 그룹을 처리하고 결과를 OR 연산으로 결합
+                final_matching_ids = set()
+                for condition in search_conditions:
+                    group_result = await self._process_condition_group(tag_doc, condition)
+                    final_matching_ids.update(group_result)
                 
-            allowed_images = await self._filter_by_permissions(final_matching_ids, user_id)
-            if not allowed_images:
-                return ImageSearchResponse(images={})
+                if not final_matching_ids:
+                    return {
+                        "data": [],
+                        "page": page,
+                        "limit": self.PAGE_SIZE,
+                        "total_count": 0,
+                        "total_pages": 0
+                    }
+                    
+                allowed_images = await self._filter_by_permissions(final_matching_ids, user_id)
+                if not allowed_images:
+                    return {
+                        "data": [],
+                        "page": page,
+                        "limit": self.PAGE_SIZE,
+                        "total_count": 0,
+                        "total_pages": 0
+                    }
+                object_ids = [ObjectId(id) for id in allowed_images]
             
+            # 전체 개수 조회
+            base_query = {"_id": {"$in": object_ids}}
+            total_count = await collection_images.count_documents(base_query)
+            total_pages = (total_count + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+
+            # 페이지네이션을 위한 정렬 추가
+            skip = (page - 1) * self.PAGE_SIZE
+            paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(self.PAGE_SIZE).to_list(length=None)
+
 
             # 매칭된 이미지 정보 조회
-            image_data = {}
-            for image_id in final_matching_ids:
-                image = await collection_images.find_one({"_id": ObjectId(image_id)})
-                if image:
-                    metadata = await collection_metadata.find_one(
-                        {"_id": ObjectId(image["metadataId"])}
-                    )
-                    if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[image_id] = metadata["fileList"][0]
+            metadata_ids = [ObjectId(image["metadataId"]) for image in paginated_images]
+            metadata_docs = await collection_metadata.find(
+                {"_id": {"$in": metadata_ids}},
+                {"fileList": 1}
+            ).to_list(length=None)
 
-            return ImageSearchResponse(images=image_data)
+            metadata_dict = {str(doc["_id"]): doc.get("fileList", [])[0] for doc in metadata_docs}
+
+            image_list = [
+                ImageSearchResponse(images={str(image["_id"]): metadata_dict.get(str(image["metadataId"]))})
+                for image in paginated_images
+                if metadata_dict.get(str(image["metadataId"]))
+            ]
+
+            return {
+                "data": image_list,
+                "page": page,
+                "limit": self.PAGE_SIZE,
+                "total_count": total_count,
+                "total_pages": total_pages
+            }
 
         except Exception as e:
             raise HTTPException(

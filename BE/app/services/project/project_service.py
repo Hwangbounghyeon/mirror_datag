@@ -2,17 +2,14 @@ from dto.project_dto import ProjectRequest
 
 from sqlalchemy.orm import Session
 from utils.timezone import get_current_time
-from datetime import datetime, timezone
 from bson import ObjectId
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from dto.search_dto import TagImageResponse, SearchCondition, ImageSearchResponse, SearchRequest
+from dto.search_dto import SearchCondition, ImageSearchResponse
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
     collection_images,
-    collection_image_permissions, 
     collection_project_images,
     collection_project_histories, 
     collection_project_permissions, 
@@ -20,7 +17,7 @@ from configs.mongodb import (
 )
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, DepartmentResponse, UserResponse, UserRequet
+from dto.project_dto import ProjectRequest, ProjectResponse
 from models.mariadb_users import Users, Departments
 from typing import List
 
@@ -260,14 +257,19 @@ class ProjectService:
             raise HTTPException(status_code=404, detail="프로젝트를 찾을 수 없습니다.")
         
         # 2. projectPermissions에서 삭제
-        await collection_project_permissions.update_many(
-            {},
-            {"$pull": {f"user.$[].view": project_id, f"user.$[].edit": project_id}}
-        )
-        await collection_project_permissions.update_many(
-            {},
-            {"$pull": {f"department.Production Management.view": project_id, f"department.Production Management.edit": project_id}}
-        )
+        permissions = await collection_project_permissions.find_one()
+        users = permissions.get("user")
+        departments = permissions.get("department")
+        for i in users:
+            await collection_project_permissions.update_many(
+                {},
+                {"$pull": {f"user.{i}.view": project_id, f"user.{i}.edit": project_id}}
+            )
+        for j in departments:
+            await collection_project_permissions.update_many(
+                {},
+                {"$pull": {f"department.{j}.view": project_id, f"department.{j}.edit": project_id}}
+            )
         
         # 3. projectHistories에서 삭제
         await collection_project_histories.update_one(
@@ -275,53 +277,23 @@ class ProjectService:
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
 
-        # 4. projectImages에서 삭제
+        # 4. metadata 에서 삭제
+        projectImages = await collection_project_images.find_one({"project": project_id})
+        if projectImages and "project" in projectImages and projectImages["project"]:
+            for m in projectImages["project"]:
+                images = await collection_images.find_one({"_id": ObjectId(m)})
+                if images and "metadataId" in images:
+                    imageMetadataId = images["metadataId"]
+                    await collection_metadata.update_one(
+                        {"_id": ObjectId(imageMetadataId)},
+                        {"$pull": {"metadata.accessControl.projects": project_id}}
+                    )
+
+        # 5. projectImages에서 삭제
         await collection_project_images.update_one(
             {},
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
-
-        # 5. metadata 에서 삭제
-        await collection_metadata.update_many(
-            {},
-            {"$pull": {"metadata.accessControl.projects": project_id}}
-        )
-
-    # # 1-3. 프로젝트 삭제
-    # async def delete_project(self, project_id: str):
-    #     # MariaDB에서 project 조회 및 삭제
-    #     delete_project = await collection_projects.delete_one({"_id": ObjectId(project_id)})
-    #     if delete_project.deleted_count == 0:
-    #         raise HTTPException(
-    #             status_code=404,
-    #             detail="프로젝트를 찾을 수 없습니다."
-    #         )
-
-    #     document = await collection_project_permissions.find_one({})
-
-    #     if document:
-    #         # user 필드에서 project_id 제거
-    #         for user_id, permissions in document.get("user", {}).items():
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"user.{user_id}.view": project_id}}
-    #             )
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"user.{user_id}.edit": project_id}}
-    #             )
-
-    #         # department 필드에서 project_id 제거
-    #         for department, permissions in document.get("department", {}).items():
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"department.{department}.view": project_id}}
-    #             )
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"department.{department}.edit": project_id}}
-    #             )
-
 
     # 2. 각 그룹별로 Tag 필터링
     async def _process_condition_group(self, tag_doc: dict, condition: SearchCondition) -> set:
@@ -363,37 +335,110 @@ class ProjectService:
 
         return result_ids
 
-    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> ImageSearchResponse:
+    async def search_project_images(self, project_id: str, search_conditions: List[SearchCondition] | None, page: int = 1,limit: int = 10) -> PaginationDto[ImageSearchResponse]:
         try:
+            # 1. project_images 가져오기
             project_images = await collection_project_images.find_one({})
             if not project_images or "project" not in project_images:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
 
             project_image_ids = set(project_images["project"].get(project_id, []))
             if not project_image_ids:
-                return ImageSearchResponse(images={})
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
             
-            # 검색 조건이 있는 경우에만 필터링 적용
-            if search_request and search_request.conditions:
-                tag_doc = await collection_tag_images.find_one({})
-                if tag_doc:
-                    matching_ids = set()
-                    for condition in search_request.conditions:
-                        group_result = await self._process_condition_group(tag_doc, condition)
-                        matching_ids.update(group_result)
-                    project_image_ids &= matching_ids
+            # 2. conditions 처리
+            tag_doc = await collection_tag_images.find_one({})
+            if not tag_doc:
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
 
-            image_data = {}
-            for image_id in project_image_ids:
-                image = await collection_images.find_one({"_id": ObjectId(image_id)})
-                if image:
-                    metadata = await collection_metadata.find_one(
-                        {"_id": ObjectId(image["metadataId"])}
-                    )
-                    if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[image_id] = metadata["fileList"][0]
+            if not search_conditions:
+                final_matching_ids = project_image_ids
+            else:
+                final_matching_ids = set()
+                for condition in search_conditions:
+                    group_result = await self._process_condition_group(tag_doc, condition)
+                    final_matching_ids.update(group_result)
+                
+                if not final_matching_ids:
+                    return {
+                        "data": [],
+                        "page": page,
+                        "limit": limit,
+                        "total_count": 0,
+                        "total_pages": 0
+                    }
+                
+                final_matching_ids &= project_image_ids
+            
+            if not final_matching_ids:
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
 
-            return ImageSearchResponse(images=image_data)
+            # 3. 페이지네이션 및 정렬
+            object_ids = [ObjectId(id) for id in final_matching_ids]
+            base_query = {"_id": {"$in": object_ids}}
+            
+            total_count = await collection_images.count_documents(base_query)
+            total_pages = (total_count + limit - 1) // limit
+
+            skip = (page - 1) * limit
+            paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(limit).to_list(length=None)
+
+            # 4. metadata 한 번에 조회
+            metadata_ids = [ObjectId(image["metadataId"]) for image in paginated_images]
+            metadata_docs = await collection_metadata.find(
+                {"_id": {"$in": metadata_ids}},
+                {"fileList": 1}
+            ).to_list(length=None)
+
+            metadata_dict = {str(doc["_id"]): doc.get("fileList", [])[0] for doc in metadata_docs}
+
+            # 5. 결과 생성
+            image_list = [
+                ImageSearchResponse(images={str(image["_id"]): metadata_dict.get(str(image["metadataId"]))})
+                for image in paginated_images
+                if metadata_dict.get(str(image["metadataId"]))
+            ]
+
+            return {
+                "data": image_list,
+                "page": page,
+                "limit": limit,
+                "total_count": total_count,
+                "total_pages": total_pages
+            }
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+    
+    # 3. 모델 리스트 호출
+    async def get_model_list(self):
+        model_list = {
+            "cls": ["vgg19_bn", "mobilenetv2_x1_4", "repvgg_a2"],
+            "det": ["yolov5n", "yolov8n", "yolo11n"]
+        }
+        
+        return model_list

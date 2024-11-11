@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
+from pydantic import BaseModel
+from typing import List
 from datetime import datetime
-from bson import ObjectId
 
 class Feature(BaseModel):
     projectId: str

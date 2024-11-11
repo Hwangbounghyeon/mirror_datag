@@ -2,7 +2,7 @@ from fastapi import  HTTPException
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict
 import mimetypes
 import zipfile
 import requests
@@ -43,13 +43,13 @@ class UploadService:
 
         await self._mapping_user_upload_batches(upload_request.project_id, user_id, inserted_id)
 
-        file_urls = await self._upload_s3(files)
+        file_data = await self._upload_s3(files)
 
-        await self._analysis_data(upload_request, model_name, task, file_urls, user_id, department_id)
+        await self._analysis_data(upload_request, model_name, task, file_data, user_id, department_id)
 
         await self._after_save_upload_batch(inserted_id)
 
-        return file_urls
+        return file_data
         
     async def _before_save_upload_batch(self, upload_request: UploadRequest, user_id: int) -> str:
         try:
@@ -72,19 +72,50 @@ class UploadService:
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
 
-    async def _upload_s3(self, files: list) -> List[str]:
-        file_urls = []
+    async def _upload_s3(self, files: list) -> Dict[str, List[Dict[str, str]]]:
+        file_data = {
+            "urls": [],
+            "labels": []
+        }
+        
+        json_labels = {}
+
+        # 먼저 JSON 파일들을 처리하여 json_labels에 저장
+        for file in files:
+            if file.filename.endswith(".json"):
+                try:
+                    # JSON 파일 내용을 읽고 라벨 데이터로 저장
+                    json_content = json.loads(await file.read())
+                    json_labels.update(json_content)
+                except json.JSONDecodeError:
+                    raise HTTPException(status_code=400, detail="JSON파일의 형식이 틀립니다.")
+                
 
         for file in files:
+            if file.filename.endswith(".json"):
+                continue
+        
             if file.filename.endswith("zip"):
                 contents = await file.read()
 
                 try:
                     with zipfile.ZipFile(io.BytesIO(contents)) as zip_file:
                         extracted_files = zip_file.namelist()
+                        
+                        # ZIP 파일에서 JSON 파일 찾기 및 읽기
+                        for filename in extracted_files:
+                            if filename.endswith(".json"):
+                                with zip_file.open(filename) as json_file:
+                                    try:
+                                        json_content = json.load(json_file)
+                                        json_labels.update(json_content)
+                                    except json.JSONDecodeError:
+                                        raise HTTPException(status_code=400, detail="ZIP 파일 안의 JSON파일 형식이 틀립니다.")
+                                    
                         for filename in extracted_files:
                             if not self.is_image(filename):
                                 continue
+                            
                             # ZIP 파일 내부에서 각 파일 읽기
                             with zip_file.open(filename) as extracted_file:
                                 file_extension = os.path.splitext(extracted_file.name)[1]
@@ -93,7 +124,13 @@ class UploadService:
                                 # S3에 파일 업로드
                                 upload_to_s3(extracted_file, BUCKENAME, file_name)
                                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
-                                file_urls.append(s3_url)
+                                file_data["urls"].append(s3_url)
+                                label_info = json_labels.get(filename, {"label": [], "bounding_boxes": []})
+                                file_data["labels"].append({
+                                    "url": s3_url,
+                                    "label": label_info.get("labels", []),
+                                    "bounding_boxes": label_info.get("bounding_boxes", [])
+                                })
 
                 except zipfile.BadZipFile:
                     raise HTTPException(status_code=400, detail="Uploaded file is not a valid ZIP file.")
@@ -116,16 +153,22 @@ class UploadService:
                 upload_to_s3(file.file, BUCKENAME, file_name)
     
                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
-                file_urls.append(s3_url)
+                file_data["urls"].append(s3_url)
+                label_info = json_labels.get(file.filename, {"label": [], "bounding_boxes": []})
+                file_data["labels"].append({
+                    "url": s3_url,
+                    "label": label_info.get("labels", []),
+                    "bounding_boxes": label_info.get("bounding_boxes", [])
+                })
 
-        return file_urls
+        return file_data
     
     async def _analysis_data(
         self, 
         upload_request: UploadRequest, 
         model_name: str, 
         task: str, 
-        file_urls: List[str], 
+        file_data: Dict[str, List[Dict[str, str]]], 
         user_id: int, 
         department_id: int
     ):
@@ -141,7 +184,7 @@ class UploadService:
             department_name = "None"
 
         data = {
-            "image_urls": file_urls,
+            "image_data": file_data["labels"],
             "model_name": model_name,
             "department_name": department_name,
             "user_id": user_id,

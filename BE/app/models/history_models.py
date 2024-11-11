@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from pydantic import BaseModel
+from typing import List, Any
 from datetime import datetime
-from bson import ObjectId
 
 class Parameters(BaseModel):
     selectedAlgorithm: str
@@ -19,7 +18,7 @@ class HistoryData(BaseModel):
     isPrivate: bool
     historyName: str
     isDone: bool
-    parameters: Optional[Parameters] = None
-    results: Optional[List[ReductionResults]] = None
+    parameters: Parameters | None = None
+    results: List[ReductionResults] | None = None
     createdAt: datetime
     updatedAt: datetime

@@ -41,9 +41,11 @@ class ClassificationService:
                     detail="Classification Model Not Found"
                 )
 
-            temp_result = []
-
-            for url in request.image_urls:
+            for image_entry in request.image_data:
+                url = image_entry['url']
+                label = image_entry.get('label')
+                bounding_boxes = image_entry.get('bounding_boxes', [])
+                
                 image_data = self.preprocess_service.load_image_from_s3(url)
                 image_data = Image.open(BytesIO(image_data))
                 image_tensor = self.preprocess_service.process_image(image_data, (32, 32), use_normalize=True)
@@ -71,7 +73,12 @@ class ClassificationService:
 
                 features_id = await self.classification_metadata_service.upload_feature(features)
 
-                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id)
+                if label:
+                    label_id = await self.classification_metadata_service.upload_label_data(label, bounding_boxes)
+                else:
+                    label_id = None
+
+                image_id = await self.image_service.save_images_mongodb(metadata_id, features_id, label_id)
 
                 for tag in tags:
                     await self.classification_metadata_service.mapping_image_tags_mongodb(tag, image_id)
