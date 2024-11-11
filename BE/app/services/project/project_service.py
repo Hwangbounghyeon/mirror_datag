@@ -257,14 +257,19 @@ class ProjectService:
             raise HTTPException(status_code=404, detail="프로젝트를 찾을 수 없습니다.")
         
         # 2. projectPermissions에서 삭제
-        await collection_project_permissions.update_many(
-            {},
-            {"$pull": {f"user.$[].view": project_id, f"user.$[].edit": project_id}}
-        )
-        await collection_project_permissions.update_many(
-            {},
-            {"$pull": {f"department.Production Management.view": project_id, f"department.Production Management.edit": project_id}}
-        )
+        permissions = await collection_project_permissions.find_one()
+        users = permissions.get("user")
+        departments = permissions.get("department")
+        for i in users:
+            await collection_project_permissions.update_many(
+                {},
+                {"$pull": {f"user.{i}.view": project_id, f"user.{i}.edit": project_id}}
+            )
+        for j in departments:
+            await collection_project_permissions.update_many(
+                {},
+                {"$pull": {f"department.{j}.view": project_id, f"department.{j}.edit": project_id}}
+            )
         
         # 3. projectHistories에서 삭제
         await collection_project_histories.update_one(
@@ -272,53 +277,23 @@ class ProjectService:
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
 
-        # 4. projectImages에서 삭제
+        # 4. metadata 에서 삭제
+        projectImages = await collection_project_images.find_one({"project": project_id})
+        if projectImages and "project" in projectImages and projectImages["project"]:
+            for m in projectImages["project"]:
+                images = await collection_images.find_one({"_id": ObjectId(m)})
+                if images and "metadataId" in images:
+                    imageMetadataId = images["metadataId"]
+                    await collection_metadata.update_one(
+                        {"_id": ObjectId(imageMetadataId)},
+                        {"$pull": {"metadata.accessControl.projects": project_id}}
+                    )
+
+        # 5. projectImages에서 삭제
         await collection_project_images.update_one(
             {},
             {"$pull": {f"project.{project_id}": {"$exists": True}}}
         )
-
-        # 5. metadata 에서 삭제
-        await collection_metadata.update_many(
-            {},
-            {"$pull": {"metadata.accessControl.projects": project_id}}
-        )
-
-    # # 1-3. 프로젝트 삭제
-    # async def delete_project(self, project_id: str):
-    #     # MariaDB에서 project 조회 및 삭제
-    #     delete_project = await collection_projects.delete_one({"_id": ObjectId(project_id)})
-    #     if delete_project.deleted_count == 0:
-    #         raise HTTPException(
-    #             status_code=404,
-    #             detail="프로젝트를 찾을 수 없습니다."
-    #         )
-
-    #     document = await collection_project_permissions.find_one({})
-
-    #     if document:
-    #         # user 필드에서 project_id 제거
-    #         for user_id, permissions in document.get("user", {}).items():
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"user.{user_id}.view": project_id}}
-    #             )
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"user.{user_id}.edit": project_id}}
-    #             )
-
-    #         # department 필드에서 project_id 제거
-    #         for department, permissions in document.get("department", {}).items():
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"department.{department}.view": project_id}}
-    #             )
-    #             await collection_project_permissions.update_one(
-    #                 {"_id": document["_id"]},
-    #                 {"$pull": {f"department.{department}.edit": project_id}}
-    #             )
-
 
     # 2. 각 그룹별로 Tag 필터링
     async def _process_condition_group(self, tag_doc: dict, condition: SearchCondition) -> set:
