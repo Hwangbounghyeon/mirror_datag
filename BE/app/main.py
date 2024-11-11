@@ -56,6 +56,10 @@ async def startup_db_client(app: FastAPI):
     get_database_mariadb()
     yield
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

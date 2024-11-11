@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY}/backend:${IMAGE_TAG:-lts}
+    image: ${DOCKER_REGISTRY}/s108_backend:${GIT_VERSION}
     env_file:
       - .env
     ports:
@@ -12,11 +12,17 @@ services:
     networks:
       - be-redis
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s # 30초마다 체크
-      timeout: 10s # 10초 안에 응답이 없으면 실패
-      retries: 3 # 3번 연속 실패하면 unhealthy로 판단
-      start_period: 40s # 컨테이너 시작 후 40초는 체크 제외
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://${EC2_HOST}}:${HEALTH_CHECK_PORT:-8000}${HEALTH_CHECK_PATH:-/health}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       resources:
         limits:
