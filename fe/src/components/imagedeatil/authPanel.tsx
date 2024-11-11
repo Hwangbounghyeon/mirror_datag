@@ -8,7 +8,7 @@ import { AuthUser } from "@/types/auth";
 interface AuthorityPanelProps {
     authorities: AuthUser[];
     onRemove: (userId: number) => void;
-    onAdd: (userIds: number[]) => void;
+    onAdd: (userIds: string[]) => void;
 }
 
 function AuthPanel({ authorities, onRemove, onAdd }: AuthorityPanelProps) {
