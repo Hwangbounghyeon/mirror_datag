@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from dto.search_dto import SearchCondition
 
 # 모델 추론 공통 Request Dto
 class DimensionReductionRequest(BaseModel):
@@ -7,7 +8,7 @@ class DimensionReductionRequest(BaseModel):
     project_id: str
     history_name: str
     is_private: bool
-    selected_tags: List[List[str]]
+    selected_tags: List[SearchCondition]
     image_ids: List[str]
 
 # 모델 추론 공통 Response Dto
