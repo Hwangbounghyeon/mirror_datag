@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoFilter } from "react-icons/io5";
-import { TagBySearchRequest } from "@/types/tag";
+import { FilterCondition, TagBySearchRequest } from "@/types/tag";
 import { createInitialRow, FilterRow } from "@/components/loadimage/filterBox";
 import BatchList from "@/components/image/BatchList";
 import { FilterModal } from "@/components/loadimage/filterModal";
@@ -12,11 +12,59 @@ interface FilterSectionProps {
     onFilterApply: (filterData: TagBySearchRequest) => void;
 }
 
-export function FilterSection({ tags, onFilterApply }: FilterSectionProps) {
+export function FilterSection({
+    tags,
+    onFilterApply,
+    currentFilter,
+}: FilterSectionProps & { currentFilter: TagBySearchRequest }) {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-    const [filterRows, setFilterRows] = useState<FilterRow[]>([
-        createInitialRow(),
-    ]);
+    const [filterRows, setFilterRows] = useState<FilterRow[]>(() => {
+        return currentFilter.conditions.map((condition: FilterCondition) => ({
+            id: crypto.randomUUID(),
+            AND: condition.and_condition || [],
+            OR: condition.or_condition || [],
+            NOT: condition.not_condition || [],
+        }));
+        return [createInitialRow()];
+    });
+
+    useEffect(() => {
+        if (isFilterOpen) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const filterParam = searchParams.get("filter");
+
+            if (filterParam) {
+                try {
+                    const parsedFilter = JSON.parse(
+                        decodeURIComponent(filterParam)
+                    );
+                    const newFilterRows = parsedFilter.conditions.map(
+                        (condition: FilterCondition) => ({
+                            id: crypto.randomUUID(),
+                            AND: condition.and_condition || [],
+                            OR: condition.or_condition || [],
+                            NOT: condition.not_condition || [],
+                        })
+                    );
+                    setFilterRows(newFilterRows);
+                } catch {
+                    setFilterRows([createInitialRow()]);
+                }
+            }
+        }
+    }, [isFilterOpen]);
+
+    useEffect(() => {
+        const newFilterRows = currentFilter.conditions.map(
+            (condition: FilterCondition) => ({
+                id: crypto.randomUUID(),
+                AND: condition.and_condition || [],
+                OR: condition.or_condition || [],
+                NOT: condition.not_condition || [],
+            })
+        );
+        setFilterRows(newFilterRows);
+    }, [currentFilter]);
 
     const handleDone = (filterData: TagBySearchRequest) => {
         onFilterApply(filterData);
