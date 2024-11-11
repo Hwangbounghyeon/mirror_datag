@@ -438,10 +438,19 @@ class ProjectService:
         
         return model_list
     
-    # 4. 선택한 이미지 project에 저장
+    # 4. 선택한 이미지를 project에 저장
     async def get_add_image(self, request: AddImageRequest):
-        collection_project_images.find_one_and_update(
-            {},
-            {"$set": request.image_ids}
+        document = collection_project_images.find_one({"project." + request.project_id: {"$exists": True}})
+    
+        if not document:
+            raise HTTPException(status_code=404, detail="Project ID not found")
+
+        result = collection_project_images.update_one(
+            {"_id": document["_id"]},
+            {"$set": {f"project.{request.project_id}": request.image_ids}}
         )
-        return
+        
+        if result.modified_count > 0:
+            return "Image를 성공적으로 업데이트하였습니다."
+        else:
+            raise HTTPException(status_code=500, detail="Image 업데이트에 실패하였습니다.")
