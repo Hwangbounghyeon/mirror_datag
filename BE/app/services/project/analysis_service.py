@@ -40,36 +40,79 @@ class AnalysisService:
 
             ai_results = image_metadata["aiResults"][0]
             predictions = ai_results["predictions"][0]
-            iou = None
 
             # feature의 클래스 수만큼 반복
             if ai_results["task"] == "det":
-                for j in range(len(image_features[i])):  # 클래스 수만큼 반복
-                    if len(label_info["bounding_boxes"]) != 0:
-                        iou = 0
-                        for k in range(len(label_info["bounding_boxes"])):
-                            iou = max(iou, self._iou(predictions["detections"][j]["bbox"], label_info["bounding_boxes"][k]))
-                        if iou < 0.6:
-                            iou = None
+                used_predictions = set()
+                used_labels = set()
+                
+                # Ground Truth (label_info)와 Predictions 매핑
+                if label_info:
+                    for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
+                        max_iou = 0
+                        best_match_idx = None
 
-                    concat_image_infos.append({
-                        "imageId": request.image_ids[i],
-                        "predictions": predictions["detections"][j],
-                        "label": label_info["label"] if label_info else None,
-                        "iou": iou,
-                        "imageUrl": image_metadata["fileList"][0],
-                    })
+                        # 각 label bounding box에 대해 predictions와의 IoU 계산
+                        for pred_idx, prediction in enumerate(predictions["detections"]):
+                            if pred_idx not in used_predictions:
+                                current_iou = self._iou(prediction["bbox"], label_box)
+                                if current_iou > max_iou:
+                                    max_iou = current_iou
+                                    best_match_idx = pred_idx
+
+                        # 매핑 기준에 따른 처리
+                        if max_iou >= 0.6 and best_match_idx is not None:
+                            used_predictions.add(best_match_idx)
+                            used_labels.add(label_idx)
+
+                            concat_image_infos.append({
+                                "imageId": request.image_ids[i],
+                                "predictions": predictions["detections"][best_match_idx],
+                                "label": label_info["label"][0] if "label" in label_info else None,  # label 가져오기
+                                "iou": max_iou,
+                                "imageUrl": image_metadata["fileList"][0],
+                            })
+                        else:
+                            # IoU가 기준보다 낮은 경우
+                            concat_image_infos.append({
+                                "imageId": request.image_ids[i],
+                                "predictions": None,
+                                "label": label_info["label"][0] if "label" in label_info else None,
+                                "iou": max_iou,
+                                "imageUrl": image_metadata["fileList"][0],
+                            })
+
+                    # 남은 label 처리
+                    for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
+                        if label_idx not in used_labels:
+                            concat_image_infos.append({
+                                "imageId": request.image_ids[i],
+                                "predictions": None,
+                                "label": label_info["label"][0] if "label" in label_info else None,
+                                "iou": None,
+                                "imageUrl": image_metadata["fileList"][0],
+                            })
+
+                # 남은 prediction 처리
+                for pred_idx, prediction in enumerate(predictions["detections"]):
+                    if pred_idx not in used_predictions:
+                        concat_image_infos.append({
+                            "imageId": request.image_ids[i],
+                            "predictions": prediction,
+                            "label": None,
+                            "iou": None,
+                            "imageUrl": image_metadata["fileList"][0],
+                        })
             else:
-                for j in range(len(image_features[i])):  # 클래스 수만큼 반복
-                    concat_image_infos.append({
-                        "imageId": request.image_ids[i],
-                        "predictions": {
-                            "prediction": predictions["prediction"],
-                            "confidence": predictions["confidence"]
-                        },
-                        "label": label_info["label"][0] if label_info else None,
-                        "imageUrl": image_metadata["fileList"][0]
-                    })
+                concat_image_infos.append({
+                    "imageId": request.image_ids[i],
+                    "predictions": {
+                        "prediction": predictions["prediction"],
+                        "confidence": predictions["confidence"]
+                    },
+                    "label": label_info["label"][0] if label_info else None,
+                    "imageUrl": image_metadata["fileList"][0]
+                })
                     
         # features concatenate
         concat_features = self._concatenate_array(image_features)
@@ -80,8 +123,16 @@ class AnalysisService:
         else:
             reduction_features = self._dimension_reduction_UMAP(concat_features)
 
+        feature_idx = 0
         for i in range(len(concat_image_infos)):
-            concat_image_infos[i]["features"] = reduction_features[i]
+            print(feature_idx, " | " ,i)
+            if concat_image_infos[i]["predictions"] is not None:
+                # predictions가 있는 경우에만 feature 추가
+                concat_image_infos[i]["features"] = reduction_features[feature_idx]
+                feature_idx += 1
+            else:
+                # predictions가 없는 경우 feature를 None으로 설정
+                concat_image_infos[i]["features"] = None
 
         # 작업 완료
         await self._save_history_completed_mongodb(inserted_id, concat_image_infos)
