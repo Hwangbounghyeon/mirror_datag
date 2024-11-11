@@ -25,26 +25,15 @@ class SearchCondition(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    page: int
-    limit: int
-    conditions: List[SearchCondition] | None = None
-
+    and_condition: List[str] = []
+    or_condition: List[str] = []
+    not_condition: List[str] = []
+    
     class Config:
         json_schema_extra = {
             "example": {
-                "page": 1,
-                "limit": 10,
-                "conditions": [
-                    {
-                        "and_condition": ["cat", "Seoul"],
-                        "or_condition": ["2024_11"],
-                        "not_condition": ["Zone A"]
-                    },
-                    {
-                        "and_condition": ["dog", "Busan"],
-                        "or_condition": [],
-                        "not_condition": ["Zone B"]
-                    }
-                ]
+                "and_condition": ["cat"],
+                "or_condition": ["dog"],
+                "not_condition": ["Busan"]
             }
         }

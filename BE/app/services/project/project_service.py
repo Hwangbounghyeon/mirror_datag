@@ -360,19 +360,13 @@ class ProjectService:
 
         return result_ids
 
-    async def search_project_images(self, project_id: str, search_request: SearchRequest | None, user_id: int) -> PaginationDto[ImageSearchResponse]:
+    async def search_project_images(self, project_id: str, search_conditions: List[SearchCondition] | None, page: int = 1, limit: int = 10) -> PaginationDto[ImageSearchResponse]:
         try:
-            if not search_request:
-                page = 1
-                limit = 10
-            else:
-                page = search_request.page
-                limit = search_request.limit
-
+            # 1. project_images 가져오기
             project_images = await collection_project_images.find_one({})
             if not project_images or "project" not in project_images:
                 return {
-                    "data": {},
+                    "data": [],
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
@@ -382,46 +376,83 @@ class ProjectService:
             project_image_ids = set(project_images["project"].get(project_id, []))
             if not project_image_ids:
                 return {
-                    "data": {},
+                    "data": [],
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
                     "total_pages": 0
                 }
             
-            # 검색 조건이 있는 경우에만 필터링 적용
-            if search_request and search_request.conditions:
-                tag_doc = await collection_tag_images.find_one({})
-                if tag_doc:
-                    matching_ids = set()
-                    for condition in search_request.conditions:
-                        group_result = await self._process_condition_group(tag_doc, condition)
-                        matching_ids.update(group_result)
-                    project_image_ids &= matching_ids
+            # 2. conditions 처리
+            tag_doc = await collection_tag_images.find_one({})
+            if not tag_doc:
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
 
-            total_images = len(project_image_ids)
-            total_pages = (total_images + limit - 1) // limit
-
-            start_idx = (page - 1) * limit
-            end_idx = start_idx + limit
-
-            paginated_image_ids = list(project_image_ids)[start_idx:end_idx]
-
-            image_data = {}
-            for image_id in paginated_image_ids:
-                image = await collection_images.find_one({"_id": ObjectId(image_id)})
-                if image:
-                    metadata = await collection_metadata.find_one(
-                        {"_id": ObjectId(image["metadataId"])}
-                    )
-                    if metadata and "fileList" in metadata and metadata["fileList"]:
-                        image_data[image_id] = metadata["fileList"][0]
+            if not search_conditions:
+                final_matching_ids = project_image_ids
+            else:
+                final_matching_ids = set()
+                for condition in search_conditions:
+                    group_result = await self._process_condition_group(tag_doc, condition)
+                    final_matching_ids.update(group_result)
+                
+                if not final_matching_ids:
+                    return {
+                        "data": [],
+                        "page": page,
+                        "limit": limit,
+                        "total_count": 0,
+                        "total_pages": 0
+                    }
+                
+                final_matching_ids &= project_image_ids
             
+            if not final_matching_ids:
+                return {
+                    "data": [],
+                    "page": page,
+                    "limit": limit,
+                    "total_count": 0,
+                    "total_pages": 0
+                }
+
+            # 3. 페이지네이션 및 정렬
+            object_ids = [ObjectId(id) for id in final_matching_ids]
+            base_query = {"_id": {"$in": object_ids}}
+            
+            total_count = await collection_images.count_documents(base_query)
+            total_pages = (total_count + limit - 1) // limit
+
+            skip = (page - 1) * limit
+            paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(limit).to_list(length=None)
+
+            # 4. metadata 한 번에 조회
+            metadata_ids = [ObjectId(image["metadataId"]) for image in paginated_images]
+            metadata_docs = await collection_metadata.find(
+                {"_id": {"$in": metadata_ids}},
+                {"fileList": 1}
+            ).to_list(length=None)
+
+            metadata_dict = {str(doc["_id"]): doc.get("fileList", [])[0] for doc in metadata_docs}
+
+            # 5. 결과 생성
+            image_list = [
+                ImageSearchResponse(images={str(image["_id"]): metadata_dict.get(str(image["metadataId"]))})
+                for image in paginated_images
+                if metadata_dict.get(str(image["metadataId"]))
+            ]
+
             return {
-                "data": ImageSearchResponse(images=image_data),
+                "data": image_list,
                 "page": page,
                 "limit": limit,
-                "total_count": total_images,
+                "total_count": total_count,
                 "total_pages": total_pages
             }
 
