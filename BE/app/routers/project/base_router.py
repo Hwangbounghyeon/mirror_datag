@@ -9,7 +9,7 @@ from dto.pagination_dto import PaginationDto
 from dto.project_dto import ProjectRequest, ProjectResponse
 from services.project.project_service import ProjectService
 from services.auth.auth_service import JWTManage
-from dto.search_dto import SearchRequest, ImageSearchResponse, SearchCondition
+from dto.search_dto import ImageSearchResponse, SearchCondition, SearchRequest
 from dto.uploads_dto import UploadRequest
 from services.project.upload_service import UploadService
 import json
@@ -97,19 +97,19 @@ async def delete_project(
 @router.post("/image/{project_id}/list", response_model=CommonResponse[PaginationDto[List[ImageSearchResponse]]])
 async def search_project_images(
     project_id: str,
-    conditions: List[SearchCondition] = Body(default=[]),
+    conditions: SearchRequest = Body(default=None),
     page: int = Query(1, ge=1, description="페이지 번호"),
     limit: int = Query(10, ge=1, le=100, description="페이지당 항목 수"),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
-        jwt = JWTManage(db)
+        conditions = conditions or SearchRequest()
         
         project_service = ProjectService(db)
         result = await project_service.search_project_images(
             project_id, 
-            conditions,
+            conditions.conditions,
             page,
             limit
         )
