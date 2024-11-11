@@ -1,13 +1,24 @@
 import { Modal, ModalContent, ModalHeader, ModalBody } from "@nextui-org/react";
-import FilterComponent from "./filterBox";
+import FilterComponent, { FilterRow } from "./filterBox";
+import { TagBySearchRequest } from "@/types/tag";
 
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onDone: () => void;
+    onDone: (filterData: TagBySearchRequest) => void;
+    tags: string[];
+    filterRows: FilterRow[];
+    setFilterRows: (rows: FilterRow[]) => void;
 }
 
-export const FilterModal = ({ isOpen, onClose, onDone }: FilterModalProps) => {
+export const FilterModal = ({
+    isOpen,
+    onClose,
+    onDone,
+    tags,
+    filterRows,
+    setFilterRows,
+}: FilterModalProps) => {
     return (
         <Modal
             size="3xl"
@@ -29,7 +40,15 @@ export const FilterModal = ({ isOpen, onClose, onDone }: FilterModalProps) => {
                         </ModalHeader>
 
                         <ModalBody>
-                            <FilterComponent onDone={onDone} />
+                            <FilterComponent
+                                onDone={(filterData) => {
+                                    onDone(filterData);
+                                    onClose();
+                                }}
+                                tags={tags}
+                                filterRows={filterRows}
+                                setFilterRows={setFilterRows}
+                            />
                         </ModalBody>
                     </>
                 )}

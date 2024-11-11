@@ -1,56 +1,89 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Select, SelectItem, Button } from "@nextui-org/react";
 import { IoCloseOutline } from "react-icons/io5";
+import { TagBySearchRequest } from "@/types/tag";
 
-interface FilterRow {
+export interface FilterRow {
     id: string;
     AND: string[];
     OR: string[];
     NOT: string[];
 }
 
-const INITIAL_ROW = {
-    id: Date.now().toString(),
+export const createInitialRow = () => ({
+    id: crypto.randomUUID(),
     AND: [],
     OR: [],
     NOT: [],
-};
+});
 
-const SELECT_OPTIONS = {
-    fields: ["Ops", "Design", "Design Status", "Ops Status"],
-};
+interface FilterComponentProps {
+    onDone: (filterData: TagBySearchRequest) => void;
+    tags: string[];
+    filterRows: FilterRow[];
+    setFilterRows: (rows: FilterRow[]) => void;
+}
 
-const FilterSelect = ({
-    type,
-    value,
-    onChange,
-    placeholder,
-    disabledOptions,
-}: {
-    type: keyof typeof SELECT_OPTIONS;
-    value: Set<string>;
-    onChange: (values: string[]) => void;
-    placeholder: string;
-    disabledOptions: Set<string>;
-}) => (
-    <Select
-        size="sm"
-        selectionMode="multiple"
-        placeholder={placeholder}
-        selectedKeys={value}
-        disabledKeys={disabledOptions}
-        onSelectionChange={(keys) => {
-            onChange(Array.from(keys as Set<string>));
-        }}
-    >
-        {SELECT_OPTIONS[type].map((option) => (
-            <SelectItem key={option}>{option}</SelectItem>
-        ))}
-    </Select>
-);
+const FilterComponent = ({
+    onDone,
+    tags,
+    filterRows,
+    setFilterRows,
+}: FilterComponentProps) => {
+    const SELECT_OPTIONS = {
+        fields: tags,
+    };
 
-const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
-    const [filterRows, setFilterRows] = useState<FilterRow[]>([INITIAL_ROW]);
+    const FilterSelect = ({
+        type,
+        value,
+        onChange,
+        placeholder,
+        disabledOptions,
+    }: {
+        type: keyof typeof SELECT_OPTIONS;
+        value: Set<string>;
+        onChange: (values: string[]) => void;
+        placeholder: string;
+        disabledOptions: Set<string>;
+    }) => (
+        <Select
+            size="sm"
+            selectionMode="multiple"
+            placeholder={placeholder}
+            selectedKeys={value}
+            disabledKeys={disabledOptions}
+            aria-label={placeholder}
+            onSelectionChange={(keys) => {
+                onChange(Array.from(keys as Set<string>));
+            }}
+        >
+            {SELECT_OPTIONS[type].map((option) => (
+                <SelectItem key={option} value={option}>
+                    {option}
+                </SelectItem>
+            ))}
+        </Select>
+    );
+
+    const transformFilterData = () => {
+        const conditions = filterRows
+            .filter(
+                (row) =>
+                    row.AND.length > 0 ||
+                    row.OR.length > 0 ||
+                    row.NOT.length > 0
+            )
+            .map((row) => ({
+                and_condition: row.AND,
+                or_condition: row.OR,
+                not_condition: row.NOT,
+            }));
+
+        return {
+            conditions: conditions,
+        };
+    };
 
     const getDisabledOptions = (
         rowIndex: number,
@@ -83,6 +116,19 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
         setFilterRows(newRows);
     };
 
+    const handleReset = () => {
+        setFilterRows([createInitialRow()]);
+        onDone?.({
+            conditions: [
+                {
+                    and_condition: [],
+                    or_condition: [],
+                    not_condition: [],
+                },
+            ],
+        });
+    };
+
     useEffect(() => {
         const lastRow = filterRows[filterRows.length - 1];
         if (
@@ -90,9 +136,9 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
             lastRow.OR.length > 0 ||
             lastRow.NOT.length > 0
         ) {
-            setFilterRows([...filterRows, INITIAL_ROW]);
+            setFilterRows([...filterRows, createInitialRow()]);
         }
-    }, [filterRows]);
+    }, [filterRows, setFilterRows]);
 
     return (
         <div className="p-3 space-y-2 min-w-[600px]">
@@ -142,7 +188,7 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                             setFilterRows(
                                 filterRows.length > 1
                                     ? filterRows.filter((_, i) => i !== index)
-                                    : [INITIAL_ROW]
+                                    : [createInitialRow()]
                             );
                         }}
                         className="p-1 hover:bg-gray-100 rounded-full"
@@ -152,13 +198,16 @@ const FilterComponent = ({ onDone }: { onDone?: () => void }) => {
                 </div>
             ))}
             <div className="flex justify-end pt-3 gap-4">
-                <Button
-                    color="danger"
-                    onPress={() => setFilterRows([INITIAL_ROW])}
-                >
+                <Button color="danger" onPress={handleReset}>
                     Reset
                 </Button>
-                <Button color="primary" onPress={onDone}>
+                <Button
+                    color="primary"
+                    onPress={() => {
+                        const filterData = transformFilterData();
+                        onDone(filterData);
+                    }}
+                >
                     Done
                 </Button>
             </div>
