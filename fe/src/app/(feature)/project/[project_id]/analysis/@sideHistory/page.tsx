@@ -20,7 +20,7 @@ const GetHistories = async ({
     method: "GET",
     cache: "no-store",
     ContentType: "application/json",
-    endpoint: `/history/${projectId}`,
+    endpoint: `/project/history/${projectId}/list`,
     searchParams: requestParams,
   });
   if (!response.data) {

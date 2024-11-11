@@ -6,6 +6,6 @@ export async function getHistoryDetail(historyId: string) {
     method: "GET",
     cache: "no-store",
     ContentType: "application/json",
-    endpoint: `/history/detail/${historyId}`
+    endpoint: `/project/history/detail/${historyId}`
   });
 }
