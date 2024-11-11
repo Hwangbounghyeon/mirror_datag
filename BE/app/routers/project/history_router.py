@@ -13,7 +13,7 @@ from services.project.history_service import HistoryService
 
 security_scheme = HTTPBearer()
 
-router = APIRouter(prefix="/history")
+router = APIRouter(prefix="/project/history", tags=["Project"])
 
 @router.get("/{project_id}/list", response_model=CommonResponse[PaginationDto[List[HistoryListData]]])
 async def get_history_list(

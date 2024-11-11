@@ -2,9 +2,7 @@ from bson import ObjectId
 from datetime import date
 import zipfile
 import requests
-import os
 import io
-import json
 
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
@@ -12,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from configs.mongodb import collection_metadata, collection_features, collection_images
 from dto.download_dto import DownloadRequest
-from models.mariadb_image import Images
 
 class DownloadService:
     def __init__(self, db : Session):
