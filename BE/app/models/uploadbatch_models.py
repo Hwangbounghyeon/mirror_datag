@@ -1,7 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel
 from datetime import datetime
-from bson import ObjectId
 
 class UploadBatch(BaseModel):
     userId: int

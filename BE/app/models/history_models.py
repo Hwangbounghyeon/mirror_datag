@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from pydantic import BaseModel
+from typing import List, Any
 from datetime import datetime
-from bson import ObjectId
+from dto.search_dto import SearchCondition
 
 class Parameters(BaseModel):
     selectedAlgorithm: str
-    selectedTags: List[List[str]]
+    selectedTags: List[SearchCondition]
 
 class ReductionResults(BaseModel):
     imageId: str
@@ -20,7 +20,7 @@ class HistoryData(BaseModel):
     isPrivate: bool
     historyName: str
     isDone: bool
-    parameters: Optional[Parameters] = None
-    results: Optional[List[ReductionResults]] = None
+    parameters: Parameters | None = None
+    results: List[ReductionResults] | None = None
     createdAt: datetime
     updatedAt: datetime

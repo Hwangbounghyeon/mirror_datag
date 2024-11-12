@@ -1,8 +1,7 @@
 from fastapi import Query
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
-from models.history_models import HistoryData
+from typing import List
 
 # Project 생성 요청 DTO
 class HistoryListRequest(BaseModel):
