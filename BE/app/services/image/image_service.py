@@ -123,7 +123,7 @@ class ImageService:
                 return {
                     "data": [],
                     "page": page,
-                    "limit": self.PAGE_SIZE,
+                    "limit": limit,
                     "total_count": 0,
                     "total_pages": 0
                 }
@@ -149,7 +149,7 @@ class ImageService:
                     return {
                         "data": [],
                         "page": page,
-                        "limit": self.PAGE_SIZE,
+                        "limit": limit,
                         "total_count": 0,
                         "total_pages": 0
                     }
@@ -159,7 +159,7 @@ class ImageService:
                     return {
                         "data": [],
                         "page": page,
-                        "limit": self.PAGE_SIZE,
+                        "limit": limit,
                         "total_count": 0,
                         "total_pages": 0
                     }
