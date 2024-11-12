@@ -1,21 +1,27 @@
 import { Button, Input, RadioGroup, Radio, ModalHeader, ModalBody, ModalFooter, Card } from "@nextui-org/react";
 import { useEffect, useState } from "react";
-import { postAnalysis } from "@/api/analysis/postAnalysis";
+import { postAutoAnalysis } from "@/api/analysis/postAnalysis";
+import FilterContainer from "./filter-container";
+import { FilterRow } from "./filter-container";
+import { tagApi } from "@/api/detail/tagApi";
+import { createInitialRow } from "./filter-container";
 
 interface AnalysisModalProps {
   onClose: () => void;
-  selectedImageIds: string[];
   projectId: string;
 }
 
-const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalProps) => {
-  const [isBtnDisabled, setIsBtnDisaled] = useState(true);
+const AutoAnalysisModal = ({ onClose, projectId }: AnalysisModalProps) => {
   const [historyName, setHistoryName] = useState(`History_${new Date().toUTCString()}`)
   const [algorithm, setAlgorithm] = useState("tsne");
   const [isPrivate, setIsPrivate] = useState("open");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const [filterRows, setFilterRows] = useState<FilterRow[]>([
+      createInitialRow(),
+  ]);
+  const [tags, setTags] = useState<string[]>([]);
 
   const preventClick = (e: React.MouseEvent) => {
     e.stopPropagation(); 
@@ -25,16 +31,27 @@ const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisMod
     setIsLoading(true);
 
     try {
+      const filteredConditions = filterRows
+        .filter(row => 
+          row.AND.length > 0 || 
+          row.OR.length > 0 || 
+          row.NOT.length > 0
+        )
+        .map(row => ({
+          and_condition: row.AND,
+          or_condition: row.OR,
+          not_condition: row.NOT
+        }));
+
       const bodyData = {
         algorithm: algorithm,
         project_id: projectId,
         history_name: historyName,
         is_private: isPrivate !== "open",
-        selected_tags: [],
-        image_ids: selectedImageIds
+        selected_tags: filteredConditions,
       }
   
-      await postAnalysis(bodyData);
+      await postAutoAnalysis(bodyData);
     } catch (error) {
       console.log(error);
     } finally {
@@ -42,15 +59,27 @@ const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisMod
     }
   }
 
-  useEffect(() => {
-    if (selectedImageIds.length >= 10) {
-      setIsBtnDisaled(false)
-      setErrorMessage("")
-    } else {
-      setIsBtnDisaled(true)
-      setErrorMessage("최소 10개 이상의 데이터를 선택해주세요.")
+  const getTags = async () => {
+    try {
+        setIsLoading(true);
+        const response = await tagApi.getTag();
+        if (response.data) {
+            setTags(response.data.tags);
+        }
+    } catch (error) {
+        console.error("Failed to fetch images:", error);
+    } finally {
+        setIsLoading(false);
     }
-  }, [selectedImageIds])
+  };
+
+  useEffect(() => {
+    getTags()
+  }, [])
+
+  useEffect(() => {
+    console.log(filterRows)
+  }, [filterRows])
 
   return (
     <div>
@@ -145,11 +174,16 @@ const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisMod
                 </Radio>
               </RadioGroup>
             </div>
+
+            <div className="w-full">
+              <label className="text-sm font-semibold text-gray-700">필터 조건 설정</label>
+              <FilterContainer tags={tags} filterRows={filterRows} setFilterRows={setFilterRows}/>
+            </div>
           </div>
         </Card>
       </ModalBody>
       <ModalFooter className="flex items-center justify-between px-6 py-4">
-        <div className="text-sm text-red-500 truncate">{errorMessage}</div>
+        <div className="text-sm text-red-500 truncate"></div>
         <div className="flex gap-2">
           <Button
             color="danger"
@@ -161,7 +195,6 @@ const AutoAnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisMod
           </Button>
           <Button
             color="primary"
-            isDisabled={isBtnDisabled}
             isLoading={isLoading}
             onPress={analysis}
             className="px-6"

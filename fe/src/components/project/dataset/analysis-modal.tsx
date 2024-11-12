@@ -1,14 +1,16 @@
 import { Button, Input, RadioGroup, Radio, ModalHeader, ModalBody, ModalFooter, Card } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { postAnalysis } from "@/api/analysis/postAnalysis";
+import { FilterRow } from "./filter-container";
 
 interface AnalysisModalProps {
   onClose: () => void;
   selectedImageIds: string[];
   projectId: string;
+  conditions: FilterRow[];
 }
 
-const AnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalProps) => {
+const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: AnalysisModalProps) => {
   const [isBtnDisabled, setIsBtnDisaled] = useState(true);
   const [historyName, setHistoryName] = useState(`History_${new Date().toUTCString()}`)
   const [algorithm, setAlgorithm] = useState("tsne");
@@ -25,12 +27,24 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId }: AnalysisModalPr
     setIsLoading(true);
 
     try {
+      const filteredConditions = conditions
+        .filter(row => 
+          row.AND.length > 0 || 
+          row.OR.length > 0 || 
+          row.NOT.length > 0
+        )
+        .map(row => ({
+          and_condition: row.AND,
+          or_condition: row.OR,
+          not_condition: row.NOT
+        }));
+
       const bodyData = {
         algorithm: algorithm,
         project_id: projectId,
         history_name: historyName,
         is_private: isPrivate !== "open",
-        selected_tags: [],
+        selected_tags: filteredConditions,
         image_ids: selectedImageIds
       }
   

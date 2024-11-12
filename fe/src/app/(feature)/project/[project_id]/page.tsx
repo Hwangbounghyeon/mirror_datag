@@ -88,6 +88,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
 
   const getImages = async () => {
     setIsLoading(true);
+    
     const conditions = filterRows
       .filter(row => 
         row.AND.length > 0 || 
@@ -107,8 +108,6 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     }
 
     const response: DefaultPaginationType<ImageListResponse> = await getProjectImages(params.project_id, searchParams)
-
-    console.log(response.data)
 
     if (response.data) {
       const transformedImages: ImagesType[] = Object.entries(response.data.data.images).map(([id, imageUrl]) => ({
@@ -140,7 +139,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     } finally {
         setIsLoading(false);
     }
-};
+  };
 
   useEffect(() => {
     getTags();
@@ -150,10 +149,6 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     setImages([]);
     getImages();
   }, [page, filterRows])
-
-  useEffect(() => {
-    console.log(tags)
-  }, [tags])
 
   const handleModalOpen = (componentName: string) => {
     setSelectedModal(componentName)
@@ -179,13 +174,13 @@ const Page = ({ params }: { params: { project_id: string } }) => {
             onClose={onClose}
             selectedImageIds={selectedImageIds}
             projectId={params.project_id}
+            conditions={filterRows}
           />
         );
       case 'autoAnalysis':
         return (
           <AutoAnalysisModal 
             onClose={onClose}
-            selectedImageIds={selectedImageIds}
             projectId={params.project_id}
           />
         );
