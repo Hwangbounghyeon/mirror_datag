@@ -73,7 +73,7 @@ export default function Step3({ handleMove }: StepProps) {
             }
             emptyContent="등록된 부서가 없습니다."
           >
-            {Array.from(addedAuthDeps.values()).map((department) => (
+            {Object.values(addedAuthDeps).map((department) => (
               <TableRow key={department.department_id}>
                 <TableCell>{department.department_name}</TableCell>
                 <TableCell>
@@ -150,7 +150,7 @@ export default function Step3({ handleMove }: StepProps) {
             }
             emptyContent="등록된 인원이 없습니다."
           >
-            {Array.from(addedAuthUsers.values()).map((user) => (
+            {Object.values(addedAuthUsers).map((user) => (
               <TableRow key={user.user_id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>

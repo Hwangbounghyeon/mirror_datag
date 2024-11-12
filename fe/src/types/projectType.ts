@@ -19,8 +19,8 @@ export type CreateProjectType = {
   project_model_name: string;
   description: string;
   accesscontrol: {
-    users: Map<number, SearchUserWithAuthType>;
-    departments: Map<number, SearchDepartmentWithAutyType>;
+    users: Record<number, SearchUserWithAuthType>;
+    departments: Record<number, SearchDepartmentWithAutyType>;
   };
   is_private: boolean;
 };
