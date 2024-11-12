@@ -1,7 +1,7 @@
 from fastapi import Query
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 # Project 생성 요청 DTO
 class AccessControl(BaseModel):
@@ -24,10 +24,10 @@ class ProjectResponse(BaseModel):
     project_name: str
     task: str
     model_name: str
-    description: Optional[str] = ""
+    description: str | None = ""
     user_id: int
-    department : Optional[str] = ""
-    is_private: Optional[bool] = False
+    department : str | None = ""
+    is_private: bool | None = False
     created_at: datetime
     updated_at: datetime
     is_editor: bool
@@ -40,8 +40,8 @@ class ProjectResponse(BaseModel):
 # Project list 조회 요청 DTO
 class ProjectListRequest(BaseModel):
     user_id: int
-    department: Optional[str] = None
-    model_name: Optional[str] = None
+    department: str | None = None
+    model_name: str | None = None
     page: int = Query(1, ge=1)
     limit: int = Query(10, ge=1, le=100)
 
@@ -69,7 +69,7 @@ class ProjectListResponse(BaseModel):
 
 # User 요청 DTO
 class UserRequet(BaseModel):
-    user_name: Optional[str] = None 
+    user_name: str | None = None 
     page: int = Query(1, ge=1)
     limit: int = Query(10, ge=1, le=100)
 

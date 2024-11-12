@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from services.auth.auth_service import UserCreate, EmailValidate, JWTManage, UserLogin, UserLogout
 from dto.common_dto import CommonResponse
-from dto.users_dto import UserSignUp, UserSignIn, TokenResponse, UserProfileUpdateRequest, UserProfileResponse
+from dto.users_dto import UserSignUp, UserSignIn, TokenResponse
 from models.mariadb_users import Users
 from configs.mariadb import get_database_mariadb
 
