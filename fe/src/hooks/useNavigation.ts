@@ -17,7 +17,7 @@ export const useNavigation = () => {
         try {
             const uploadProcess = uploadImage({
                 is_private: true,
-                project_id: "672d6cb4da504f5b140ecffc",
+                project_id: "6732f8c4fcec9d2c66a75080",
                 images,
             });
             // router.push("/loadimage");
