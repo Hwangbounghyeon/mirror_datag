@@ -35,6 +35,7 @@ pipeline {
         stage('환경 변수 설정') {
             steps {
                 script {
+                    dir('DL/app'){
                     withCredentials([
                         string(credentialsId: 'MARIA_USER', variable: 'MARIA_USER'),
                         string(credentialsId: 'MARIA_PASSWORD', variable: 'MARIA_PASSWORD'),
@@ -75,7 +76,7 @@ pipeline {
                             EC2_HOST=${EC2_HOST}
                             EOF
                         '''
-                    }
+                    }}
                 }
             }
         }
@@ -83,12 +84,16 @@ pipeline {
         stage('Docker Image 빌드') {
             steps {
                 script {
-                    dir('BE/app'){
+                    dir('DL/app'){
                     // Git 버전과 LTS 버전 빌드
-                    sh """
-                        docker compose -f docker-compose-version.yml build
-                        docker compose -f docker-compose-lts.yml build
+                    sh"""
+                    docker-compose -f docker-compose-version.yml build
+                    docker-compose -f docker-compose-lts.yml build
                     """
+                    // sh """
+                    // docker build -t ${DOCKER_REGISTRY}/s108_data:${GIT_VERSION} -f Dockerfile .
+                    // docker build -t ${DOCKER_REGISTRY}/s108_data:lts -f Dockerfile .
+                    // """
                     }
                 }
             }
@@ -112,11 +117,12 @@ pipeline {
         stage('Docker Image 배포') {
             steps {
                 script {
-                    dir('BE/app'){
+                    dir('DL/app'){
                     sh """
-                        docker compose -f docker-compose-lts.yml down
-                        docker rmi -f jingluv/s108_data:lts
-                        docker compose -f docker-compose-lts.yml up -d
+                        docker-compose -f docker-compose-lts.yml down
+                        docker rm -f data || true
+                        docker rmi -f jingluv/s108_data:lts || true
+                        docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
                 }
@@ -136,7 +142,7 @@ pipeline {
         }
         always {
             sh 'rm -f .env'
-            cleanWs()
+            // cleanWs()
         }
     }
 }
