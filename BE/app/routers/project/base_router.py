@@ -107,6 +107,7 @@ async def search_project_images(
         conditions = conditions or SearchRequest()
 
         project_service = ProjectService(db)
+
         result = await project_service.search_project_images(
             project_id, 
             conditions.conditions,
