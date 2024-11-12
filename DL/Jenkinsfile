@@ -120,7 +120,8 @@ pipeline {
                     dir('DL/app'){
                     sh """
                         docker-compose -f docker-compose-lts.yml down
-                        docker rmi -f jingluv/s108_data:lts
+                        docker rm -f data || true
+                        docker rmi -f jingluv/s108_data:lts || true
                         docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
