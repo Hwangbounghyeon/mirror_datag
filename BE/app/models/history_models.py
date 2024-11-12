@@ -19,7 +19,7 @@ class HistoryData(BaseModel):
     projectId: str
     isPrivate: bool
     historyName: str
-    isDone: bool
+    isDone: int # 0 = 진행중 / 1 = 성공 / 2 = 실패
     parameters: Parameters | None = None
     results: List[ReductionResults] | None = None
     createdAt: datetime

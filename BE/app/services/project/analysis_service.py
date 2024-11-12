@@ -8,142 +8,365 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from dto.search_dto import SearchCondition
-from dto.analysis_dto import DimensionReductionRequest, DimensionReductionResponse
-from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata, collection_labels
+from dto.analysis_dto import DimensionReductionRequest, AutoDimensionReductionRequest, DimensionReductionResponse
+from configs.mongodb import collection_histories, collection_features, collection_project_histories, collection_images, collection_metadata, collection_labels, collection_tag_images, collection_project_images
 from models.history_models import HistoryData, ReductionResults
 
 class AnalysisService:
     def __init__(self, db: Session):
         self.db = db
 
+    # 수동 차원축소
     async def dimension_reduction(self, request: DimensionReductionRequest, user_id: int) -> DimensionReductionResponse:
         # mongodb 저장
-        inserted_id = await self._save_history_mongodb(
-            user_id,
-            request.project_id,
-            request.is_private,
-            request.history_name,
-            request.algorithm,
-            request.selected_tags,
-        )
+        inserted_id = None
+        try:
+            inserted_id = await self._save_history_mongodb(
+                user_id,
+                request.project_id,
+                request.is_private,
+                request.history_name,
+                request.algorithm,
+                request.selected_tags,
+            )
 
-        await self._mapping_project_histories_mongodb(request.project_id, inserted_id)
+            await self._mapping_project_histories_mongodb(request.project_id, inserted_id)
 
-        # image_ids로 이미지 정보들 가져오기
-        image_features = await self._get_image_features(request.image_ids)
+            # image_ids로 이미지 정보들 가져오기
+            image_features = await self._get_image_features(request.image_ids)
 
-        concat_image_infos = []
-        for i in range(len(image_features)):
-            image_info = await collection_images.find_one({"_id": ObjectId(request.image_ids[i])})
-            image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
-            label_info = await collection_labels.find_one({"_id": ObjectId(image_info.get("labelId"))}) if image_info.get("labelId") else None
+            concat_image_infos = []
+            for i in range(len(image_features)):
+                image_info = await collection_images.find_one({"_id": ObjectId(request.image_ids[i])})
+                image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
+                label_info = await collection_labels.find_one({"_id": ObjectId(image_info.get("labelId"))}) if image_info.get("labelId") else None
 
-            ai_results = image_metadata["aiResults"][0]
-            predictions = ai_results["predictions"][0]
+                ai_results = image_metadata["aiResults"][0]
+                predictions = ai_results["predictions"][0]
 
-            # feature의 클래스 수만큼 반복
-            if ai_results["task"] == "det":
-                used_predictions = set()
-                used_labels = set()
-                
-                # Ground Truth (label_info)와 Predictions 매핑
-                if label_info:
-                    for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
-                        max_iou = 0
-                        best_match_idx = None
-
-                        # 각 label bounding box에 대해 predictions와의 IoU 계산
+                # feature의 클래스 수만큼 반복
+                if ai_results["task"] == "det":
+                    used_labels = set()
+                    
+                    # Ground Truth (label_info)와 Predictions 매핑
+                    if label_info:
                         for pred_idx, prediction in enumerate(predictions["detections"]):
-                            if pred_idx not in used_predictions:
+                            max_iou = 0
+                            best_match_idx = None
+
+                            # 각 label bounding box에 대해 predictions와의 IoU 계산
+                            for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
                                 current_iou = self._iou(prediction["bbox"], label_box)
                                 if current_iou > max_iou:
                                     max_iou = current_iou
-                                    best_match_idx = pred_idx
+                                    best_match_idx = label_idx
 
-                        # 매핑 기준에 따른 처리
-                        if max_iou >= 0.6 and best_match_idx is not None:
-                            used_predictions.add(best_match_idx)
-                            used_labels.add(label_idx)
-
+                            # 매핑 기준에 따른 처리
+                            if max_iou >= 0.6 and best_match_idx is not None:
+                                used_labels.add(best_match_idx)
+                                
+                                best_bbox = label_info["bounding_boxes"][best_match_idx]
+                                label_dict = {
+                                    "label": label_info['label'][best_match_idx],
+                                    "bbox": [best_bbox["x_min"],best_bbox["y_min"],best_bbox["x_max"],best_bbox["y_max"]]
+                                }
+                                
+                                concat_image_infos.append({
+                                    "imageId": request.image_ids[i],
+                                    "predictions": prediction,
+                                    "label": label_dict,  # label 가져오기
+                                    "iou": max_iou,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                            else:
+                                # IoU가 기준보다 낮은 경우
+                                concat_image_infos.append({
+                                    "imageId": request.image_ids[i],
+                                    "predictions": prediction,
+                                    "label": None,
+                                    "iou": None,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                        
+                        # 남은 label 처리
+                        for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
+                            if label_idx not in used_labels:
+                                remain_bbox = label_info["bounding_boxes"][label_idx]
+                                label_dict = {
+                                    "label": label_info['label'][label_idx],
+                                    "bbox": [remain_bbox["x_min"],remain_bbox["y_min"],remain_bbox["x_max"],remain_bbox["y_max"]]
+                                }
+                                
+                                concat_image_infos.append({
+                                    "imageId": request.image_ids[i],
+                                    "predictions": None,
+                                    "label": label_dict,
+                                    "iou": None,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                    else:
+                        for pred_idx, prediction in enumerate(predictions["detections"]):
                             concat_image_infos.append({
                                 "imageId": request.image_ids[i],
-                                "predictions": predictions["detections"][best_match_idx],
-                                "label": label_info["label"][0] if "label" in label_info else None,  # label 가져오기
-                                "iou": max_iou,
-                                "imageUrl": image_metadata["fileList"][0],
-                            })
-                        else:
-                            # IoU가 기준보다 낮은 경우
-                            concat_image_infos.append({
-                                "imageId": request.image_ids[i],
-                                "predictions": None,
-                                "label": label_info["label"][0] if "label" in label_info else None,
-                                "iou": max_iou,
-                                "imageUrl": image_metadata["fileList"][0],
-                            })
-
-                    # 남은 label 처리
-                    for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
-                        if label_idx not in used_labels:
-                            concat_image_infos.append({
-                                "imageId": request.image_ids[i],
-                                "predictions": None,
-                                "label": label_info["label"][0] if "label" in label_info else None,
+                                "predictions": prediction,
+                                "label": None,
                                 "iou": None,
                                 "imageUrl": image_metadata["fileList"][0],
                             })
-
-                # 남은 prediction 처리
-                for pred_idx, prediction in enumerate(predictions["detections"]):
-                    if pred_idx not in used_predictions:
-                        concat_image_infos.append({
-                            "imageId": request.image_ids[i],
-                            "predictions": prediction,
-                            "label": None,
-                            "iou": None,
-                            "imageUrl": image_metadata["fileList"][0],
-                        })
+                else:
+                    concat_image_infos.append({
+                        "imageId": request.image_ids[i],
+                        "predictions": {
+                            "prediction": predictions["prediction"],
+                            "confidence": predictions["confidence"]
+                        },
+                        "label": label_info["label"][0] if label_info else None,
+                        "imageUrl": image_metadata["fileList"][0]
+                    })
+                        
+            # features concatenate
+            concat_features = self._concatenate_array(image_features)
+            
+            # 차원축소 진행
+            if request.algorithm == "tsne":
+                reduction_features = self._dimension_reduction_TSNE(concat_features)
             else:
-                concat_image_infos.append({
-                    "imageId": request.image_ids[i],
-                    "predictions": {
-                        "prediction": predictions["prediction"],
-                        "confidence": predictions["confidence"]
-                    },
-                    "label": label_info["label"][0] if label_info else None,
-                    "imageUrl": image_metadata["fileList"][0]
-                })
+                reduction_features = self._dimension_reduction_UMAP(concat_features)
+
+            feature_idx = 0
+            for i in range(len(concat_image_infos)):
+                if concat_image_infos[i]["predictions"] is not None:
+                    concat_image_infos[i]["features"] = reduction_features[feature_idx]
+                    feature_idx += 1
+                else:
+                    concat_image_infos[i]["features"] = None
+
+            # 작업 완료
+            await self._save_history_completed_mongodb(inserted_id, concat_image_infos)
+
+            return DimensionReductionResponse(
+                history_id=inserted_id,
+                project_id=request.project_id,
+                user_id=user_id,
+                history_name=request.history_name
+            )
+        except Exception as e:
+            if inserted_id:
+                await self._save_history_failed_mongodb(inserted_id)
+            raise Exception(f"Dimension reduction failed: {str(e)}")
+
+
+    # 자동 차원축소 
+    async def auto_dimension_reduction(self, request: AutoDimensionReductionRequest, user_id: int) -> DimensionReductionResponse:
+        inserted_id = None
+        try:
+            project_images = await collection_project_images.find_one({})
+            if not project_images or "project" not in project_images:
+                raise Exception(f"Dimension reduction failed")
+
+            project_image_ids = set(project_images["project"].get(request.project_id, []))
+            if not project_image_ids:
+                raise Exception(f"Dimension reduction failed")
+            
+            if not request.selected_tags:
+                final_matching_ids = project_image_ids
+            else:
+                final_matching_ids = set()
+                for condition in request.selected_tags:
+                    group_result = await self._get_filtered_image_ids(condition)
+                    final_matching_ids.update(group_result)
+
+                if not final_matching_ids:
+                    raise Exception(f"Dimension reduction failed")
+                
+                final_matching_ids &= project_image_ids
+            
+            final_matching_ids = list(final_matching_ids)
+            
+            print(final_matching_ids)
+            
+            if len(final_matching_ids) < 10:
+                raise Exception(f"Dimension reduction failed")
+            
+            inserted_id = await self._save_history_mongodb(
+                user_id,
+                request.project_id,
+                request.is_private,
+                request.history_name,
+                request.algorithm,
+                request.selected_tags,
+            )
+
+            await self._mapping_project_histories_mongodb(request.project_id, inserted_id)
+
+            # image_ids로 이미지 정보들 가져오기
+            image_features = await self._get_image_features(final_matching_ids)
+
+            concat_image_infos = []
+            for i in range(len(image_features)):
+                image_info = await collection_images.find_one({"_id": ObjectId(final_matching_ids[i])})
+                image_metadata = await collection_metadata.find_one({"_id": ObjectId(image_info.get("metadataId"))})
+                label_info = await collection_labels.find_one({"_id": ObjectId(image_info.get("labelId"))}) if image_info.get("labelId") else None
+
+                ai_results = image_metadata["aiResults"][0]
+                predictions = ai_results["predictions"][0]
+
+                # feature의 클래스 수만큼 반복
+                if ai_results["task"] == "det":
+                    used_labels = set()
                     
-        # features concatenate
-        concat_features = self._concatenate_array(image_features)
-        
-        # 차원축소 진행
-        if request.algorithm == "tsne":
-            reduction_features = self._dimension_reduction_TSNE(concat_features)
-        else:
-            reduction_features = self._dimension_reduction_UMAP(concat_features)
+                    # Ground Truth (label_info)와 Predictions 매핑
+                    if label_info:
+                        for pred_idx, prediction in enumerate(predictions["detections"]):
+                            max_iou = 0
+                            best_match_idx = None
 
-        feature_idx = 0
-        for i in range(len(concat_image_infos)):
-            print(feature_idx, " | " ,i)
-            if concat_image_infos[i]["predictions"] is not None:
-                # predictions가 있는 경우에만 feature 추가
-                concat_image_infos[i]["features"] = reduction_features[feature_idx]
-                feature_idx += 1
+                            # 각 label bounding box에 대해 predictions와의 IoU 계산
+                            for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
+                                current_iou = self._iou(prediction["bbox"], label_box)
+                                if current_iou > max_iou:
+                                    max_iou = current_iou
+                                    best_match_idx = label_idx
+
+                            # 매핑 기준에 따른 처리
+                            if max_iou >= 0.6 and best_match_idx is not None:
+                                used_labels.add(best_match_idx)
+                                
+                                best_bbox = label_info["bounding_boxes"][best_match_idx]
+                                label_dict = {
+                                    "label": label_info['label'][best_match_idx],
+                                    "bbox": [best_bbox["x_min"],best_bbox["y_min"],best_bbox["x_max"],best_bbox["y_max"]]
+                                }
+                                
+                                concat_image_infos.append({
+                                    "imageId": final_matching_ids[i],
+                                    "predictions": prediction,
+                                    "label": label_dict,  # label 가져오기
+                                    "iou": max_iou,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                            else:
+                                # IoU가 기준보다 낮은 경우
+                                concat_image_infos.append({
+                                    "imageId": final_matching_ids[i],
+                                    "predictions": prediction,
+                                    "label": None,
+                                    "iou": None,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                        
+                        # 남은 label 처리
+                        for label_idx, label_box in enumerate(label_info["bounding_boxes"]):
+                            if label_idx not in used_labels:
+                                remain_bbox = label_info["bounding_boxes"][label_idx]
+                                label_dict = {
+                                    "label": label_info['label'][label_idx],
+                                    "bbox": [remain_bbox["x_min"],remain_bbox["y_min"],remain_bbox["x_max"],remain_bbox["y_max"]]
+                                }
+                                
+                                concat_image_infos.append({
+                                    "imageId": final_matching_ids[i],
+                                    "predictions": None,
+                                    "label": label_dict,
+                                    "iou": None,
+                                    "imageUrl": image_metadata["fileList"][0],
+                                })
+                    else:
+                        for pred_idx, prediction in enumerate(predictions["detections"]):
+                            concat_image_infos.append({
+                                "imageId": final_matching_ids[i],
+                                "predictions": prediction,
+                                "label": None,
+                                "iou": None,
+                                "imageUrl": image_metadata["fileList"][0],
+                            })
+                else:
+                    concat_image_infos.append({
+                        "imageId": final_matching_ids[i],
+                        "predictions": {
+                            "prediction": predictions["prediction"],
+                            "confidence": predictions["confidence"]
+                        },
+                        "label": label_info["label"][0] if label_info else None,
+                        "imageUrl": image_metadata["fileList"][0]
+                    })
+                        
+            # features concatenate
+            concat_features = self._concatenate_array(image_features)
+            
+            # 차원축소 진행
+            if request.algorithm == "tsne":
+                reduction_features = self._dimension_reduction_TSNE(concat_features)
             else:
-                # predictions가 없는 경우 feature를 None으로 설정
-                concat_image_infos[i]["features"] = None
+                reduction_features = self._dimension_reduction_UMAP(concat_features)
 
-        # 작업 완료
-        await self._save_history_completed_mongodb(inserted_id, concat_image_infos)
+            feature_idx = 0
+            for i in range(len(concat_image_infos)):
+                if concat_image_infos[i]["predictions"] is not None:
+                    concat_image_infos[i]["features"] = reduction_features[feature_idx]
+                    feature_idx += 1
+                else:
+                    concat_image_infos[i]["features"] = None
 
-        return DimensionReductionResponse(
-            history_id=inserted_id,
-            project_id=request.project_id,
-            user_id=user_id,
-            history_name=request.history_name
-        )
+            # 작업 완료
+            await self._save_history_completed_mongodb(inserted_id, concat_image_infos)
 
+            return DimensionReductionResponse(
+                history_id=inserted_id,
+                project_id=request.project_id,
+                user_id=user_id,
+                history_name=request.history_name
+            )
+        except Exception as e:
+            if inserted_id:
+                await self._save_history_failed_mongodb(inserted_id)
+            raise Exception(f"Dimension reduction failed: {str(e)}")
+
+    # image id 필터링해서 가져오기
+    async def _get_filtered_image_ids(self, condition: SearchCondition) -> set:
+        result_ids = None
+
+        tag_doc = await collection_tag_images.find_one({})
+        if not tag_doc:
+            raise Exception(f"Can't find tag document")
+
+        # AND 조건 처리
+        if condition.and_condition:
+            for tag in condition.and_condition:
+                if tag in tag_doc['tag']:
+                    current_ids = set(tag_doc['tag'][tag])
+                    result_ids = current_ids if result_ids is None else result_ids & current_ids
+                else:
+                    return set()  # AND 조건 중 하나라도 매칭되지 않으면 빈 set 반환
+
+        # OR 조건 처리
+        if condition.or_condition:
+            or_ids = set()
+            for tag in condition.or_condition:
+                if tag in tag_doc['tag']:
+                    or_ids.update(tag_doc['tag'][tag])
+            if result_ids is None:
+                result_ids = or_ids
+            else:
+                result_ids &= or_ids
+
+        # 아직 result_ids가 None이면 모든 이미지 ID로 초기화
+        if result_ids is None:
+            result_ids = set()
+            for tag_ids in tag_doc['tag'].values():
+                result_ids.update(tag_ids)
+
+        # NOT 조건 처리
+        if condition.not_condition:
+            exclude_ids = set()
+            for tag in condition.not_condition:
+                if tag in tag_doc['tag']:
+                    exclude_ids.update(tag_doc['tag'][tag])
+            result_ids -= exclude_ids
+
+        return result_ids
+
+    # feature 가져오기
     async def _get_image_features(self, image_ids: List[str]) -> List[List[float]]:
         # IN 절을 사용하여 한 번의 쿼리로 모든 이미지 정보 조회
         images = await collection_images.find(
@@ -240,7 +463,7 @@ class AnalysisService:
             "projectId": projectId,
             "isPrivate": is_private,
             "historyName": history_name,
-            "isDone": False,
+            "isDone": 0,
             "parameters": {
                 "selectedAlgorithm": selected_algorithm,
                 "selectedTags": selected_tags
@@ -294,7 +517,7 @@ class AnalysisService:
             
             update_data = {
                 "results": image_infos,
-                "isDone": True,
+                "isDone": 1,
                 "updatedAt": datetime.now(timezone.utc)
             }
 
@@ -302,7 +525,27 @@ class AnalysisService:
                 {"_id": ObjectId(history_id)},  # ID로 문서 찾기
                 {"$set": update_data}
             )
+        except Exception as e:
+            raise Exception(f"Failed to update results: {str(e)}")
 
+    async def _save_history_failed_mongodb(
+        self,
+        history_id: str
+    ):
+        try:
+            document = await collection_histories.find_one({"_id": ObjectId(history_id)})
+            if not document:
+                raise Exception(f"Document with id {history_id} not found")
+            
+            update_data = {
+                "isDone": 2,
+                "updatedAt": datetime.now(timezone.utc)
+            }
+
+            await collection_histories.update_one(
+                {"_id": ObjectId(history_id)},  # ID로 문서 찾기
+                {"$set": update_data}
+            )
         except Exception as e:
             raise Exception(f"Failed to update results: {str(e)}")
 
