@@ -193,7 +193,7 @@ class ImageService:
             return {
                 "data": image_list,
                 "page": page,
-                "limit": self.PAGE_SIZE,
+                "limit": limit,
                 "total_count": total_count,
                 "total_pages": total_pages
             }
