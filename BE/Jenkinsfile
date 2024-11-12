@@ -11,10 +11,16 @@ pipeline {
         stage('변경사항 감지') {
             steps {
                 script {
-                    // GitLab 환경 변수에서 `merge` 이벤트인지 확인
-                    if (env.gitlabActionType != 'merge') {
+                    def allowedBranches = ['master', 'develop', 'BE']
+                    def targetBranch = env.gitlabTargetBranch ?: env.BRANCH_NAME
+                    def eventType = env.gitlabActionType
+                    
+                    // 현재 브랜치나 타겟 브랜치가 허용된 브랜치가 아니거나,
+                    // merge 이벤트가 아닌 경우 (push 이벤트는 null)
+                    if (!allowedBranches.contains(targetBranch) && 
+                        (eventType != null && eventType != 'merge')) {
                         currentBuild.result = 'SUCCESS'
-                        echo "Merge 이벤트가 아닙니다. 파이프라인을 중단합니다."
+                        echo "허용되지 않은 브랜치 또는 이벤트입니다. 파이프라인을 중단합니다."
                         return
                     }
                     // 이전 커밋과 현재 커밋 사이의 변경된 파일 목록 가져오기
