@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { IoFilter } from "react-icons/io5";
 import { FilterCondition, TagBySearchRequest } from "@/types/tag";
 import { createInitialRow, FilterRow } from "@/components/loadimage/filterBox";
-import BatchList from "@/components/image/BatchList";
 import { FilterModal } from "@/components/loadimage/filterModal";
 
 interface FilterSectionProps {
@@ -25,7 +24,6 @@ export function FilterSection({
             OR: condition.or_condition || [],
             NOT: condition.not_condition || [],
         }));
-        return [createInitialRow()];
     });
 
     useEffect(() => {
@@ -72,7 +70,7 @@ export function FilterSection({
     };
 
     return (
-        <div className="min-h-[80vh] flex flex-[2] flex-col gap-4">
+        <div className="flex-col gap-4 max-w-[25%] min-w-[15%]">
             <div
                 className="relative h-[8%] hover:bg-gray-100 flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
                 onClick={() => setIsFilterOpen(true)}
@@ -81,9 +79,6 @@ export function FilterSection({
                     {tags.length === 0 ? "태그 로딩중..." : "필터링"}
                     <IoFilter />
                 </div>
-            </div>
-            <div className="h-[92%] border border-solid border-gray-300 rounded-lg p-4">
-                <BatchList />
             </div>
             <FilterModal
                 isOpen={isFilterOpen}
