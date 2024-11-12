@@ -86,8 +86,8 @@ pipeline {
                     dir('BE/app'){
                     // Git 버전과 LTS 버전 빌드
                     sh """
-                        docker compose -f docker-compose-version.yml build
-                        docker compose -f docker-compose-lts.yml build
+                        docker-compose -f docker-compose-version.yml build
+                        docker-compose -f docker-compose-lts.yml build
                     """
                     }
                 }
