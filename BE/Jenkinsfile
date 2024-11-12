@@ -83,7 +83,7 @@ pipeline {
         stage('Docker Image 빌드') {
             steps {
                 script {
-                    dir('/jenkins/workspace/Backend/BE/app'){
+                    dir('BE/app'){
                     // Git 버전과 LTS 버전 빌드
                     sh """
                     docker build -t ${DOCKER_REGISTRY}/s108_backend:${GIT_VERSION} -f Dockerfile .
@@ -112,7 +112,7 @@ pipeline {
         stage('Docker Image 배포') {
             steps {
                 script {
-                    dir('/jenkins/workspace/Backend/BE/app'){
+                    dir('BE/app'){
                     sh """
                         docker compose -f docker-compose-lts.yml down
                         docker rmi -f jingluv/s108_backend:lts
