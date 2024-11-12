@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_REGISTRY}/s108_backend:$lts
+    image: ${DOCKER_REGISTRY}/s108_backend:lts
     env_file:
       - .env
     ports:
