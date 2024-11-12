@@ -1,11 +1,7 @@
 "use server";
 
 import { customFetch } from "./customFetch";
-import {
-  DefaultPaginationType,
-  DefaultResponseType,
-  PaginationType,
-} from "@/types/default";
+import { DefaultPaginationType, DefaultResponseType } from "@/types/default";
 
 export type SearchUserType = {
   user_id: number;
@@ -13,19 +9,21 @@ export type SearchUserType = {
   email: string;
 };
 
-export const getUsers = async (pageNumber: number) => {
+export const getUsers = async (pageNumber: number, searchName?: string) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("page", pageNumber.toString());
+  if (typeof searchName === "string" && searchName.length > 0) {
+    searchParams.append("user_name", searchName);
+  }
   try {
     const response: DefaultResponseType<
       DefaultPaginationType<SearchUserType[]>
     > = await customFetch({
       method: "GET",
       endpoint: "/user/search",
-      searchParams: new URLSearchParams({
-        page: pageNumber.toString(),
-      }),
+      searchParams,
     });
     if (response.data) {
-      console.log("response.data", response.data);
       return {
         status: response.status,
         data: response.data,
