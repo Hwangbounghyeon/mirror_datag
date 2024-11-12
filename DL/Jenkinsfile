@@ -83,11 +83,11 @@ pipeline {
         stage('Docker Image 빌드') {
             steps {
                 script {
-                    dir('/jenkins/workspace/Backend/BE/app'){
+                    dir('/jenkins/workspace/Backend/DL/app'){
                     // Git 버전과 LTS 버전 빌드
                     sh """
-                        docker-compose -f docker-compose-version.yml build
-                        docker-compose -f docker-compose-lts.yml build
+                    docker build -t ${DOCKER_REGISTRY}/s108_data:${GIT_VERSION} -f Dockerfile .
+                    docker build -t ${DOCKER_REGISTRY}/s108_data:lts -f Dockerfile .
                     """
                     }
                 }
@@ -112,7 +112,7 @@ pipeline {
         stage('Docker Image 배포') {
             steps {
                 script {
-                    dir('/jenkins/workspace/Backend/BE/app'){
+                    dir('/jenkins/workspace/Backend/DL/app'){
                     sh """
                         docker compose -f docker-compose-lts.yml down
                         docker rmi -f jingluv/s108_data:lts

@@ -86,8 +86,8 @@ pipeline {
                     dir('/jenkins/workspace/Backend/BE/app'){
                     // Git 버전과 LTS 버전 빌드
                     sh """
-                        docker compose -f docker-compose-version.yml build
-                        docker compose -f docker-compose-lts.yml build
+                    docker build -t ${DOCKER_REGISTRY}/s108_backend:${GIT_VERSION} -f Dockerfile .
+                    docker build -t ${DOCKER_REGISTRY}/s108_backend:lts -f Dockerfile .
                     """
                     }
                 }
