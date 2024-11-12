@@ -4,6 +4,12 @@ import SelectCard from "./select-card";
 import { StepProps } from "@/types/projectType";
 import { AutocompleteItem, Autocomplete, Button } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
+import { getModels } from "@/app/actions/model";
+import { ModelListResponseType } from "@/types/modelType";
+
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+import { setProjectModelName } from "@/store/create-store";
 
 const cards: {
   imgUrl: string;
@@ -15,26 +21,25 @@ const cards: {
     imgUrl: "/images/object-detection.png",
     title: "Object Detection",
     description: "Idenify objecdts and their positions with bounding boxes",
-    value: "object-detection",
+    value: "dts",
   },
   {
     imgUrl: "/images/classification.png",
     title: "Image Classification",
     description: "Assign Labels to the entire Image",
-    value: "image-classification",
+    value: "cls",
   },
 ];
 
-const Step1 = ({
-  handleMove,
-  projectItem,
-  setProjectItem,
-  setCategory,
-  category,
-}: StepProps) => {
+const Step1 = ({ handleMove }: StepProps) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  // 마운트 여부를 확인하는 변수를 추가하고 useEffect를 사용하여 마운트 여부를 설정합니다
+  const [category, setCategory] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const project_model_name = useSelector(
+    (state: RootState) => state.project.project_model_name
+  );
+  // 마운트 여부를 확인하는 변수를 추가하고 useEffect를 사용하여 마운트 여부를 설정
   useEffect(() => {
     setIsMounted(true);
     return () => {
@@ -42,12 +47,28 @@ const Step1 = ({
     };
   }, []);
 
+  // 모델 목록을 가져오는 API를 호출하고 상태를 설정합니다
+  const [model_list, setModelList] = useState<ModelListResponseType | null>(
+    null
+  );
+
   // 마운트된 상태에서 선택이 바뀌면 모델 선택도 바뀌게 합니다
   useEffect(() => {
-    setProjectItem({
-      project_model_name: undefined,
-    });
+    dispatch(setProjectModelName(""));
   }, [category]);
+
+  useEffect(() => {
+    if (isMounted) {
+      // 모델 리스트를 가져오는 API를 호출합니다
+      getModels().then((data) => {
+        if (!data.data) {
+          console.error("모델 리스트 가져오기 에러", data.error);
+        } else {
+          setModelList(data.data);
+        }
+      });
+    }
+  }, [isMounted]);
 
   return (
     <div className="flex justify-center items-center flex-col">
@@ -70,7 +91,7 @@ const Step1 = ({
           />
         ))}
       </div>
-      {category && (
+      {category && model_list && (
         <div className="w-full flex flex-col">
           <p className="text-[22px] font-bold text-center mb-3">
             관련된 모델을 선택해 주세요
@@ -79,16 +100,19 @@ const Step1 = ({
             required
             onSelectionChange={(key) => {
               if (typeof key === "string") {
-                setProjectItem({
-                  project_model_name: key,
-                });
+                dispatch(setProjectModelName(key));
               }
             }}
             size="lg"
           >
-            <AutocompleteItem key="ssd" value="ssd">
-              SSD
-            </AutocompleteItem>
+            {
+              // 모델 리스트를 AutocompleteItem으로 변환하여 렌더링합니다
+              model_list[category].map((model) => (
+                <AutocompleteItem key={model} value={model}>
+                  {model}
+                </AutocompleteItem>
+              ))
+            }
           </Autocomplete>
         </div>
       )}
@@ -102,7 +126,7 @@ const Step1 = ({
         </Button>
         <Button
           onClick={() => handleMove(2)}
-          disabled={!projectItem.project_model_name || !category}
+          disabled={project_model_name === "" || !category}
           color="primary"
           variant="ghost"
         >
