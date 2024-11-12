@@ -3,8 +3,8 @@ import ImageUploader from "../image/ImageUploader";
 import { UploadContentProps } from "@/types/upload";
 import { ACCEPTED_FILE_TYPES } from "@/lib/constants/upload";
 import UploadedContent from "@/components/upload/uploadedContent";
-import { useFileValidation } from "@/hooks/useFileValidation";
-import { useFileSelection } from "@/hooks/useFileSelection";
+import { useFileValidation } from "@/hooks/filecheck/useFileValidation";
+import { useFileSelection } from "@/hooks/filecheck/useFileSelection";
 
 export const UploadContent = ({
     images,
