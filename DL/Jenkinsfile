@@ -119,9 +119,9 @@ pipeline {
                 script {
                     dir('DL/app'){
                     sh """
-                        docker-compose -p data -f docker-compose-lts.yml down
+                        docker-compose -f docker-compose-lts.yml down
                         docker rmi -f jingluv/s108_data:lts
-                        docker-compose -p data -f docker-compose-lts.yml up -d
+                        docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
                 }

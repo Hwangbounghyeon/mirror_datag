@@ -120,9 +120,9 @@ pipeline {
                 script {
                     dir('BE/app'){
                     sh """
-                        docker-compose -p backend -f docker-compose-lts.yml down
+                        docker-compose -f docker-compose-lts.yml down
                         docker rmi -f jingluv/s108_backend:lts
-                        docker-compose -p backend -f docker-compose-lts.yml up -d
+                        docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
                 }
