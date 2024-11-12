@@ -14,6 +14,7 @@ s3_client = client(
 )
 
 def upload_to_s3(file: io.BytesIO, bucket_name: str, file_name: str) -> None:
+    file.seek(0)
     s3_client.upload_fileobj(
         file,
         bucket_name,
