@@ -6,7 +6,7 @@ from typing import List
 from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
 from services.image.image_extra_service import ImageExtraService
-from dto.image_detail_dto import ImagePermissionDeleteRequest, ImageDepartmentPermissionAddRequest, ImageUserPermissionAddRequest
+from dto.image_detail_dto import ImageUserPermissionDeleteRequest, ImageDepartmentPermissionDeleteRequest, ImageDepartmentPermissionAddRequest, ImageUserPermissionAddRequest
 
 security_scheme = HTTPBearer()
 
@@ -56,15 +56,36 @@ async def add_user_permission(
     
 # 3. 해당 이미지 유저 권한 삭제
 @router.post('/remove', description="유저 권한 삭제")
-async def remove_permission(
-    request: ImagePermissionDeleteRequest,
+async def remove_user_permission(
+    request: ImageUserPermissionDeleteRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
     try:
         image_extra_service = ImageExtraService(db)
 
-        response = await image_extra_service.remove_image_permission(request)
+        response = await image_extra_service.remove_user_image_permission(request)
+
+        return CommonResponse(
+            status=200,
+            data=response
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+# 4. 해당 이미지 유저 권한 삭제
+@router.post('/remove', description="유저 권한 삭제")
+async def remove_department_permission(
+    request: ImageDepartmentPermissionDeleteRequest,
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
+    db: Session = Depends(get_database_mariadb)
+):
+    try:
+        image_extra_service = ImageExtraService(db)
+
+        response = await image_extra_service.remove_department_image_permission(request)
 
         return CommonResponse(
             status=200,

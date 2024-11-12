@@ -48,8 +48,12 @@ class ImagePermissionAddResponse(BaseModel):
     image_id: str
     auth_list: List[AuthDetail]
 
-class ImagePermissionDeleteRequest(BaseModel):
+class ImageUserPermissionDeleteRequest(BaseModel):
     user_id_list: List[int]
+    image_id: str
+
+class ImageDepartmentPermissionDeleteRequest(BaseModel):
+    department_name_list: List[int]
     image_id: str
 
 class ImagePermissionDeleteResponse(BaseModel):
