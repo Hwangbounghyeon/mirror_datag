@@ -181,11 +181,10 @@ class UploadService:
         department_id: int
     ):
         if task == "cls":
-            # url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/cls"
-            url = f"http://127.0.0.1:8001/dl/api/cls"
+            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/cls"
         else:
-            # url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/det"
-            url = f"http://127.0.0.1:8001/dl/api/det"
+            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/det"
+
 
         if department_id:
             department = self.db.query(Departments).filter(Departments.department_id == department_id).first()
