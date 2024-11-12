@@ -17,9 +17,7 @@ from dto.image_detail_dto import UserInformation, AccessControl, ImageDetailResp
 load_dotenv()
 
 ## 1. tag 목록 불러오기
-class ImageService:
-    PAGE_SIZE = 20
-    
+class ImageService:    
     def __init__(self, db: Session):
         self.db = db
     
@@ -170,11 +168,11 @@ class ImageService:
             # 전체 개수 조회
             base_query = {"_id": {"$in": object_ids}}
             total_count = await collection_images.count_documents(base_query)
-            total_pages = (total_count + self.PAGE_SIZE - 1) // self.PAGE_SIZE
+            total_pages = (total_count + limit - 1) // limit
 
             # 페이지네이션을 위한 정렬 추가
-            skip = (page - 1) * self.PAGE_SIZE
-            paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(self.PAGE_SIZE).to_list(length=None)
+            skip = (page - 1) * limit
+            paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(limit).to_list(length=None)
 
 
             # 매칭된 이미지 정보 조회

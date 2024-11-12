@@ -5,9 +5,8 @@ from utils.timezone import get_current_time
 from bson import ObjectId
 
 from fastapi import HTTPException
-<<<<<<< BE/app/services/project/project_service.py
 from sqlalchemy.orm import Session
-from dto.search_dto import SearchCondition, ImageSearchResponse, SearchRequest
+from dto.search_dto import SearchCondition, ImageSearchResponse
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
