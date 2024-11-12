@@ -2,7 +2,7 @@ from bson import ObjectId
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from models.mariadb_users import Users, Departments
-from dto.image_detail_dto import ImageDetailAuthDeleteRequest, ImageDetailAuthDeleteResponse, AuthDetail, ImageDetailAuthAddRequest, ImageDetailAuthAddResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse
+from dto.image_detail_dto import ImagePermissionDeleteRequest, ImagePermissionDeleteResponse, AuthDetail, ImageDepartmentPermissionAddRequest, ImagePermissionAddResponse, ImageDetailTagAddRequest, ImageDetailTagAddResponse, ImageDetailTagDeleteRequest, ImageDetailTagDeleteResponse, ImageUserPermissionAddRequest
 from configs.mongodb import collection_metadata, collection_images, collection_tag_images, collection_image_permissions
 
 class ImageExtraService:
@@ -151,8 +151,8 @@ class ImageExtraService:
                 detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
             )
     
-    # 4. 권한 추가
-    async def add_image_auth(self, request: ImageDetailAuthAddRequest) -> ImageDetailAuthAddResponse:
+    # 4. 부서 권한 추가
+    async def add_department_image_permission(self, request: ImageDepartmentPermissionAddRequest) -> ImagePermissionAddResponse:
         
         ### images, matadata
         image_id = request.image_id
@@ -168,25 +168,106 @@ class ImageExtraService:
         metadata_one["_id"] = str(metadata_one["_id"])
         ###
 
-        user_id_list = []
-        for department_name in request.department_name_list:
-            department_one = self.db.query(Departments).filter(Departments.department_name == department_name).first()
-            department_one_id = department_one.department_id
-            user_one = self.db.query(Users).filter(Users.department_id.like(f"%{department_one_id}%")).first()
-            user_one_id = user_one.user_id
-            user_id_list.append(user_one_id)
-        # metadata -> users
+        # metadata -> departments
         await collection_metadata.update_one(
             {"_id": ObjectId(metadata_id)},
             {
                 "$addToSet": {
-                    "metadata.accessControl.users": {"$each": user_id_list}
+                    "metadata.accessControl.departments": {"$each": request.department_name_list}
                 }
             }
         )
 
         # imagePermissions -> user
-        for user_id in user_id_list:
+        for department_name in request.department_name_list:
+            await collection_image_permissions.update_one(
+                {},
+                {
+                    "$addToSet": {
+                        f"department.{department_name}": request.image_id
+                    }
+                }
+            )
+        
+        ### images, matadata
+        image_id = request.image_id
+        image_one = await collection_images.find_one({"_id": ObjectId(image_id)})
+        if image_one is None:
+            raise HTTPException(status_code=404, detail="Image not found")
+        image_one["_id"] = str(image_one["_id"])
+
+        metadata_id = image_one.get("metadataId")
+        metadata_one = await collection_metadata.find_one({"_id": ObjectId(metadata_id)})
+        if metadata_one is None:
+            raise HTTPException(status_code=404, detail="Metadata not found")
+        metadata_one["_id"] = str(metadata_one["_id"])
+        ###
+
+        access_control_one = metadata_one.get("metadata").get("accessControl")
+        users = access_control_one.get("users")
+        
+        # departments 값이 None, 빈 문자열, 혹은 비어있는 경우 빈 리스트로 기본값 설정
+        departments = access_control_one.get("departments")
+        if not isinstance(departments, list) or any(department == '' for department in departments):
+            departments = []
+
+        # users
+        auth_list = []
+        for user in users:
+            user_one = self.db.query(Users).filter(Users.user_id.like(f"%{user}%")).first()
+            if user_one is None:
+                continue  # 일치하는 사용자가 없으면 건너뜁니다.
+            department_id = user_one.department_id
+            department_one = self.db.query(Departments).filter(Departments.department_id == department_id).first()
+            department_name = department_one.department_name if department_one else "Unknown Department"
+            user_information = AuthDetail(
+                user_id=user_one.user_id,
+                user_name=user_one.name,
+                department_name=department_name
+            )
+            auth_list.append(user_information)
+
+        # 5. 응답 반환
+        try:
+            return {
+                "image_id": image_id,
+                "auth_list": auth_list
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
+            )
+    
+    # 4. 유저 권한 추가
+    async def add_user_image_permission(self, request: ImageUserPermissionAddRequest) -> ImagePermissionAddResponse:
+        
+        ### images, matadata
+        image_id = request.image_id
+        image_one = await collection_images.find_one({"_id": ObjectId(image_id)})
+        if image_one is None:
+            raise HTTPException(status_code=404, detail="Image not found")
+        image_one["_id"] = str(image_one["_id"])
+
+        metadata_id = image_one.get("metadataId")
+        metadata_one = await collection_metadata.find_one({"_id": ObjectId(metadata_id)})
+        if metadata_one is None:
+            raise HTTPException(status_code=404, detail="Metadata not found")
+        metadata_one["_id"] = str(metadata_one["_id"])
+        ###
+
+        # metadata -> users
+        await collection_metadata.update_one(
+            {"_id": ObjectId(metadata_id)},
+            {
+                "$addToSet": {
+                    "metadata.accessControl.users": {"$each": request.user_id_list}
+                }
+            }
+        )
+
+        # imagePermissions -> user
+        for user_id in request.user_id_list:
             await collection_image_permissions.update_one(
                 {},
                 {
@@ -246,8 +327,8 @@ class ImageExtraService:
                 detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
             )
 
-    # 5. 권한 삭제
-    async def delete_image_auth(self, request: ImageDetailAuthDeleteRequest) -> ImageDetailAuthDeleteResponse:
+    # 6. 권한 삭제
+    async def delete_image_auth(self, request: ImagePermissionDeleteRequest) -> ImagePermissionDeleteResponse:
         
         ### images, matadata
         image_id = request.image_id
