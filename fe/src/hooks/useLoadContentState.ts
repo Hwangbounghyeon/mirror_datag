@@ -65,13 +65,11 @@ export const useLoadContentState = () => {
         [setImages, setTotalPages, setCurrentFilter, setIsLoading]
     );
 
-    // 초기화 함수
     const initialize = useCallback(async () => {
         await fetchTags();
         await searchByFilter(currentFilter, page);
     }, []);
 
-    // 컴포넌트 마운트 시 초기화
     useEffect(() => {
         initialize();
     }, [initialize]);
