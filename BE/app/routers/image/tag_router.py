@@ -7,7 +7,7 @@ from dto.common_dto import CommonResponse
 from configs.mariadb import get_database_mariadb
 from services.image.image_service import ImageService
 from services.image.image_extra_service import ImageExtraService
-from dto.image_detail_dto import ImageDetailTagDeleteRequest, ImageDetailTagAddRequest
+from dto.image_detail_dto import ImageDetailTagRemoveRequest, ImageDetailTagAddRequest
 from dto.search_dto import TagImageResponse
 
 security_scheme = HTTPBearer()
@@ -38,7 +38,7 @@ async def add_image_tag(
 # 2. 해당 이미지에 태그 삭제
 @router.post('/remove', description="태그 삭제")
 async def remove_image_tag(
-    request: ImageDetailTagDeleteRequest,
+    request: ImageDetailTagRemoveRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
     db: Session = Depends(get_database_mariadb)
 ):
