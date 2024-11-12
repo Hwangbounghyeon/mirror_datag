@@ -10,7 +10,7 @@ class Parameters(BaseModel):
 class ReductionResults(BaseModel):
     imageId: str
     imageUrl: str
-    features: Optional[List[float]] = None
+    features: List[float] | None = None
     predictions: Any
     label: Any
 
