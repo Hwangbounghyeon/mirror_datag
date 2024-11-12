@@ -25,7 +25,11 @@ main_router.include_router(det_router.router)
 
 app.include_router(main_router)
 
-@app.on_event("startup")
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.lifespan("startup")
 async def startup_db_client():
     get_database_mongodb()
 
