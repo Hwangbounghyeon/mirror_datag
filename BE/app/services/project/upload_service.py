@@ -83,25 +83,23 @@ class UploadService:
         json_labels = {}
 
         # 먼저 JSON 파일들을 처리하여 json_labels에 저장
-        for file in files:
-            if file.filename.endswith(".json"):
+        for filename, content in files:
+            if filename.endswith(".json"):
                 try:
-                    # JSON 파일 내용을 읽고 라벨 데이터로 저장
-                    json_content = json.loads(await file.read())
+                    json_content = json.loads(content)
                     json_labels.update(json_content)
                 except json.JSONDecodeError:
                     raise HTTPException(status_code=400, detail="JSON파일의 형식이 틀립니다.")
                 
 
-        for file in files:
-            if file.filename.endswith(".json"):
+        for filename, content in files:
+            if filename.endswith(".json"):
                 continue
         
-            if file.filename.endswith("zip"):
-                contents = await file.read()
+            if filename.endswith("zip"):
 
                 try:
-                    with zipfile.ZipFile(io.BytesIO(contents)) as zip_file:
+                    with zipfile.ZipFile(io.BytesIO(content)) as zip_file:
                         extracted_files = zip_file.namelist()
                         
                         # ZIP 파일에서 JSON 파일 찾기 및 읽기
@@ -120,6 +118,10 @@ class UploadService:
                             
                             # ZIP 파일 내부에서 각 파일 읽기
                             with zip_file.open(filename) as extracted_file:
+                                extracted_content = extracted_file.read()
+                                memory_file = io.BytesIO(extracted_content)
+                                memory_file.seek(0)
+
                                 file_extension = os.path.splitext(extracted_file.name)[1]
                                 file_name = f"{str(uuid.uuid4())}{file_extension}"
 
@@ -147,19 +149,20 @@ class UploadService:
                     raise HTTPException(status_code=500, detail=str(e))
                 
             else:
-                if not self.is_image(file.filename):
+                if not self.is_image(filename):
                     continue
 
-                file_extension = os.path.splitext(file.filename)[1]  # .jpg, .png 등
-
-                # 고유한 파일 이름 생성
+                memory_file = io.BytesIO(content)
+                memory_file.seek(0)
+                file_extension = os.path.splitext(filename)[1]
+                
                 file_name = f"{str(uuid.uuid4())}{file_extension}"
 
-                upload_to_s3(file.file, BUCKENAME, file_name)
+                upload_to_s3(memory_file, BUCKENAME, file_name)
     
                 s3_url = f"https://{BUCKENAME}.s3.us-east-2.amazonaws.com/{file_name}"
                 file_data["urls"].append(s3_url)
-                label_info = json_labels.get(file.filename, {"labels": [], "bounding_boxes": []})
+                label_info = json_labels.get(filename, {"labels": [], "bounding_boxes": []})
                 file_data["labels"].append({
                     "url": s3_url,
                     "label": label_info.get("labels", []),
@@ -178,9 +181,11 @@ class UploadService:
         department_id: int
     ):
         if task == "cls":
-            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/cls"
+            # url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/cls"
+            url = f"http://127.0.0.1:8001/dl/api/cls"
         else:
-            url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/det"
+            # url = f"http://{os.getenv('REDIS_HOST')}:8001/dl/api/det"
+            url = f"http://127.0.0.1:8001/dl/api/det"
 
         if department_id:
             department = self.db.query(Departments).filter(Departments.department_id == department_id).first()

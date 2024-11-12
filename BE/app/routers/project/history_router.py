@@ -59,3 +59,22 @@ async def get_history_detail(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.delete("/delete/{history_id}", description="History 삭제")
+async def delete_history(
+    history_id: str,
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
+    db: Session = Depends(get_database_mariadb)
+):
+    try:
+        history_service = HistoryService(db)
+        await history_service.delete_history(history_id)
+
+        return CommonResponse[str](
+            status=200,
+            data="History를 성공적으로 삭제하였습니다."
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
