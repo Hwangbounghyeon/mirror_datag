@@ -23,39 +23,47 @@ class ImageDetailTagAddResponse(BaseModel):
     image_id: str
     tag_name_list: List[str]
 
-class ImageDetailTagDeleteRequest(BaseModel):
+class ImageDetailTagRemoveRequest(BaseModel):
     image_id: str
-    delete_tag_list: List[str]
+    remove_tag_list: List[str]
 
-class ImageDetailTagDeleteResponse(BaseModel):
+class ImageDetailTagRemoveResponse(BaseModel):
     image_id: str
     tag_name_list: List[str]
 
-class AuthDetail(BaseModel):
+class UserDetail(BaseModel):
     user_id: int
     user_name: str
     department_name: str
 
-class ImageDepartmentPermissionAddRequest(BaseModel):
-    department_name_list: List[str]
-    image_id: str
-
 class ImageUserPermissionAddRequest(BaseModel):
+    image_id: str
     user_id_list: List[int]
-    image_id: str
 
-class ImagePermissionAddResponse(BaseModel):
+class ImageDepartmentPermissionAddRequest(BaseModel):
     image_id: str
-    auth_list: List[AuthDetail]
+    department_name_list: List[str]
 
-class ImageUserPermissionDeleteRequest(BaseModel):
+class ImageUserPermissionAddResponse(BaseModel):
+    image_id: str
+    user_list: List[UserDetail]
+
+class ImageDepartmentPermissionAddResponse(BaseModel):
+    image_id: str
+    department_list: List[str]
+
+class ImageUserPermissionRemoveRequest(BaseModel):
+    image_id: str
     user_id_list: List[int]
-    image_id: str
 
-class ImageDepartmentPermissionDeleteRequest(BaseModel):
-    department_name_list: List[int]
+class ImageDepartmentPermissionRemoveRequest(BaseModel):
     image_id: str
+    department_name_list: List[str]
 
-class ImagePermissionDeleteResponse(BaseModel):
+class ImageUserPermissionRemoveResponse(BaseModel):
     image_id: str
-    auth_list: List[AuthDetail]
+    user_list: List[UserDetail]
+
+class ImageDepartmentPermissionRemoveResponse(BaseModel):
+    image_id: str
+    department_list: List[str]
