@@ -4,7 +4,7 @@ import { createFileInput } from "./fileUtils";
 export const useFileSelection = (onFilesSelected: (files: File[]) => void) => {
     const handleSelectFiles = useCallback(() => {
         const input = createFileInput({
-            accept: "image/*,.zip",
+            accept: "image/*,.zip,.7z,.json",
             onChange: onFilesSelected,
         });
         input.click();
