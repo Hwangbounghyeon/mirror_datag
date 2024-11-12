@@ -36,18 +36,26 @@ class AuthDetail(BaseModel):
     user_name: str
     department_name: str
 
-class ImageDetailAuthAddRequest(BaseModel):
+class ImageDepartmentPermissionAddRequest(BaseModel):
     department_name_list: List[str]
     image_id: str
 
-class ImageDetailAuthAddResponse(BaseModel):
-    image_id: str
-    auth_list: List[AuthDetail]
-
-class ImageDetailAuthDeleteRequest(BaseModel):
+class ImageUserPermissionAddRequest(BaseModel):
     user_id_list: List[int]
     image_id: str
 
-class ImageDetailAuthDeleteResponse(BaseModel):
+class ImagePermissionAddResponse(BaseModel):
+    image_id: str
+    auth_list: List[AuthDetail]
+
+class ImageDepartmentPermissionDeleteRequest(BaseModel):
+    user_id_list: List[int]
+    image_id: str
+
+class ImageUserPermissionDeleteRequest(BaseModel):
+    user_id_list: List[int]
+    image_id: str
+
+class ImagePermissionDeleteResponse(BaseModel):
     image_id: str
     auth_list: List[AuthDetail]
