@@ -11,6 +11,11 @@ pipeline {
         stage('변경사항 감지') {
                 steps {
                     script {
+                        if (env.gitlabActionType != 'merge') {
+                        currentBuild.result = 'SUCCESS'
+                        echo "Merge 이벤트가 아닙니다. 파이프라인을 중단합니다."
+                        return
+                        }
                         // 이전 커밋과 현재 커밋 사이의 변경된 파일 목록 가져오기
                         def changes = sh(
                             script: "git diff --name-only HEAD^..HEAD | grep '^DL/app/' || true",
