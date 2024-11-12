@@ -136,7 +136,7 @@ pipeline {
         }
         always {
             sh 'rm -f .env'
-            cleanWs()
+            // cleanWs()
         }
     }
 }
