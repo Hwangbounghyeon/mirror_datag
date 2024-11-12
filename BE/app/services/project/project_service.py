@@ -435,14 +435,17 @@ class ProjectService:
             metadata_dict = {str(doc["_id"]): doc.get("fileList", [])[0] for doc in metadata_docs}
 
             # 5. 결과 생성
-            image_list = [
-                ImageSearchResponse(images={str(image["_id"]): metadata_dict.get(str(image["metadataId"]))})
+            images = {
+                str(image["_id"]): metadata_dict.get(str(image["metadataId"]))
                 for image in paginated_images
                 if metadata_dict.get(str(image["metadataId"]))
-            ]
+            }
+
+            # ImageSearchResponse 생성
+            response = ImageSearchResponse(images=images)
 
             return {
-                "data": image_list,
+                "data": response,
                 "page": page,
                 "limit": limit,
                 "total_count": total_count,
