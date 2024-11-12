@@ -29,10 +29,6 @@ app.include_router(main_router)
 async def health_check():
     return {"status": "healthy"}
 
-@app.lifespan("startup")
-async def startup_db_client():
-    get_database_mongodb()
-
 import uvicorn
 
 if __name__ == "__main__":
