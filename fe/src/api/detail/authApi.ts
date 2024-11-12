@@ -1,20 +1,30 @@
 import apiClient from "../client";
-import { AuthResponse, AuthUser } from "@/types/auth";
+import { AuthDepartmentResponse, AuthResponse, AuthUser } from "@/types/auth";
 
-export interface AddAuthorityRequest {
-    image_id: string;
-    user_id_list: string[];
-}
-
-export interface DeleteAuthorityRequest {
+export interface AddUserAuthorityRequest {
     image_id: string;
     user_id_list: number[];
 }
 
+export interface AddDepartmentAuthorityRequest {
+    image_id: string;
+    department_name_list: string[];
+}
+
+export interface DeleteUserAuthorityRequest {
+    image_id: string;
+    user_id_list: number[];
+}
+
+export interface DeleteDepartmentAuthorityRequest {
+    image_id: string;
+    department_name_list: string[];
+}
+
 export const authorityApi = {
-    add: async (request: AddAuthorityRequest): Promise<AuthUser[]> => {
+    addUsers: async (request: AddUserAuthorityRequest): Promise<AuthUser[]> => {
         const response = await apiClient<AuthResponse>(
-            "/image/permission/add",
+            "image/permission/addUser",
             {
                 method: "POST",
                 body: JSON.stringify(request),
@@ -26,14 +36,55 @@ export const authorityApi = {
             throw new Error("No data received");
         }
 
+        return response.data.auth_list;
+    },
+
+    addDepartments: async (
+        request: AddDepartmentAuthorityRequest
+    ): Promise<string[]> => {
+        const response = await apiClient<AuthDepartmentResponse>(
+            "/image/permission/addDepartment",
+            {
+                method: "POST",
+                body: JSON.stringify(request),
+                cache: "no-store",
+            }
+        );
+
+        if (!response.data) {
+            throw new Error("No data received");
+        }
+
+        console.log(response.data.department_list);
+
+        return response.data.department_list;
+    },
+
+    removeUser: async (
+        request: DeleteUserAuthorityRequest
+    ): Promise<AuthUser[]> => {
+        const response = await apiClient<AuthResponse>(
+            "/image/permission/removeUser",
+            {
+                method: "POST",
+                body: JSON.stringify(request),
+                cache: "no-store",
+            }
+        );
+
+        if (!response.data) {
+            throw new Error("No data received");
+        }
         console.log(response.data.auth_list);
 
         return response.data.auth_list;
     },
 
-    delete: async (request: DeleteAuthorityRequest): Promise<AuthUser[]> => {
-        const response = await apiClient<AuthResponse>(
-            "/image/permission/remove",
+    removeDepartment: async (
+        request: DeleteDepartmentAuthorityRequest
+    ): Promise<string[]> => {
+        const response = await apiClient<AuthDepartmentResponse>(
+            "/image/permission/removeDepartment",
             {
                 method: "POST",
                 body: JSON.stringify(request),
@@ -44,8 +95,8 @@ export const authorityApi = {
         if (!response.data) {
             throw new Error("No data received");
         }
-        console.log(response.data.auth_list);
+        console.log(response.data.department_list);
 
-        return response.data.auth_list;
+        return response.data.department_list;
     },
 };
