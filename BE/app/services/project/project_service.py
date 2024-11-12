@@ -5,7 +5,9 @@ from utils.timezone import get_current_time
 from bson import ObjectId
 
 from fastapi import HTTPException
-from dto.search_dto import SearchCondition, ImageSearchResponse
+<<<<<<< BE/app/services/project/project_service.py
+from sqlalchemy.orm import Session
+from dto.search_dto import SearchCondition, ImageSearchResponse, SearchRequest
 from configs.mongodb import (
     collection_tag_images, 
     collection_metadata, 
@@ -17,7 +19,7 @@ from configs.mongodb import (
 )
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse
+from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest
 from models.mariadb_users import Users, Departments
 from typing import List
 
@@ -458,3 +460,20 @@ class ProjectService:
         }
         
         return model_list
+    
+    # 4. 선택한 이미지를 project에 저장
+    async def get_add_image(self, request: AddImageRequest):
+        document = collection_project_images.find_one({"project." + request.project_id: {"$exists": True}})
+    
+        if not document:
+            raise HTTPException(status_code=404, detail="Project ID not found")
+
+        result = collection_project_images.update_one(
+            {"_id": document["_id"]},
+            {"$set": {f"project.{request.project_id}": request.image_ids}}
+        )
+        
+        if result.modified_count > 0:
+            return "Image를 성공적으로 업데이트하였습니다."
+        else:
+            raise HTTPException(status_code=500, detail="Image 업데이트에 실패하였습니다.")
