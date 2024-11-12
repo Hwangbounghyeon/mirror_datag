@@ -207,6 +207,14 @@ const FilterComponent = ({
                         const filterData = transformFilterData();
                         onDone(filterData);
                     }}
+                    isDisabled={
+                        !filterRows.some(
+                            (row) =>
+                                row.AND.length > 0 ||
+                                row.OR.length > 0 ||
+                                row.NOT.length > 0
+                        )
+                    }
                 >
                     Done
                 </Button>
