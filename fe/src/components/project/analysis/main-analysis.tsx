@@ -67,15 +67,19 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
   };
 
   function extractFeatureData(data: HistoryData): DataPoint[] {
-    if (data.results) {
-      return data.results.map((result) => ({
+    if (!data.results) return [];
+  
+    return data.results
+      .filter(result => 
+        result.features && 
+        Array.isArray(result.features)
+      )
+      .map((result) => ({
         id: result.imageId,
-        x: result.features[selectedIndices.x],
-        y: result.features[selectedIndices.y],
-        label: result.predictions.prediction,
+        x: (result.features as number[])[selectedIndices.x],
+        y: (result.features as number[])[selectedIndices.y],
+        label: result.predictions?.prediction || 'unknown',
       }));
-    }
-    return [];
   }
 
   useEffect(() => {

@@ -23,30 +23,47 @@ const GetHistories = async ({
     endpoint: `/project/history/${projectId}/list`,
     searchParams: requestParams,
   });
+
   if (!response.data) {
-    return <div>데이터가 없습니다.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="p-6 text-center bg-default-50 rounded-lg">
+          <p className="text-lg font-medium">데이터가 없습니다</p>
+        </div>
+      </div>
+    );
   }
+
   const result = response.data;
   return (
-    <div className="h-full w-full flex flex-col flex-grow items-center">
-      <div className="h-[85%] w-[95%] flex flex-col overflow-y-scroll">
-        {result.data.data.map((history) => (
-          <HistoryCard
-            key={history.history_id}
-            project_id={projectId}
-            {...history}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="bg-background shadow-lg rounded-lg p-6">
+        <div className="space-y-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">분석 히스토리</h1>
+          </div>
+        </div>
+        
+        <div className="space-y-4 mb-8">
+          {result.data.data.map((history) => (
+            <HistoryCard
+              key={history.history_id}
+              project_id={projectId}
+              {...history}
+              queryStrings={requestParams}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-divider">
+          <PaginationBar
+            prefetch={false}
             queryStrings={requestParams}
+            totalPage={result.data.total_pages}
+            currentPage={page > result.data.total_pages ? result.data.total_pages : page}
           />
-        ))}
+        </div>
       </div>
-      <PaginationBar
-        prefetch={false}
-        queryStrings={requestParams}
-        totalPage={result.data.total_pages}
-        currentPage={
-          page > result.data.total_pages ? result.data.total_pages : page
-        }
-      />
     </div>
   );
 };
@@ -67,8 +84,17 @@ const Page = ({ params, searchParams }: PageProps) => {
   const projectId = params.project_id;
   const nowPage = searchParams.page ? parseInt(searchParams.page) : 1;
   const queryStrings = new URLSearchParams(searchParams);
+  
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense 
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="p-4 bg-default-50 rounded-lg">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      }
+    >
       <GetHistories
         projectId={projectId}
         nowPage={nowPage}
