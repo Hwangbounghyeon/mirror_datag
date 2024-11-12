@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Form, Security, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -120,10 +120,11 @@ async def search_project_images(
 # 5. 이미지 업로드
 @router.post("/image/upload", description="이미지 업로드(zip, image)")
 async def image_upload(
+    background_tasks: BackgroundTasks,
     upload_request: str = Form(...),
     files: Optional[list[UploadFile]] = File(None),
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
-    db : Session = Depends(get_database_mariadb)
+    db : Session = Depends(get_database_mariadb),
 ):
     try:
         access_token = credentials.credentials
@@ -134,14 +135,13 @@ async def image_upload(
         upload_request_obj = UploadRequest(**parsed_request)
 
         upload = UploadService(db)
-        if not files or len(files) == 0:
-            file_urls = []
-        else:
-            file_urls = await upload.upload_image(upload_request_obj, files, user_id)
+
+        if files:
+            background_tasks.add_task(upload.upload_image, upload_request_obj, files, user_id)
 
         return CommonResponse(
             status=200,
-            data=file_urls
+            data="이미지 업로드에 성공하였습니다."
         )
     except HTTPException as http_exc:
         raise http_exc
@@ -169,12 +169,13 @@ async def model_list(
 # 7. 선택한 이미지를 project에 저장
 @router.post("/image/add", description="선택한 이미지 project에 저장")
 async def image_add(
+    background_tasks: BackgroundTasks,
     request: AddImageRequest,
     credentials: HTTPAuthorizationCredentials = Security(security_scheme),
 ):
     try:
         project_service = ProjectService()
-
+        background_tasks.add_task(project_service.get_add_image, request)
         return
     except HTTPException as http_exc:
         raise http_exc
