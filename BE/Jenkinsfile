@@ -121,7 +121,8 @@ pipeline {
                     dir('BE/app'){
                     sh """
                         docker-compose -f docker-compose-lts.yml down
-                        docker rmi -f jingluv/s108_backend:lts
+                        docker rm -f backend || true
+                        docker rmi -f jingluv/s108_backend:lts || true
                         docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
