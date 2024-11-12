@@ -328,7 +328,7 @@ class ImageExtraService:
             )
 
     # 6. 권한 삭제
-    async def delete_image_auth(self, request: ImagePermissionDeleteRequest) -> ImagePermissionDeleteResponse:
+    async def remove_image_permission(self, request: ImagePermissionDeleteRequest) -> ImagePermissionDeleteResponse:
         
         ### images, matadata
         image_id = request.image_id
