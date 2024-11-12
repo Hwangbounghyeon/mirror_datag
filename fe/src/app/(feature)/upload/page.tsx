@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/common/pageContainer";
 import { UploadContent } from "@/components/upload/uploadContent";
 import { useImageState } from "@/hooks/useImageState";
 import { useNavigation } from "@/hooks/useNavigation";
-import { useFileValidation } from "@/hooks/useFileValidation";
+import { useFileValidation } from "@/hooks/filecheck/useFileValidation";
 import { PageHeader } from "@/components/common/pageHeader";
 
 export default function UploadPage() {

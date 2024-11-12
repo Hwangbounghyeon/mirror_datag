@@ -74,7 +74,7 @@ const SupportedFormats: FC = () => (
     <div className="flex flex-col items-center justify-center text-center">
         <p className="text-base mt-10 mb-3">Supported Formats</p>
         <p className="text-base text-opacity-80 text-gray-300">
-            .jpg .jpeg .png .gif .webp .bmp .svg .zip
+            .jpg .jpeg .png .gif .webp .bmp .svg .zip .json .7z
         </p>
     </div>
 );
