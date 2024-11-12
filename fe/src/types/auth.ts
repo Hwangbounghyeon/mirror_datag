@@ -15,9 +15,18 @@ export interface AuthUser {
 export interface AuthResponseData {
     image_id: string;
     auth_list: AuthUser[];
+    department_auth_list: string[];
+}
+
+export interface AuthDepartmentResponseData {
+    image_id: string;
+    department_list: string[];
 }
 
 export type AuthResponse = DefaultResponseType<AuthResponseData>;
+
+export type AuthDepartmentResponse =
+    DefaultResponseType<AuthDepartmentResponseData>;
 
 export interface LoginResponseType {
     access_token: string;
