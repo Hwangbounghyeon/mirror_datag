@@ -4,44 +4,38 @@ import React, { useCallback, useState, memo, useEffect, use } from "react";
 import StepIndicator from "@/components/project/create/step-indicator";
 import useCreateProject from "@/hooks/useCreateProject";
 import Step1 from "@/components/project/create/step1";
+import Step2 from "@/components/project/create/step2";
 import Step3 from "@/components/project/create/step3";
-import Step4 from "@/components/project/create/step4";
-import { CreateProjectType } from "@/types/projectType";
 import { useRouter } from "next/navigation";
 
 // Memoize step components
 const MemoizedStep1 = memo(Step1);
+const MemoizedStep2 = memo(Step2);
 const MemoizedStep3 = memo(Step3);
-const MemoizedStep4 = memo(Step4);
 
 const Page = () => {
   const router = useRouter();
-
   useEffect(() => {
     router.prefetch("/project");
-  }, []);
+  }, [router]);
+
   const [step, setStep] = useState(3);
-  const { state, dispatch } = useCreateProject();
+  const {
+    state,
+    handleProjectItemChange,
+    handleCategoryChange,
+    addUser,
+    removeUser,
+    updateUserAuth,
+    addDepartment,
+    removeDepartment,
+    updateDepartmentAuth,
+    clearAccessControl,
+    resetState,
+  } = useCreateProject();
 
   const handleMove = useCallback((stepNumber: number) => {
     setStep(stepNumber);
-  }, []);
-
-  const handleProjectItemChange = useCallback(
-    (updates: Partial<CreateProjectType>) => {
-      dispatch({
-        type: "SET_PROJECT_ITEM",
-        payload: updates,
-      });
-    },
-    []
-  );
-
-  const handleCategoryChange = useCallback((category: string) => {
-    dispatch({
-      type: "SET_CATEGORY",
-      payload: category,
-    });
   }, []);
 
   // Memoize the step rendering logic
@@ -64,9 +58,9 @@ const Page = () => {
           />
         );
       case 2:
-        return <MemoizedStep3 {...commonProps} />;
+        return <MemoizedStep2 {...commonProps} />;
       case 3:
-        return <MemoizedStep4 {...commonProps} />;
+        return <MemoizedStep3 {...commonProps} />;
       default:
         return null;
     }

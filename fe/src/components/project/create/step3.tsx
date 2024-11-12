@@ -1,57 +1,38 @@
 import { StepProps } from "@/types/projectType";
-import { Button, Input, Textarea } from "@nextui-org/react";
-import { memo } from "react";
 
-const Step3 = ({ handleMove, projectItem, setProjectItem }: StepProps) => {
+import { AppDispatch, RootState } from "@/store/store";
+import { setProjectName, setDescription } from "@/store/create-store";
+import { useDispatch, useSelector } from "react-redux";
+import { Root } from "postcss";
+import { Button } from "@nextui-org/react";
+
+export default function Step3({ handleMove }: StepProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const addedAuthUsers = useSelector(
+    (state: RootState) => state.project.accesscontrol.users
+  );
+  const addedAuthDeps = useSelector(
+    (state: RootState) => state.project.accesscontrol.departments
+  );
+
   return (
-    <div className="flex flex-col item-center max-w-[700px] w-[90%] flex-wrap md:flex-nowrap ">
-      <Input
-        isRequired
-        defaultValue={`${projectItem.project_name || ""}`}
-        type="text"
-        name="project_name"
-        className="mb-5"
-        label="Project Name"
-        radius="md"
-        size="md"
-        onChange={(e) => {
-          setProjectItem({
-            project_name: e.target.value || "",
-          });
-        }}
-      />
+    <div className="max-w-[700px] w-full flex flex-col items-center justify-center">
+      <header>
+        <h1 className="text-[20px] mb-3">
+          추가적으로 프로젝트에 접근 허용할 대상을 골라 주세요.
+        </h1>
+        <div className="flex flex-row flex-wrap">
+          <Button>부서 추가</Button>
+          <Button>인원 추가</Button>
+        </div>
+      </header>
 
-      <Textarea
-        isRequired
-        minRows={2}
-        className="mb-5"
-        defaultValue={`${projectItem.description || ""}`}
-        label="Project Description"
-        radius="md"
-        size="md"
-        name="description"
-        onChange={(e) => {
-          setProjectItem({
-            description: e.target.value || "",
-          });
-        }}
-      />
-
-      <Button
-        disabled={
-          projectItem.project_name.length === 0 ||
-          projectItem.description.length === 0
-        }
-        onClick={() => {
-          if (handleMove) {
-            handleMove(3);
-          }
-        }}
-      >
-        Next
-      </Button>
+      <section className="w-full flex flex-col">
+        <h3 className="text-[14px] text-center">부서 목록</h3>
+      </section>
+      <section className="w-full flex flex-col">
+        <h3 className="text-[14px] text-center">인원 목록</h3>
+      </section>
     </div>
   );
-};
-
-export default memo(Step3);
+}

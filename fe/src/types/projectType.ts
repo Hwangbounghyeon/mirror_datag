@@ -52,11 +52,7 @@ export type ProjectType = {
 };
 
 export interface StepProps {
-  projectItem: CreateProjectType;
-  setProjectItem: (updates: Partial<CreateProjectType>) => void;
   handleMove: (step: number) => void;
-  category?: string; // Step1에만 필요
-  setCategory?: (category: string) => void; // Step1에만 필요
 }
 
 export type ProjectAuthType = "ReadOnly" | "Read&Write" | "None";
