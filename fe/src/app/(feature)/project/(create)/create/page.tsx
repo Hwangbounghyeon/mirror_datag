@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useCallback, useState, memo, useEffect, use } from "react";
+import React, { useCallback, useState, memo, useEffect } from "react";
 import StepIndicator from "@/components/project/create/step-indicator";
-import useCreateProject from "@/hooks/useCreateProject";
 import Step1 from "@/components/project/create/step1";
 import Step2 from "@/components/project/create/step2";
 import Step3 from "@/components/project/create/step3";
@@ -20,19 +19,6 @@ const Page = () => {
   }, [router]);
 
   const [step, setStep] = useState(3);
-  const {
-    state,
-    handleProjectItemChange,
-    handleCategoryChange,
-    addUser,
-    removeUser,
-    updateUserAuth,
-    addDepartment,
-    removeDepartment,
-    updateDepartmentAuth,
-    clearAccessControl,
-    resetState,
-  } = useCreateProject();
 
   const handleMove = useCallback((stepNumber: number) => {
     setStep(stepNumber);
@@ -41,37 +27,19 @@ const Page = () => {
   // Memoize the step rendering logic
   const renderStep = useCallback(() => {
     // 공통 props
-    const commonProps = {
-      projectItem: state.createProjectItem,
-      setProjectItem: handleProjectItemChange,
-      handleMove: handleMove,
-    };
 
     // Step에 따라 다른 컴포넌트를 렌더링
     switch (step) {
       case 1:
-        return (
-          <MemoizedStep1
-            {...commonProps}
-            category={state.category}
-            setCategory={handleCategoryChange}
-          />
-        );
+        return <MemoizedStep1 handleMove={handleMove} />;
       case 2:
-        return <MemoizedStep2 {...commonProps} />;
+        return <MemoizedStep2 handleMove={handleMove} />;
       case 3:
-        return <MemoizedStep3 {...commonProps} />;
+        return <MemoizedStep3 handleMove={handleMove} />;
       default:
         return null;
     }
-  }, [
-    step,
-    state.createProjectItem,
-    state.category,
-    handleProjectItemChange,
-    handleMove,
-    handleCategoryChange,
-  ]);
+  }, [step, handleMove]);
 
   return (
     <div className="min-h-screen flex flex-col relative">

@@ -13,8 +13,8 @@ const initialState: CreateProjectType = {
   project_model_name: "",
   description: "",
   accesscontrol: {
-    users: new Map<number, SearchUserWithAuthType>(),
-    departments: new Map<number, SearchDepartmentWithAutyType>(),
+    users: {},
+    departments: {},
   },
   is_private: false,
 };
@@ -36,46 +36,37 @@ const projectSlice = createSlice({
       state.is_private = action.payload;
     },
     addUser: (state, action: PayloadAction<SearchUserWithAuthType>) => {
-      state.accesscontrol.users.set(action.payload.user_id, action.payload);
+      state.accesscontrol.users[action.payload.user_id] = action.payload;
     },
     removeUser: (state, action: PayloadAction<number>) => {
-      state.accesscontrol.users.delete(action.payload);
+      delete state.accesscontrol.users[action.payload];
     },
     addDepartment: (
       state,
       action: PayloadAction<SearchDepartmentWithAutyType>
     ) => {
-      state.accesscontrol.departments.set(
-        action.payload.department_id,
-        action.payload
-      );
+      state.accesscontrol.departments[action.payload.department_id] =
+        action.payload;
     },
     removeDepartment: (state, action: PayloadAction<number>) => {
-      state.accesscontrol.departments.delete(action.payload);
+      delete state.accesscontrol.departments[action.payload];
     },
     updateUserAuth: (
       state,
       action: PayloadAction<{ userId: number; auth: ProjectAuthType }>
     ) => {
-      const user = state.accesscontrol.users.get(action.payload.userId);
-      if (user) {
-        user.Auth = action.payload.auth;
-        state.accesscontrol.users.set(action.payload.userId, user);
+      if (state.accesscontrol.users[action.payload.userId]) {
+        state.accesscontrol.users[action.payload.userId].Auth =
+          action.payload.auth;
       }
     },
     updateDepartmentAuth: (
       state,
       action: PayloadAction<{ departmentId: number; auth: ProjectAuthType }>
     ) => {
-      const department = state.accesscontrol.departments.get(
-        action.payload.departmentId
-      );
-      if (department) {
-        department.Auth = action.payload.auth;
-        state.accesscontrol.departments.set(
-          action.payload.departmentId,
-          department
-        );
+      if (state.accesscontrol.departments[action.payload.departmentId]) {
+        state.accesscontrol.departments[action.payload.departmentId].Auth =
+          action.payload.auth;
       }
     },
     resetProject: (state) => {

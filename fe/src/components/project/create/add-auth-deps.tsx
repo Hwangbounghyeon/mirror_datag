@@ -136,14 +136,14 @@ const AddAuthDeps = ({ isOpen, onClose }: AddAuthDpts) => {
                         handleSelectUser(department);
                       }}
                       size="sm"
-                      disabled={selectedDeps.has(department.department_id)}
+                      disabled={!!selectedDeps[department.department_id]}
                       color={
                         willSelectedDeps.includes(department)
                           ? "secondary"
                           : "primary"
                       }
                     >
-                      {selectedDeps.has(department.department_id)
+                      {!!selectedDeps[department.department_id]
                         ? "추가됨"
                         : willSelectedDeps.includes(department)
                         ? "목록 제거"

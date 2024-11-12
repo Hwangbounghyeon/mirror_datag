@@ -181,14 +181,14 @@ const AddAuthUser = ({ isOpen, onClose }: AddAuthUserProps) => {
                         handleSelectUser(user);
                       }}
                       size="sm"
-                      disabled={selectedUsers.has(user.user_id)}
+                      disabled={!!selectedUsers[user.user_id]}
                       color={
                         willselectedUser.includes(user)
                           ? "secondary"
                           : "primary"
                       }
                     >
-                      {selectedUsers.has(user.user_id)
+                      {!!selectedUsers[user.user_id]
                         ? "추가됨"
                         : willselectedUser.includes(user)
                         ? "목록 제거"

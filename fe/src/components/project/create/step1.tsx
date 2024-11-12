@@ -64,6 +64,7 @@ const Step1 = ({ handleMove }: StepProps) => {
         if (!data.data) {
           console.error("모델 리스트 가져오기 에러", data.error);
         } else {
+          console.log("모델 리스트 가져오기 성공", data.data);
           setModelList(data.data);
         }
       });
