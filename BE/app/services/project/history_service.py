@@ -87,3 +87,20 @@ class HistoryService:
             return {**history}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+    # History 삭제
+    async def delete_history(self, history_id: str):
+        try:
+            history = await collection_histories.find_one_and_delete({"_id": ObjectId(history_id)})
+
+            if history:
+                project_id = history['projectId']
+
+                # 특정 history ID를 배열에서 제거
+                await collection_project_histories.update_one(
+                    {f"project.{project_id}": history_id},
+                    {"$pull": {f"project.{project_id}": history_id}}
+                )
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
