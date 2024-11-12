@@ -358,32 +358,32 @@ class ProjectService:
             project_images = await collection_project_images.find_one({})
             if not project_images or "project" not in project_images:
                 return {
-                    "data": [],
+                    "data": ImageSearchResponse(images={}),
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
-                    "total_pages": 0
+                    "total_pages": 1
                 }
 
             project_image_ids = set(project_images["project"].get(project_id, []))
             if not project_image_ids:
                 return {
-                    "data": [],
+                    "data": ImageSearchResponse(images={}),
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
-                    "total_pages": 0
+                    "total_pages": 1
                 }
             
             # 2. conditions 처리
             tag_doc = await collection_tag_images.find_one({})
             if not tag_doc:
                 return {
-                    "data": [],
+                    "data": ImageSearchResponse(images={}),
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
-                    "total_pages": 0
+                    "total_pages": 1
                 }
 
             if not search_conditions:
@@ -396,22 +396,22 @@ class ProjectService:
                 
                 if not final_matching_ids:
                     return {
-                        "data": [],
+                        "data": ImageSearchResponse(images={}),
                         "page": page,
                         "limit": limit,
                         "total_count": 0,
-                        "total_pages": 0
+                        "total_pages": 1
                     }
                 
                 final_matching_ids &= project_image_ids
             
             if not final_matching_ids:
                 return {
-                    "data": [],
+                    "data": ImageSearchResponse(images={}),
                     "page": page,
                     "limit": limit,
                     "total_count": 0,
-                    "total_pages": 0
+                    "total_pages": 1
                 }
 
             # 3. 페이지네이션 및 정렬
@@ -420,6 +420,7 @@ class ProjectService:
             
             total_count = await collection_images.count_documents(base_query)
             total_pages = (total_count + limit - 1) // limit
+            total_pages = 1 if total_pages == 0 else total_pages
 
             skip = (page - 1) * limit
             paginated_images = await collection_images.find(base_query).sort('createdAt', 1).skip(skip).limit(limit).to_list(length=None)
@@ -432,7 +433,7 @@ class ProjectService:
             ).to_list(length=None)
 
             metadata_dict = {str(doc["_id"]): doc.get("fileList", [])[0] for doc in metadata_docs}
-
+            
             # 5. 결과 생성
             images = {
                 str(image["_id"]): metadata_dict.get(str(image["metadataId"]))

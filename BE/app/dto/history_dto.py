@@ -12,7 +12,7 @@ class HistoryListRequest(BaseModel):
 class HistoryListData(BaseModel):
     history_id: str
     history_name: str
-    is_done: bool
+    is_done: int
     created_at: datetime
     updated_at: datetime
 
