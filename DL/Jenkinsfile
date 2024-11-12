@@ -85,10 +85,14 @@ pipeline {
                 script {
                     dir('DL/app'){
                     // Git 버전과 LTS 버전 빌드
-                    sh """
-                    docker build -t ${DOCKER_REGISTRY}/s108_data:${GIT_VERSION} -f Dockerfile .
-                    docker build -t ${DOCKER_REGISTRY}/s108_data:lts -f Dockerfile .
+                    sh"""
+                    docker-compose -f docker-compose-version.yml build
+                    docker-compose -f docker-compose-lts.yml build
                     """
+                    // sh """
+                    // docker build -t ${DOCKER_REGISTRY}/s108_data:${GIT_VERSION} -f Dockerfile .
+                    // docker build -t ${DOCKER_REGISTRY}/s108_data:lts -f Dockerfile .
+                    // """
                     }
                 }
             }
@@ -114,9 +118,9 @@ pipeline {
                 script {
                     dir('DL/app'){
                     sh """
-                        docker compose -f docker-compose-lts.yml down
+                        docker-compose -f docker-compose-lts.yml down
                         docker rmi -f jingluv/s108_data:lts
-                        docker compose -f docker-compose-lts.yml up -d
+                        docker-compose -f docker-compose-lts.yml up -d
                     """
                     }
                 }
