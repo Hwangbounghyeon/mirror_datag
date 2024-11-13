@@ -5,19 +5,33 @@ export const uploadImage = async (
     request: UploadImageRequest
 ): Promise<UploadResponse> => {
     const formData = new FormData();
-    const upload_request = JSON.stringify({
-        project_id: request.project_id,
-        is_private: request.is_private,
-    });
 
-    formData.append("upload_request", upload_request);
-    request.images.forEach((item) => {
-        formData.append("files", item.data);
-    });
+    try {
+        formData.append(
+            "upload_request",
+            JSON.stringify({
+                project_id: request.project_id,
+                is_private: request.is_private,
+            })
+        );
 
-    return apiClient<UploadResponse>("/project/image/upload", {
-        method: "POST",
-        body: formData,
-        cache: "no-store",
-    });
+        request.images.forEach((item) => {
+            formData.append("files", item.data);
+        });
+
+        console.log("Sending request to API");
+        const response = await apiClient<UploadResponse>(
+            "/project/image/upload",
+            {
+                method: "POST",
+                body: formData,
+                cache: "no-store",
+                headers: {},
+            }
+        );
+        return response;
+    } catch (error) {
+        console.error("Upload failed:", error);
+        throw error;
+    }
 };

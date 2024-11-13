@@ -1,3 +1,4 @@
+import { Button } from "@nextui-org/react";
 import { FC } from "react";
 
 interface ImageUploaderProps {
@@ -54,18 +55,18 @@ const UploadButtons: FC<ImageUploaderProps> = ({
     onSelectFolder,
 }) => (
     <div className="flex gap-48">
-        <button
-            className="px-12 py-4 border border-dashed border-gray-500 rounded hover:bg-gray-100"
+        <Button
+            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded bg-gray-100"
             onClick={onSelectFiles}
         >
             Select Files
-        </button>
-        <button
-            className="px-12 py-4 border border-dashed border-gray-500 rounded hover:bg-gray-100"
+        </Button>
+        <Button
+            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded bg-gray-100"
             onClick={onSelectFolder}
         >
             Select Folder
-        </button>
+        </Button>
     </div>
 );
 
@@ -73,7 +74,7 @@ const SupportedFormats: FC = () => (
     <div className="flex flex-col items-center justify-center text-center">
         <p className="text-base mt-10 mb-3">Supported Formats</p>
         <p className="text-base text-opacity-80 text-gray-300">
-            .jpg .jpeg .png .gif .webp .bmp .svg .zip
+            .jpg .jpeg .png .gif .webp .bmp .svg .zip .json .7z
         </p>
     </div>
 );
