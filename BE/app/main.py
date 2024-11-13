@@ -26,12 +26,11 @@ if platform.system() == 'Windows':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI(
-    docs_url="/be/docs",
-    openapi_url="/be/openapi.json"
+    root_path="/be"
 )
 
 
-main_router = APIRouter(prefix="/be/api")
+main_router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
