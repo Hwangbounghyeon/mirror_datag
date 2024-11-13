@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   frontend:
     container_name: frontend-${GIT_VERSION}
@@ -16,27 +17,14 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-      - ./.next:/app/.next
-      - ./next.config.mjs:/app/next.config.mjs
-      - ./tailwind.config.ts:/app/tailwind.config.ts
-      - ./postcss.config.mjs:/app/postcss.config.mjs
-      - ./tsconfig.json:/app/tsconfig.json
+      - .:/app
       - /app/node_modules
+      - /app/.next
     restart: unless-stopped
     networks:
       - be-redis
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/health",
-        ]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
