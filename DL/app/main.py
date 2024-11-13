@@ -8,7 +8,10 @@ from configs.mongodb import mongo_url
 from configs.mongodb import get_database_mongodb
 import traceback
 
-app = FastAPI()
+app = FastAPI(
+    docs_url="/be/docs",
+    openapi_url="/be/openapi.json"
+)
 
 main_router = APIRouter(prefix="/dl/api")
 
