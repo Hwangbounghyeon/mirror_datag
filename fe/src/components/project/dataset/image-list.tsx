@@ -14,9 +14,10 @@ interface ImageListProps {
   selectedImageIds: string[];
   selectImageAll: () => void;
   unSelectImageAll: () => void;
+  clearAllSelection: () => void;
 }
 
-const ImageList = ({ images, selectImage, selectedCount, selectedImageIds, selectImageAll, unSelectImageAll }: ImageListProps) => {
+const ImageList = ({ images, selectImage, selectedCount, selectedImageIds, selectImageAll, unSelectImageAll, clearAllSelection }: ImageListProps) => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCountModalOpen, setIsCountModalOpen] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -59,6 +60,14 @@ const ImageList = ({ images, selectImage, selectedCount, selectedImageIds, selec
           >
             Deselect All
           </Button>
+          <Button 
+            color="success" 
+            variant="flat"
+            onPress={clearAllSelection}
+            className="flex-1 sm:flex-none"
+          >
+            Clear
+          </Button>
         </div>
         <div 
           className="text-lg cursor-pointer w-full sm:w-auto text-center sm:text-right" 
@@ -70,29 +79,37 @@ const ImageList = ({ images, selectImage, selectedCount, selectedImageIds, selec
 
       <div className="w-full flex justify-center">
         <div className="grid max-md:gap-x-[2.5rem] grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10 gap-3 sm:gap-4 max-w-[calc(10rem*10+1rem*9)]">
-          {images?.map((image, index) => (
-            <Card 
-              key={index}
-              isPressable
-              onPress={() => detailOpen(image.id)}
-              className="aspect-square w-full max-w-[10rem]"
-            >
-              <div className="relative w-full h-full">
-                <img 
-                  src={image.imageUrl} 
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+        {images?.map((image, index) => (
+            <div key={index} className="relative">
+              <Card 
+                isPressable
+                onPress={() => detailOpen(image.id)}
+                className="aspect-square w-full max-w-[10rem]"
+              >
+                <div className="relative w-full h-full bg-black">
+                  <img 
+                    src={image.imageUrl} 
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />  
+                </div>
+              </Card>
+              <div 
+                className="absolute top-2 right-3 z-10"
+              >
                 <Button
                   isIconOnly
-                  className="absolute top-2 right-2 bg-white/80 dark:bg-gray-800/80"
+                  className="bg-white/80 dark:bg-gray-800/80"
                   size="sm"
-                  onClick={(e) => selectImage(e, image.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectImage(e, image.id);
+                  }}
                 >
                   {image.checked && <Image src={CheckMark} alt="check" className="w-4 h-4" />}
                 </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

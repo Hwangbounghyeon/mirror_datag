@@ -21,38 +21,47 @@ const HistoryCard = ({
   const searchParams = new URLSearchParams(queryStrings);
   searchParams.set("history_id", history_id);
 
-  const getStatusBadge = (isDone: number) => {
-    const statusConfig = {
-      0: { color: "bg-warning-100 text-warning-700", text: "분석중" },
-      1: { color: "bg-success-100 text-success-700", text: "완료됨" },
-      2: { color: "bg-danger-100 text-danger-700", text: "실패" },
-    };
+  const statusConfig = {
+    0: { color: "bg-warning-100 text-warning-700", text: "진행" },
+    1: { color: "bg-success-100 text-success-700", text: "완료" },
+    2: { color: "bg-danger-100 text-danger-700", text: "실패" },
+  };
 
-    const status = statusConfig[isDone as keyof typeof statusConfig] || statusConfig[0];
+  const status = statusConfig[is_done as keyof typeof statusConfig] || statusConfig[0];
 
-    return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
-        {status.text}
-      </span>
-    );
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   return (
     <Link
       prefetch={prefetch}
       href={`/project/${project_id}/analysis?${searchParams.toString()}`}
-      className="block transition-all duration-200 hover:translate-x-1"
+      className="block group"
     >
-      <div className="p-4 bg-content2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex flex-col gap-2">
-          <h3 className="text-lg font-semibold text-foreground">
+      <div className="p-4 rounded-lg bg-content2 shadow-sm transition-all duration-200 
+                    hover:shadow-md hover:translate-x-1 border border-transparent 
+                    hover:border-primary/20">
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-foreground line-clamp-1 group-hover:text-primary">
             {history_name}
           </h3>
           <div className="flex justify-between items-center">
-            <time className="text-sm text-foreground-500">
-              {updated_at}
+            <time className="text-sm text-foreground-500 truncate">
+              {formatDate(updated_at)}
             </time>
-            {getStatusBadge(is_done)}
+            <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-flex items-center justify-center ${status.color}`}>
+              {status.text}
+            </span>
           </div>
         </div>
       </div>

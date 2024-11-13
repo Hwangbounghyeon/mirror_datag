@@ -34,10 +34,18 @@ export type ObjectDetectionPredictions = {
   bbox: number[];
 }
 
+export type ObjectDetectionLabels = {
+  label: string;
+  bbox: number[];
+}
+
 export type ReductionResults = {
   imageId: string;
+  detailId: string;
+  imageUrl: string;
   features: number[] | null;
   predictions: ClassificationPredictions | ObjectDetectionPredictions | null;
+  label?: ObjectDetectionLabels | string;
   iou?: number;
 }
 
