@@ -24,7 +24,7 @@ export interface DeleteDepartmentAuthorityRequest {
 export const authorityApi = {
     addUsers: async (request: AddUserAuthorityRequest): Promise<AuthUser[]> => {
         const response = await apiClient<AuthResponse>(
-            "image/permission/addUser",
+            "/image/permission/addUser",
             {
                 method: "POST",
                 body: JSON.stringify(request),
@@ -55,8 +55,6 @@ export const authorityApi = {
             throw new Error("No data received");
         }
 
-        console.log(response.data.department_list);
-
         return response.data.department_list;
     },
 
@@ -75,7 +73,6 @@ export const authorityApi = {
         if (!response.data) {
             throw new Error("No data received");
         }
-        console.log(response.data.auth_list);
 
         return response.data.auth_list;
     },
@@ -95,7 +92,6 @@ export const authorityApi = {
         if (!response.data) {
             throw new Error("No data received");
         }
-        console.log(response.data.department_list);
 
         return response.data.department_list;
     },
