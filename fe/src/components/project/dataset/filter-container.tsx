@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Select, SelectItem, Button } from "@nextui-org/react";
 import { IoCloseOutline } from "react-icons/io5";
 import { TagBySearchRequest } from "@/types/tag";
@@ -18,21 +18,29 @@ export const createInitialRow = () => ({
 });
 
 interface FilterComponentProps {
-    onDone: (filterData: TagBySearchRequest) => void;
-    tags: string[];
-    filterRows: FilterRow[];
-    setFilterRows: (rows: FilterRow[]) => void;
+  onDone?: (filterData: TagBySearchRequest) => void;
+  onReset?: () => void;
+  tags: string[];
+  filterRows: FilterRow[];
+  setFilterRows: (rows: FilterRow[]) => void;
 }
 
-const FilterComponent = ({
-    onDone,
-    tags,
-    filterRows,
-    setFilterRows,
+const FilterContainer = ({
+  onDone,
+  onReset,
+  tags,
+  filterRows,
+  setFilterRows,
 }: FilterComponentProps) => {
-    const SELECT_OPTIONS = {
+    const [selectOptions, setSelectOptions] = useState({
         fields: tags,
-    };
+    });
+
+    useEffect(() => {
+        setSelectOptions({
+            fields: tags,
+        });
+    }, [tags]);
 
     const FilterSelect = ({
         type,
@@ -41,7 +49,7 @@ const FilterComponent = ({
         placeholder,
         disabledOptions,
     }: {
-        type: keyof typeof SELECT_OPTIONS;
+        type: keyof typeof selectOptions;
         value: Set<string>;
         onChange: (values: string[]) => void;
         placeholder: string;
@@ -58,7 +66,7 @@ const FilterComponent = ({
                 onChange(Array.from(keys as Set<string>));
             }}
         >
-            {SELECT_OPTIONS[type].map((option) => (
+            {selectOptions[type].map((option) => (
                 <SelectItem key={option} value={option}>
                     {option}
                 </SelectItem>
@@ -116,29 +124,12 @@ const FilterComponent = ({
         setFilterRows(newRows);
     };
 
-    const handleReset = () => {
-        setFilterRows([createInitialRow()]);
-        onDone?.({
-            conditions: [
-                {
-                    and_condition: [],
-                    or_condition: [],
-                    not_condition: [],
-                },
-            ],
-        });
-    };
-
     useEffect(() => {
         const lastRow = filterRows[filterRows.length - 1];
-        if (
-            lastRow.AND.length > 0 ||
-            lastRow.OR.length > 0 ||
-            lastRow.NOT.length > 0
-        ) {
+        if (lastRow && (lastRow.AND.length > 0 || lastRow.OR.length > 0 || lastRow.NOT.length > 0)) {
             setFilterRows([...filterRows, createInitialRow()]);
         }
-    }, [filterRows, setFilterRows]);
+    }, [filterRows, setFilterRows, tags]);
 
     return (
         <div className="p-3 space-y-2 min-w-[600px]">
@@ -185,11 +176,9 @@ const FilterComponent = ({
                         radius="full"
                         size="sm"
                         onClick={() => {
-                            setFilterRows(
-                                filterRows.length > 1
-                                    ? filterRows.filter((_, i) => i !== index)
-                                    : [createInitialRow()]
-                            );
+                            if (filterRows.length > 1) {
+                                setFilterRows(filterRows.filter((_, i) => i !== index));
+                            }
                         }}
                         className="p-1 hover:bg-gray-100 rounded-full"
                     >
@@ -197,30 +186,28 @@ const FilterComponent = ({
                     </Button>
                 </div>
             ))}
-            <div className="flex justify-end pt-3 gap-4">
-                <Button color="danger" onPress={handleReset}>
-                    Reset
-                </Button>
-                <Button
-                    color="primary"
-                    onPress={() => {
-                        const filterData = transformFilterData();
-                        onDone(filterData);
-                    }}
-                    isDisabled={
-                        !filterRows.some(
-                            (row) =>
-                                row.AND.length > 0 ||
-                                row.OR.length > 0 ||
-                                row.NOT.length > 0
-                        )
-                    }
-                >
-                    Done
-                </Button>
-            </div>
+            {(onDone || onReset) && (
+                <div className="flex justify-end pt-3 gap-4">
+                    {onReset && (
+                        <Button color="danger" onPress={onReset}>
+                            Reset
+                        </Button>
+                    )}
+                    {onDone && (
+                        <Button
+                            color="primary"
+                            onPress={() => {
+                                const filterData = transformFilterData();
+                                onDone(filterData);
+                            }}
+                        >
+                            Done
+                        </Button>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
 
-export default FilterComponent;
+export default FilterContainer;

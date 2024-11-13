@@ -1,4 +1,5 @@
 import { AuthUser } from "@/types/auth";
+import { Button } from "@nextui-org/react";
 import { MdOutlineClear } from "react-icons/md";
 
 interface SelectedPeopleProps {
@@ -17,12 +18,12 @@ export function SelectedPeople({ people, onRemove }: SelectedPeopleProps) {
                     <span className="text-sm">
                         {person.user_name} / {person.department_name}
                     </span>
-                    <button
+                    <Button
                         onClick={() => onRemove(person.user_id)}
                         className="hover:text-blue-300"
                     >
                         <MdOutlineClear />
-                    </button>
+                    </Button>
                 </div>
             ))}
         </div>
