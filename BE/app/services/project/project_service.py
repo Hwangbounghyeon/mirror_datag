@@ -18,7 +18,7 @@ from configs.mongodb import (
 )
 
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest
+from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest, AddFilteringImageRequest, AddFilteringImageResponse
 from models.mariadb_users import Users, Departments
 from typing import List
 
@@ -480,3 +480,79 @@ class ProjectService:
             return "Image를 성공적으로 업데이트하였습니다."
         else:
             raise HTTPException(status_code=500, detail="Image 업데이트에 실패하였습니다.")
+        
+
+    # 5. 필터링된 이미지를 project에 저장
+    async def add_filter_image(self, project_id: str, project_conditions: List[SearchCondition] | None) -> AddFilteringImageResponse:
+        try:
+            # 비동기 결과를 먼저 받아온 후 접근
+            tag_doc = await collection_tag_images.find_one({})
+            if not tag_doc or "tag" not in tag_doc:
+                return {
+                    "project_id": project_id,
+                    "image_list": []
+                }
+            
+            tags = tag_doc["tag"]
+            
+            # project_conditions가 없을 경우 기본값을 할당
+            if project_conditions:
+                and_condition = project_conditions[0].and_condition if hasattr(project_conditions[0], 'and_condition') else []
+                or_condition = project_conditions[0].or_condition if hasattr(project_conditions[0], 'or_condition') else []
+                not_condition = project_conditions[0].not_condition if hasattr(project_conditions[0], 'not_condition') else []
+            else:
+                and_condition = []
+                or_condition = []
+                not_condition = []
+
+            tag_and_images = []
+            tag_or_images = []
+            tag_not_images = []
+            
+            # AND 연산
+            for i in and_condition:
+                tag_image = tags.get(i)
+                if tag_image:
+                    tag_and_images.append(set(tag_image))
+                    if len(tag_and_images) > 1:
+                        tag_and_images = [tag_and_images[0] & tag_and_images[1]]
+            tag_and_images = list(tag_and_images[0]) if tag_and_images else []
+
+            # OR 연산
+            for i in or_condition:
+                tag_image = tags.get(i)
+                if tag_image:
+                    tag_or_images.append(set(tag_image))
+            tag_or_images = list(set().union(*tag_or_images)) if tag_or_images else []
+
+            # NOT 연산
+            for i in not_condition:
+                tag_image = tags.get(i)
+                if tag_image:
+                    tag_not_images.extend(tag_image)
+            tag_not_images = set(tag_not_images)
+
+            # 최종 필터링된 이미지 목록 생성
+            filtered_images = list((set(tag_and_images) | set(tag_or_images)) - tag_not_images)
+
+            # 필터링된 이미지를 project에 저장
+            for image_id in filtered_images:
+                await collection_tag_images.update_one(
+                    {},
+                    {
+                        "$addToSet": {
+                            f"project.{project_id}": image_id
+                        }
+                    }
+                )
+            
+            return {
+                "project_id": project_id,
+                "image_list": filtered_images
+            }
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"이미지 정보 조회 중 오류가 발생했습니다: {str(e)}"
+            )
