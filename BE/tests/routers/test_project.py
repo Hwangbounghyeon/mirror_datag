@@ -1,17 +1,51 @@
+from httpx import AsyncClient
 import pytest
+import asyncio
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app')))
 
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.configs.mariadb import get_database_mariadb
+from main import app
+from configs.mongodb import client as mongo_client
 
 client = TestClient(app)
 
+def get_auth_token():
+    login_data = {
+        "email": "test1@tmail.ws",  
+        "password": "1234"
+    }
+    
+    # 로그인 요청
+    response = client.post("be/api/auth/login", json=login_data)
+    assert response.status_code == 200 
+    
+    # 토큰 추출
+    token = response.json()["data"].get("access_token")
+    assert token is not None, "토큰이 반환되지 않았습니다."
+    
+    return token
+
+@pytest.fixture
+def auth_headers():
+    token = get_auth_token()
+    return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(scope="session")
+async def mongodb():
+    result = await mongo_client.admin.command("ping")
+    assert result["ok"] != 0.0  # Check that the connection is okay.
+    return mongo_client
+
 # 1. 프로젝트 생성 테스트
-def test_create_project():
-    response = client.post(
-        "/project",
-        json={
+@pytest.mark.asyncio
+async def test_create_project(auth_headers, mongodb):
+    mongodb_instance = await mongodb
+
+    data = {
             "user_id": 1,
             "project_name": "New Project",
             "model_name": "vgg19_bn",
@@ -24,44 +58,73 @@ def test_create_project():
             },
             "is_private": 0
         }
+    
+    session = mongodb_instance.start_session()
+    session.start_transaction()
+    
+    response = client.post(
+        "be/api/project/create",
+        json=data,
+        headers=auth_headers
     )
+
+    session.abort_transaction()
+
     assert response.status_code == 200
     assert response.json()["status"] == 200
     assert "data" in response.json()
 
 # 2. 프로젝트 리스트 조회 테스트
-def test_get_project_list():
-    response = client.get(
-        "/project/list",
-        json={
-            "user_id": 1,
-            "department_id": 1,
-            "select_department": "department1",
-            "select_model_name": "vgg19_bn"
+@pytest.mark.asyncio
+async def test_get_project_list(auth_headers):
+    params={
+        "page" : 1,
+        "limit" : 10
         }
-    )
+    async with AsyncClient(app=app, base_url="http://127.0.0.1:8000") as client:
+        response = await client.get(
+            "be/api/project/list",
+            params=params,
+            headers=auth_headers
+        )
+
+    print(response.json())
+    
     assert response.status_code == 200
     assert response.json()["status"] == 200
-    assert isinstance(response.json()["data"], list)
+    assert isinstance(response.json()["data"]['data'], list)
 
 # 3. 프로젝트 삭제 테스트
-def test_delete_project():
+@pytest.mark.asyncio
+async def test_delete_project():
+    session = mongo_client.start_session()
+    session.start_transaction()
+
     # 삭제할 프로젝트 ID가 1이라고 가정
-    response = client.delete("/project/1")
+    response = client.delete("be/api/project/1",headers=auth_headers)
+
+    session.abort_transaction()
+
     assert response.status_code == 200
     assert response.json()["status"] == 200
     assert response.json()["data"]["message"] == "Project deleted successfully"
 
 # 4. 부서 리스트 조회 테스트
-def test_get_department_list():
-    response = client.get("/project/departments")
+@pytest.mark.asyncio
+async def test_get_department_list():
+    response = client.get("be/api/department/list")
     assert response.status_code == 200
     assert response.json()["status"] == 200
     assert isinstance(response.json()["data"], list)
 
 # 5. 사용자 이름 검색 테스트
-def test_search_user_name():
-    response = client.get("/project/users/search", params={"name": "user1"})
+@pytest.mark.asyncio
+async def test_search_user_name(auth_headers):
+    params = {
+        "page" :1,
+        "limit" : 10
+    }
+    response = client.get("be/api/user/search", params=params, headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["status"] == 200
-    assert isinstance(response.json()["data"], list)
+    assert isinstance(response.json()["data"]['data'], list)
