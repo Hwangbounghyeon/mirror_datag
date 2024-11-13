@@ -4,11 +4,11 @@ export interface ImageFile {
     data: File;
 }
 
-export type UploadType = "zip" | "images" | null;
+export type UploadType = "zip" | "images" | ".7z" | ".json" | null;
 
 export type ValidationResult =
     | { isValid: false; error: string }
-    | { isValid: true; files: File[]; type: "zip" | "images" };
+    | { isValid: true; files: File[]; type: "zip" | "images" | "json" | ".7z" };
 
 export interface UploadContentProps {
     images: ImageFile[];
