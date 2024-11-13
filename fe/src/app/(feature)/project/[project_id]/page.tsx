@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Button, Modal, ModalContent, useDisclosure, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
+import { Button, Modal, ModalContent, useDisclosure, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Chip } from "@nextui-org/react";
 import Image from "next/image";
 
 import { TagBySearchRequest } from "@/types/tag";
@@ -85,6 +85,14 @@ const Page = ({ params }: { params: { project_id: string } }) => {
     );
     setSelectedCount(prev => prev - checkedImages.length);
   }
+
+  const clearAllSelection = () => {
+    setImages(prevImages => 
+      prevImages.map(image => ({ ...image, checked: false }))
+    );
+    setSelectedImageIds([]);
+    setSelectedCount(0);
+  };
 
   const getImages = async () => {
     setIsLoading(true);
@@ -234,7 +242,53 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         >
           <Image src={Filter} alt="filter" className="w-5 h-5" />
         </Button>
-        <div className="p-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">Active filters here</div>
+        <div className="flex gap-2 items-center flex-wrap p-3">
+          {filterRows.filter(row => 
+            row.AND.length > 0 || 
+            row.OR.length > 0 || 
+            row.NOT.length > 0
+          ).map((row, index) => (
+            <div key={row.id} className="flex gap-2 items-center">
+              {row.AND.length > 0 && (
+                <Chip 
+                  variant="flat" 
+                  color="primary"
+                  className="text-xs"
+                >
+                  AND: {row.AND.join(', ')}
+                </Chip>
+              )}
+              {row.OR.length > 0 && (
+                <Chip 
+                  variant="flat" 
+                  color="success"
+                  className="text-xs"
+                >
+                  OR: {row.OR.join(', ')}
+                </Chip>
+              )}
+              {row.NOT.length > 0 && (
+                <Chip 
+                  variant="flat" 
+                  color="danger"
+                  className="text-xs"
+                >
+                  NOT: {row.NOT.join(', ')}
+                </Chip>
+              )}
+              {index < filterRows.length - 1 && (
+                <span className="text-gray-400 dark:text-gray-500">|</span>
+              )}
+            </div>
+          ))}
+          {!filterRows.some(row => 
+            row.AND.length > 0 || 
+            row.OR.length > 0 || 
+            row.NOT.length > 0
+          ) && (
+            <span className="text-gray-400 dark:text-gray-500">No active filters</span>
+          )}
+        </div>
       </div>
 
       <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
@@ -245,6 +299,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
           selectedImageIds={selectedImageIds}
           selectImageAll={selectImageAll}
           unSelectImageAll={unSelectImageAll}
+          clearAllSelection={clearAllSelection}
         />
         <PaginationFooter 
           currentPage={page} 
