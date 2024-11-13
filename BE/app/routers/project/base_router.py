@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from configs.mariadb import get_database_mariadb
 from dto.common_dto import CommonResponse
 from dto.pagination_dto import PaginationDto
-from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest
+from dto.project_dto import ProjectRequest, ProjectResponse, AddImageRequest, AddFilteringImageRequest
 from services.project.project_service import ProjectService
 from services.auth.auth_service import JWTManage
 from dto.search_dto import ImageSearchResponse, SearchCondition, SearchRequest
@@ -194,3 +194,29 @@ async def image_add(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+# 8. 프로젝트에 이미지 필터링 저장
+@router.post("/filterImage/{project_id}/list", description="프로젝트에 이미지 필터링 저장")
+async def filter_image_add(
+    project_id: str,
+    credentials: HTTPAuthorizationCredentials = Security(security_scheme),
+    conditions: AddFilteringImageRequest = Body(default=None),
+    db: Session = Depends(get_database_mariadb)
+):
+    try:    
+        project_service = ProjectService(db)
+
+        response = await project_service.add_filter_image(
+            project_id,
+            conditions.conditions
+        )
+
+        return CommonResponse(
+            status=200,
+            data=response
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+

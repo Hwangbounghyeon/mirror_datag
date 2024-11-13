@@ -95,3 +95,17 @@ class DepartmentResponse(BaseModel):
 class AddImageRequest(BaseModel):
     project_id: str
     image_ids: List
+
+# 프로젝트 이미지 필터링 한것들 싹다 넣기
+
+class SearchCondition(BaseModel):
+    and_condition: List[str] = []
+    or_condition: List[str] = []
+    not_condition: List[str] = []
+
+class AddFilteringImageRequest(BaseModel):
+    conditions: List[SearchCondition] | None = None
+
+class AddFilteringImageResponse(BaseModel):
+    project_id: str
+    image_list: List[str]
