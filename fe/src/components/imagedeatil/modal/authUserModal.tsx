@@ -19,6 +19,7 @@ export default function AuthUserModal({
         departments,
         selectedDepartment,
         users,
+        allUsers,
         selectedUsers,
         handleSingleDepartmentSelect,
         handleUserSelect,
@@ -102,7 +103,7 @@ export default function AuthUserModal({
                 {selectedUsers.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                         {selectedUsers.map((userId) => {
-                            const user = users?.find(
+                            const user = allUsers?.find(
                                 (u) => u.user_id === userId
                             );
                             return (

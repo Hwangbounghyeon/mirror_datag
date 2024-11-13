@@ -23,6 +23,20 @@ export interface AuthDepartmentResponseData {
     department_list: string[];
 }
 
+export interface Department {
+    department_id: number;
+    department_name: string;
+}
+
+interface UserResponse {
+    user_id: number;
+    name: string;
+    email: string;
+    department_name: string;
+}
+
+export type UserListResponse = UserResponse[];
+
 export type AuthResponse = DefaultResponseType<AuthResponseData>;
 
 export type AuthDepartmentResponse =
