@@ -1,5 +1,5 @@
 import React from "react";
-import { ImageGrid } from "../image/ImageGrid";
+import { ImageGrid } from "./ImageGrid";
 import { Button } from "@nextui-org/react";
 
 interface UploadedContentProps {

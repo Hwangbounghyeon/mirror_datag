@@ -1,5 +1,5 @@
 import { useDropzone, FileRejection, DropEvent } from "react-dropzone";
-import ImageUploader from "../image/ImageUploader";
+import ImageUploader from "./ImageUploader";
 import { UploadContentProps } from "@/types/upload";
 import { ACCEPTED_FILE_TYPES } from "@/lib/constants/upload";
 import UploadedContent from "@/components/upload/uploadedContent";
