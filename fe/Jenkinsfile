@@ -1,0 +1,126 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_REGISTRY = 'jingluv'
+        DOCKER_CREDENTIALS = credentials('khk-docker')
+        GIT_VERSION = sh(script: 'git describe --tags --always', returnStdout: true).trim()
+    }
+    
+    stages {
+        stage('변경사항 감지') {
+            steps {
+                script {
+                    def allowedBranches = ['master', 'develop', 'FE']
+                    def targetBranch = env.gitlabTargetBranch ?: env.BRANCH_NAME
+                    def eventType = env.gitlabActionType
+                    
+                    if (!allowedBranches.contains(targetBranch) && 
+                        (eventType != null && eventType != 'merge')) {
+                        currentBuild.result = 'SUCCESS'
+                        echo "허용되지 않은 브랜치 또는 이벤트입니다. 파이프라인을 중단합니다."
+                        return
+                    }
+
+                    def changes = sh(
+                        script: "git diff --name-only HEAD^..HEAD | grep '^fe/' || true",
+                        returnStdout: true
+                    ).trim()
+                    
+                    if (changes.isEmpty()) {
+                        currentBuild.result = 'SUCCESS'
+                        echo "fe/ 디렉토리에 변경사항이 없습니다. 파이프라인을 건너뜁니다."
+                        return
+                    }
+                }
+            }
+        }
+
+        stage('체크아웃') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('환경 변수 설정') {
+            steps {
+                script {
+                    dir('fe') {
+                        withCredentials([
+                            string(credentialsId: 'NEXT_PUBLIC_BACKEND_URL', variable: 'NEXT_PUBLIC_BACKEND_URL'),
+                            string(credentialsId: 'NEXT_PUBLIC_FRONTEND_URL', variable: 'NEXT_PUBLIC_FRONTEND_URL')
+                        ]) {
+                            sh '''
+                                cat << EOF > .env
+                                NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+                                NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+                                ACCESSTOKEN_DURATION=1800
+                                REFRESHTOKEN_DURATION=86400
+                                EOF
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Docker Image 빌드') {
+            steps {
+                script {
+                    dir('fe') {
+                        sh """
+                            docker-compose -f docker-compose-version.yml build
+                            docker-compose -f docker-compose-lts.yml build
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Hub 업로드') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'khk-docker', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin'
+                    }
+                    
+                    sh """
+                        docker push ${DOCKER_REGISTRY}/s108_frontend:${GIT_VERSION}
+                        docker push ${DOCKER_REGISTRY}/s108_frontend:lts
+                    """
+                }
+            }
+        }
+        
+        stage('Docker Image 배포') {
+            steps {
+                script {
+                    dir('fe') {
+                        sh """
+                            docker-compose -f docker-compose-lts.yml down
+                            docker rm -f frontend-lts || true
+                            docker rmi -f ${DOCKER_REGISTRY}/s108_frontend:lts || true
+                            docker-compose -f docker-compose-lts.yml up -d
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            script {
+                sh """
+                    echo "최신 버전: ${GIT_VERSION}" > version.properties
+                    echo "${GIT_VERSION} 버전으로 배포가 완료되었습니다."
+                """
+                archiveArtifacts artifacts: 'version.properties'
+            }
+        }
+        always {
+            sh 'rm -f .env'
+            // cleanWs()
+        }
+    }
+}

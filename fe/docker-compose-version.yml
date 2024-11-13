@@ -1,0 +1,41 @@
+services:
+  frontend:
+    container_name: frontend-${GIT_VERSION}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+        - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+    image: ${DOCKER_REGISTRY}/s108_frontend:${GIT_VERSION}
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+      - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+      - ACCESSTOKEN_DURATION=${ACCESSTOKEN_DURATION}
+      - REFRESHTOKEN_DURATION=${REFRESHTOKEN_DURATION}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./types:/app/types
+      - ./components:/app/components
+      - ./hooks:/app/hooks
+      - ./lib:/app/lib
+      - ./utils:/app/utils
+      - ./api:/app/api
+      - ./.next:/app/.next
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - be-redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  be-redis:
+    external: true
