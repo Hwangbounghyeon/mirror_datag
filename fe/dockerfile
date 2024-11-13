@@ -10,14 +10,7 @@ COPY package*.json ./
 RUN npm install
 
 # 소스 코드 복사
-COPY src ./src
-COPY public ./public
-COPY package*.json ./
-COPY next.config.mjs ./
-COPY tsconfig.json ./
-COPY postcss.config.mjs ./
-COPY tailwind.config.ts ./
-COPY .eslintrc.json ./
+COPY . .
 
 # 환경 변수 설정
 ARG NEXT_PUBLIC_BACKEND_URL
@@ -27,4 +20,4 @@ ENV NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--port", "3000"]
+CMD ["npm", "run", "dev", "--", "--turbo", "--hostname", "0.0.0.0", "--port", "3000"]
