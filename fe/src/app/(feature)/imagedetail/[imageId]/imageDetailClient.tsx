@@ -13,10 +13,10 @@ import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { AuthUser } from "@/types/auth";
 import { Detection } from "@/types/metadata";
+import { ImagesType } from "@/types/ImagesType";
 
 interface ImageDetailClientProps {
     imageId: string;
-    imageIdx: number;
     initialUserAuthorities: AuthUser[];
     initialDepartmentAuthorities: string[];
     initialTags: string[];
@@ -34,17 +34,10 @@ interface ImageDetailClientProps {
 
 function ImageDetailClient({
     imageId,
-    imageIdx,
-    initialUserAuthorities,
-    initialDepartmentAuthorities,
-    initialTags,
-    classes,
-    imageSrc,
-    metadata,
-    detections,
-}: ImageDetailClientProps) {
+    imageList,
+    ...props
+}: ImageDetailClientProps & { imageList: ImagesType[] }) {
     const router = useRouter();
-    const totalImages = 300;
 
     const {
         userAuthorities,
@@ -54,25 +47,30 @@ function ImageDetailClient({
         removeUserAuthority,
         removeDepartmentAuthority,
     } = useAuthorityManager(
-        "6732f4f3db3183653e78ac44",
-        initialUserAuthorities,
-        initialDepartmentAuthorities
+        imageId,
+        props.initialUserAuthorities,
+        props.initialDepartmentAuthorities
     );
 
     const { tags, addTag, removeTag } = useTagManager(
-        "6732f4f3db3183653e78ac44", //TODO 추후 imageId로 수정
-        initialTags
+        imageId,
+        props.initialTags
     );
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
-            if (direction === "prev" && imageIdx > 1) {
-                router.push(`/imagedetail/${imageIdx - 1}`);
-            } else if (direction === "next" && imageIdx < totalImages) {
-                router.push(`/imagedetail/${imageIdx + 1}`);
+            const currentIndex = imageList.findIndex(
+                (img) => img.id === imageId
+            );
+            const newIndex =
+                direction === "prev" ? currentIndex - 1 : currentIndex + 1;
+
+            if (newIndex >= 0 && newIndex < imageList.length) {
+                const newImageId = imageList[newIndex].id;
+                router.push(`/imagedetail/${newImageId}`);
             }
         },
-        [imageIdx, router]
+        [imageId, imageList, router]
     );
 
     useEffect(() => {
@@ -96,9 +94,11 @@ function ImageDetailClient({
     return (
         <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-500">
             <Header
-                fileName={imageSrc.split("/").pop() || "Unknown"}
-                currentNumber={imageIdx}
-                totalCount={totalImages}
+                fileName={props.imageSrc.split("/").pop() || "Unknown"}
+                currentNumber={
+                    imageList.findIndex((img) => img.id === imageId) + 1
+                }
+                totalCount={imageList.length}
                 onNavigate={handleNavigate}
             />
 
@@ -134,9 +134,9 @@ function ImageDetailClient({
                                 </div>
                             </div>
                             {activePanel === "class" ? (
-                                <ClassPanel classes={classes} />
+                                <ClassPanel classes={props.classes} />
                             ) : (
-                                <MetadataPanel metadata={metadata} />
+                                <MetadataPanel metadata={props.metadata} />
                             )}
                         </div>
                         <div className="h-1/3 border-b border-gray-700 dark:border-gray-50">
@@ -164,7 +164,10 @@ function ImageDetailClient({
                 </div>
 
                 <div className="w-[80%]">
-                    <ImagePanel imageSrc={imageSrc} detections={detections} />
+                    <ImagePanel
+                        imageSrc={props.imageSrc}
+                        detections={props.detections}
+                    />
                 </div>
             </div>
         </div>
