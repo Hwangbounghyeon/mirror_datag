@@ -7,11 +7,16 @@ import {
 
 export async function ImageDetailContent({
     params,
+    searchParams,
 }: {
     params: { imageId: string };
+    searchParams: { imageList?: string };
 }) {
     const imageId = params.imageId;
-    const data = await loadImageDetail("6732f4f3db3183653e78ac44"); //TODO 추후 수정
+    const imageList = searchParams.imageList
+        ? JSON.parse(searchParams.imageList)
+        : [];
+    const data = await loadImageDetail(imageId);
 
     if (!data.data) {
         throw new Error("Data is undefined");
@@ -57,7 +62,7 @@ export async function ImageDetailContent({
     return (
         <ImageDetailClient
             imageId={imageId}
-            imageIdx={parseInt(imageId, 10)}
+            imageList={imageList}
             initialUserAuthorities={initialUserAuthorities}
             initialDepartmentAuthorities={initialDepartmentAuthorities}
             initialTags={initialTags}
