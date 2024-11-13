@@ -13,15 +13,19 @@ export const ImageContainer: FC<{ src: string }> = ({ src }) => {
     const [imgError, setImgError] = useState(false);
 
     return (
-        <div className="aspect-square rounded-lg overflow-hidden relative max-w-[120px] max-h-[120px]">
-            <Image
-                src={imgError ? fallbackImageSrc : src}
-                alt="No Image"
-                fill
-                className="object-cover pointer-events-none h-full w-full"
-                draggable={false}
-                onError={() => setImgError(true)}
-            />
+        <div className="w-[120px] h-[120px] relative">
+            <div className="absolute inset-0 rounded-lg overflow-hidden">
+                <Image
+                    src={imgError ? fallbackImageSrc : src}
+                    alt="No Image"
+                    fill
+                    sizes="120px"
+                    className="object-cover"
+                    draggable={false}
+                    onError={() => setImgError(true)}
+                    priority
+                />
+            </div>
         </div>
     );
 };
