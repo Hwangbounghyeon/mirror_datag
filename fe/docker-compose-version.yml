@@ -22,3 +22,7 @@ services:
     restart: unless-stopped
     networks:
       - be-redis
+
+networks:
+  be-redis:
+    external: true
