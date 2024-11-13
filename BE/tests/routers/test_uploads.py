@@ -1,5 +1,10 @@
 import json
 import pytest
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch
