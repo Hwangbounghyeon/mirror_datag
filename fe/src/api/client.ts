@@ -10,13 +10,6 @@ interface ApiOptions {
 }
 
 async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
-    console.log("API request started:", {
-        endpoint,
-        method: options.method,
-        hasBody: !!options.body,
-        contentType: options.ContentType,
-    });
-
     try {
         const response = await customFetch<T>({
             endpoint,
@@ -30,14 +23,7 @@ async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
             searchParams: options.searchParams,
         });
 
-        console.log("API response received:", {
-            status: response.status,
-            hasError: !!response.error,
-            hasData: !!response.data,
-        });
-
         if (response.error || !response.data) {
-            console.error("API error:", response.error);
             throw new Error(response.error);
         }
 

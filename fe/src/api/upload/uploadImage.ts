@@ -4,11 +4,6 @@ import apiClient from "../client";
 export const uploadImage = async (
     request: UploadImageRequest
 ): Promise<UploadResponse> => {
-    console.log("Starting image upload process", {
-        projectId: request.project_id,
-        imageCount: request.images.length,
-    });
-
     const formData = new FormData();
 
     try {
@@ -19,11 +14,9 @@ export const uploadImage = async (
                 is_private: request.is_private,
             })
         );
-        console.log("FormData upload_request added");
 
-        request.images.forEach((item, index) => {
+        request.images.forEach((item) => {
             formData.append("files", item.data);
-            console.log(`Added image ${index + 1} to FormData`);
         });
 
         console.log("Sending request to API");
@@ -36,7 +29,6 @@ export const uploadImage = async (
                 headers: {},
             }
         );
-        console.log("Upload response received", { status: response });
         return response;
     } catch (error) {
         console.error("Upload failed:", error);
