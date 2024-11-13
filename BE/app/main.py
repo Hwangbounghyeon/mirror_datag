@@ -25,10 +25,7 @@ from sqlalchemy.orm import sessionmaker
 if platform.system() == 'Windows':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-app = FastAPI(
-    docs_url="/be/docs",
-    openapi_url="/be/openapi.json"
-)
+app = FastAPI()
 
 
 main_router = APIRouter(prefix="/be/api")
