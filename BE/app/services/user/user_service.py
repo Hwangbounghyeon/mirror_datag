@@ -117,10 +117,12 @@ class UserService:
 
         user_list = []
         for user in users:
+            departments = self.db.query(Departments).filter(Departments.department_id == user.department_id).first()
             user_one = UserResponse(
                 user_id = user.user_id,
                 name = user.name,
-                email = user.email
+                email = user.email,
+                department_name = departments.department_name if departments else None
             )
             user_list.append(user_one)
 
