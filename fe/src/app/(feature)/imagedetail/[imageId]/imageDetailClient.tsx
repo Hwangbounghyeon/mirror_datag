@@ -13,10 +13,10 @@ import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { AuthUser } from "@/types/auth";
 import { Detection } from "@/types/metadata";
-import { ImagesType } from "@/types/ImagesType";
 
 interface ImageDetailClientProps {
     imageId: string;
+    imageIdx: number;
     initialUserAuthorities: AuthUser[];
     initialDepartmentAuthorities: string[];
     initialTags: string[];
@@ -34,10 +34,17 @@ interface ImageDetailClientProps {
 
 function ImageDetailClient({
     imageId,
-    imageList,
-    ...props
-}: ImageDetailClientProps & { imageList: ImagesType[] }) {
+    imageIdx,
+    initialUserAuthorities,
+    initialDepartmentAuthorities,
+    initialTags,
+    classes,
+    imageSrc,
+    metadata,
+    detections,
+}: ImageDetailClientProps) {
     const router = useRouter();
+    const totalImages = 300;
 
     const {
         userAuthorities,
@@ -48,29 +55,21 @@ function ImageDetailClient({
         removeDepartmentAuthority,
     } = useAuthorityManager(
         imageId,
-        props.initialUserAuthorities,
-        props.initialDepartmentAuthorities
+        initialUserAuthorities,
+        initialDepartmentAuthorities
     );
 
-    const { tags, addTag, removeTag } = useTagManager(
-        imageId,
-        props.initialTags
-    );
+    const { tags, addTag, removeTag } = useTagManager(imageId, initialTags);
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
-            const currentIndex = imageList.findIndex(
-                (img) => img.id === imageId
-            );
-            const newIndex =
-                direction === "prev" ? currentIndex - 1 : currentIndex + 1;
-
-            if (newIndex >= 0 && newIndex < imageList.length) {
-                const newImageId = imageList[newIndex].id;
-                router.push(`/imagedetail/${newImageId}`);
+            if (direction === "prev" && imageIdx > 1) {
+                router.push(`/imagedetail/${imageIdx - 1}`);
+            } else if (direction === "next" && imageIdx < totalImages) {
+                router.push(`/imagedetail/${imageIdx + 1}`);
             }
         },
-        [imageId, imageList, router]
+        [imageIdx, router]
     );
 
     useEffect(() => {
@@ -94,11 +93,9 @@ function ImageDetailClient({
     return (
         <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-500">
             <Header
-                fileName={props.imageSrc.split("/").pop() || "Unknown"}
-                currentNumber={
-                    imageList.findIndex((img) => img.id === imageId) + 1
-                }
-                totalCount={imageList.length}
+                fileName={imageSrc.split("/").pop() || "Unknown"}
+                currentNumber={imageIdx}
+                totalCount={totalImages}
                 onNavigate={handleNavigate}
             />
 
@@ -134,9 +131,9 @@ function ImageDetailClient({
                                 </div>
                             </div>
                             {activePanel === "class" ? (
-                                <ClassPanel classes={props.classes} />
+                                <ClassPanel classes={classes} />
                             ) : (
-                                <MetadataPanel metadata={props.metadata} />
+                                <MetadataPanel metadata={metadata} />
                             )}
                         </div>
                         <div className="h-1/3 border-b border-gray-700 dark:border-gray-50">
@@ -164,10 +161,7 @@ function ImageDetailClient({
                 </div>
 
                 <div className="w-[80%]">
-                    <ImagePanel
-                        imageSrc={props.imageSrc}
-                        detections={props.detections}
-                    />
+                    <ImagePanel imageSrc={imageSrc} detections={detections} />
                 </div>
             </div>
         </div>
