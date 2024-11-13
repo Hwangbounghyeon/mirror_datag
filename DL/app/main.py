@@ -9,11 +9,10 @@ from configs.mongodb import get_database_mongodb
 import traceback
 
 app = FastAPI(
-    docs_url="/be/docs",
-    openapi_url="/be/openapi.json"
+    root_path="/dl"
 )
 
-main_router = APIRouter(prefix="/dl/api")
+main_router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
