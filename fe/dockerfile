@@ -1,0 +1,30 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 패키지 매니저 설치
+RUN apk add --no-cache libc6-compat
+
+# 의존성 파일 복사 및 설치
+COPY package*.json ./
+RUN npm install
+
+# 소스 코드 복사
+COPY src ./src
+COPY public ./public
+COPY package*.json ./
+COPY next.config.mjs ./
+COPY tsconfig.json ./
+COPY postcss.config.mjs ./
+COPY tailwind.config.ts ./
+COPY .eslintrc.json ./
+
+# 환경 변수 설정
+ARG NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_FRONTEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+ENV NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0", "--port", "3000"]
