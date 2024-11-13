@@ -1,3 +1,5 @@
+import { FilterRow } from "@/components/loadimage/filterBox";
+
 export type ImagesType = {
   id: string;
   imageUrl: string;

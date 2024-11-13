@@ -1,6 +1,8 @@
 "use client";
 
+import { searchProjectImages } from "@/api/load/uploadData";
 import { uploadImage } from "@/api/upload/uploadImage";
+import { TagBySearchRequest } from "@/types/tag";
 import { ImageFile } from "@/types/upload";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
@@ -14,14 +16,20 @@ export const useNavigation = () => {
     }, [router]);
 
     const goToLoadImages = useCallback(
-        async (images: ImageFile[]) => {
+        async (images: ImageFile[], currentFilter: TagBySearchRequest) => {
             try {
                 const uploadProcess = uploadImage({
                     is_private: true,
-                    project_id: "672d6cb4da504f5b140ecffc",
+                    project_id: "6732f8c4fcec9d2c66a75080",
                     images,
                 });
-                router.push("/loadimage");
+
+                const searchResponse = await searchProjectImages(
+                    "6732f8c4fcec9d2c66a75080",
+                    currentFilter
+                );
+
+                // TODO 추후에 이동하도록
 
                 await uploadProcess;
                 toast.success("Image Upload Success!", {
@@ -46,7 +54,7 @@ export const useNavigation = () => {
                 });
             }
         },
-        [router]
+        []
     );
 
     return {

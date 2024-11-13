@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en"
       className={` ${pretendard.variable} ${BMJUA.variable}`}
     >
-      <body id="root" className="min-w-[1024px]">
+      <body id="root">
         <ThemeProvider attribute="class">
           <div className="min-h-screen min-w-screen flex">
             <Sidebar />

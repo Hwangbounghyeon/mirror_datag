@@ -1,21 +1,25 @@
-"use client";
-
+import { useState, useCallback, useEffect } from "react";
 import { tagApi } from "@/api/detail/tagApi";
 import { ImageArray } from "@/types/imageLoad";
 import { TagBySearchRequest } from "@/types/tag";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 
-export const useLoadImages = () => {
-    const router = useRouter();
+export const useLoadContentState = () => {
+    const [page, setPage] = useState(1);
     const [images, setImages] = useState<ImageArray>({});
     const [tags, setTags] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
-    const [currentFilter, setCurrentFilter] =
-        useState<TagBySearchRequest | null>(null);
+    const [currentFilter, setCurrentFilter] = useState<TagBySearchRequest>({
+        conditions: [
+            {
+                and_condition: [],
+                or_condition: [],
+                not_condition: [],
+            },
+        ],
+    });
 
-    const fetchTags = async () => {
+    const fetchTags = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await tagApi.getTag();
@@ -23,23 +27,20 @@ export const useLoadImages = () => {
                 setTags(response.data.tags);
             }
         } catch (error) {
-            console.error("Failed to fetch images:", error);
+            console.error("Failed to fetch tags:", error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     const searchByFilter = useCallback(
-        async (filterConditions: TagBySearchRequest, page: number = 1) => {
+        async (filterConditions: TagBySearchRequest, page: number) => {
             try {
                 setIsLoading(true);
-                console.log("Filter Conditions:", filterConditions);
-
                 const response = await tagApi.searchByTag(
                     filterConditions,
                     page
                 );
-                console.log("API Response:", response?.data);
 
                 if (response?.data) {
                     const allImages = response.data.data.reduce(
@@ -61,42 +62,27 @@ export const useLoadImages = () => {
                 setIsLoading(false);
             }
         },
-        []
+        [setImages, setTotalPages, setCurrentFilter, setIsLoading]
     );
 
-    useEffect(() => {
-        fetchTags();
+    const initialize = useCallback(async () => {
+        await fetchTags();
+        await searchByFilter(currentFilter, page);
     }, []);
 
     useEffect(() => {
-        const loadInitialData = async () => {
-            if (tags.length > 0) {
-                const initialFilter = {
-                    conditions: [
-                        {
-                            and_condition: [],
-                            or_condition: [],
-                            not_condition: [],
-                        },
-                    ],
-                };
-                await searchByFilter(initialFilter, 1);
-            }
-        };
-        loadInitialData();
-    }, [searchByFilter, tags.length]);
-
-    const handlePrevious = () => {
-        router.push("/upload");
-    };
+        initialize();
+    }, [initialize]);
 
     return {
+        page,
+        setPage,
         images,
         tags,
         isLoading,
         totalPages,
         currentFilter,
-        handlePrevious,
         searchByFilter,
+        initialize,
     };
 };

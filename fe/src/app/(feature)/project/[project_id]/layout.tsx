@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="w-full h-[calc(100vh-20px)] min-h-[30rem]">
+    <div className="w-full">
       {children}
       <FloatingButton />
     </div>

@@ -1,11 +1,23 @@
-import { customFetch } from "@/app/actions/customFetch";
-import { HistoryDetailResponseType } from "@/types/historyType";
+import { DefaultResponseType } from "@/types/default";
+import { HistoryData } from "@/types/historyType";
+import apiClient from "../client";
 
-export async function getHistoryDetail(historyId: string) {
-  return await customFetch<HistoryDetailResponseType>({
-    method: "GET",
-    cache: "no-store",
-    ContentType: "application/json",
-    endpoint: `/project/history/detail/${historyId}`
-  });
-}
+export const getHistoryDetail = async (
+  historyId: string,
+): Promise<DefaultResponseType<HistoryData>> => {
+  const response = await apiClient<DefaultResponseType<HistoryData>>(
+    `/project/history/detail/${historyId}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  );
+
+  if (!response.data) {
+    throw new Error("No data received");
+  }
+
+  console.log(response)
+
+  return response;
+};
