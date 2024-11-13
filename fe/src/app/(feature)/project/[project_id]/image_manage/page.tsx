@@ -8,10 +8,10 @@ import { useNavigation } from "@/hooks/useNavigation";
 import { useFileValidation } from "@/hooks/filecheck/useFileValidation";
 import { PageHeader } from "@/components/common/pageHeader";
 import { useLoadContentState } from "@/hooks/useLoadContentState";
-import { LoadContent } from "@/app/(feature)/loadimage/LoadContent";
+import { LoadContent } from "@/components/loadimage/LoadContent";
 import { TagBySearchRequest } from "@/types/tag";
-import { FilterSection } from "@/app/(feature)/loadimage/FilterSection";
 import { useState } from "react";
+import { FilterSection } from "@/components/loadimage/FilterSection";
 
 export default function ImageManage() {
     const [selectedTab, setSelectedTab] = useState("upload");
@@ -26,7 +26,7 @@ export default function ImageManage() {
     const { tags, currentFilter, searchByFilter, setPage } = loadContentState;
 
     const handleMoveToDataset = async () => {
-        await goToLoadImages(images);
+        await goToLoadImages(images, currentFilter);
     };
 
     const handleFilterApply = (filterData: TagBySearchRequest) => {
