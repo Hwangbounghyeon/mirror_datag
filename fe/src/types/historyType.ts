@@ -1,7 +1,7 @@
 export type HistoryListData = {
   history_id: string;
   history_name: string;
-  is_done: boolean;
+  is_done: number;
   created_at: string;
   updated_at: string;
 };
@@ -34,10 +34,19 @@ export type ObjectDetectionPredictions = {
   bbox: number[];
 }
 
+export type ObjectDetectionLabels = {
+  label: string;
+  bbox: number[];
+}
+
 export type ReductionResults = {
   imageId: string;
-  features: number[];
-  predictions: ClassificationPredictions | ObjectDetectionPredictions;
+  detailId: string;
+  imageUrl: string;
+  features: number[] | null;
+  predictions: ClassificationPredictions | ObjectDetectionPredictions | null;
+  label?: ObjectDetectionLabels | string;
+  iou?: number;
 }
 
 export type HistoryData = {
@@ -45,7 +54,7 @@ export type HistoryData = {
   projectId: string;
   isPrivate: boolean;
   historyName: string;
-  isDone: boolean;
+  isDone: number;
   parameters?: Parameters;
   results?: ReductionResults[];
   createdAt: Date;
