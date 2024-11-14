@@ -12,11 +12,14 @@ import { LoadContent } from "@/components/loadimage/LoadContent";
 import { TagBySearchRequest } from "@/types/tag";
 import { useState } from "react";
 import { FilterSection } from "@/components/loadimage/FilterSection";
+import { useParams } from "next/navigation";
 
 export default function ImageManage() {
+    const params = useParams();
+    const ProjectId = params.project_id as string;
     const [selectedTab, setSelectedTab] = useState("upload");
     const { images, addImages, deleteImage, deleteAllImages } = useImageState();
-    const { goBack, goToLoadImages } = useNavigation();
+    const { goBack, goToLoadImages } = useNavigation(ProjectId);
     const { handleFileValidation } = useFileValidation({
         images,
         onValidFiles: addImages,

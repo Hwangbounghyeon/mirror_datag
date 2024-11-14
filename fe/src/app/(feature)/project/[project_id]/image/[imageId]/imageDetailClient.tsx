@@ -13,6 +13,7 @@ import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { AuthUser } from "@/types/auth";
 import { Detection } from "@/types/metadata";
+import { TagBySearchRequest } from "@/types/tag";
 
 interface ImageDetailClientProps {
     imageId: string;
@@ -30,6 +31,11 @@ interface ImageDetailClientProps {
         createdAt: string;
     };
     detections: Detection[];
+    totalItem: number;
+    nextId: string | null;
+    prevId: string | null;
+    project_id: string;
+    conditions?: TagBySearchRequest;
 }
 
 function ImageDetailClient({
@@ -42,9 +48,13 @@ function ImageDetailClient({
     imageSrc,
     metadata,
     detections,
+    totalItem,
+    nextId,
+    prevId,
+    project_id,
+    conditions,
 }: ImageDetailClientProps) {
     const router = useRouter();
-    const totalImages = 300;
 
     const {
         userAuthorities,
@@ -59,17 +69,31 @@ function ImageDetailClient({
         initialDepartmentAuthorities
     );
 
+    const searchParams = conditions
+        ? `?conditions=${encodeURIComponent(JSON.stringify(conditions))}`
+        : "";
+
     const { tags, addTag, removeTag } = useTagManager(imageId, initialTags);
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
-            if (direction === "prev" && imageIdx > 1) {
-                router.push(`/imagedetail/${imageIdx - 1}`);
-            } else if (direction === "next" && imageIdx < totalImages) {
-                router.push(`/imagedetail/${imageIdx + 1}`);
+            const searchParams = conditions
+                ? `?conditions=${encodeURIComponent(
+                      JSON.stringify(conditions)
+                  )}`
+                : "";
+
+            if (direction === "prev" && prevId) {
+                router.push(
+                    `/project/${project_id}/image/${prevId}${searchParams}`
+                );
+            } else if (direction === "next" && nextId) {
+                router.push(
+                    `/project/${project_id}/image/${nextId}${searchParams}`
+                );
             }
         },
-        [imageIdx, router]
+        [nextId, prevId, project_id, router, conditions]
     );
 
     useEffect(() => {
@@ -95,8 +119,17 @@ function ImageDetailClient({
             <Header
                 fileName={imageSrc.split("/").pop() || "Unknown"}
                 currentNumber={imageIdx}
-                totalCount={totalImages}
-                onNavigate={handleNavigate}
+                totalCount={totalItem}
+                prevLink={
+                    prevId
+                        ? `/project/${project_id}/image/${prevId}${searchParams}`
+                        : null
+                }
+                nextLink={
+                    nextId
+                        ? `/project/${project_id}/image/${nextId}${searchParams}`
+                        : null
+                }
             />
 
             <div className="w-full h-[1px] bg-gray-400 " />
