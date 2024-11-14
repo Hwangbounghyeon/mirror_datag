@@ -58,3 +58,5 @@ export interface StepProps {
 }
 
 export type ProjectAuthType = "ReadOnly" | "Read&Write" | "None";
+
+export type CreateProjectResponseType = string;

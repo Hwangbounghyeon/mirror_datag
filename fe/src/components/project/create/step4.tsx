@@ -1,5 +1,5 @@
 import { RootState } from "@/store/store";
-import { StepProps } from "@/types/projectType";
+import { CreateProjectResponseType, StepProps } from "@/types/projectType";
 import { CreateProjectRequestType } from "@/types/projectType";
 import {
   Button,
@@ -82,7 +82,7 @@ const Step4 = ({ handleMove }: StepProps) => {
         is_private: is_private,
       };
 
-      const response = await customFetch<string>({
+      const response = await customFetch<CreateProjectResponseType>({
         endpoint: "/project/create",
         method: "POST",
         body: JSON.stringify(sendData),
@@ -91,7 +91,7 @@ const Step4 = ({ handleMove }: StepProps) => {
         console.error(response);
         setErrorMessage("프로젝트 생성에 실패했습니다.");
       } else {
-        router.push("/project");
+        router.push(`/project/${response.data}`);
       }
     } catch (error) {
       console.error(error);
