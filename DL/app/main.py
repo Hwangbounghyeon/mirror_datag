@@ -30,7 +30,7 @@ main_router.include_router(det_router.router)
 
 app.include_router(main_router)
 
-@app.get("/health")
+@app.get("/dl/health")
 async def health_check():
     return {"status": "healthy"}
 
