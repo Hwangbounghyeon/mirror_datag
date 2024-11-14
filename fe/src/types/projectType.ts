@@ -1,6 +1,35 @@
+import { DepartmentType } from "./departmentType";
+
+export type SearchUserType = {
+  user_id: number;
+  name: string;
+  email: string;
+};
+
+export type SearchUserWithAuthType = SearchUserType & {
+  Auth: ProjectAuthType;
+};
+
+export type SearchDepartmentWithAutyType = DepartmentType & {
+  Auth: ProjectAuthType;
+};
+
 export type CreateProjectType = {
   project_name: string;
+  project_model_task: string;
   project_model_name: string;
+  description: string;
+  accesscontrol: {
+    users: Record<number, SearchUserWithAuthType>;
+    departments: Record<number, SearchDepartmentWithAutyType>;
+  };
+  is_private: boolean;
+};
+
+export type CreateProjectRequestType = {
+  project_name: string;
+  project_model_name: string;
+  project_model_task: string;
   description: string;
   accesscontrol: {
     view_users: string[];
@@ -34,9 +63,9 @@ export type ProjectType = {
 };
 
 export interface StepProps {
-  projectItem: CreateProjectType;
-  setProjectItem: (updates: Partial<CreateProjectType>) => void;
   handleMove: (step: number) => void;
-  category?: string; // Step1에만 필요
-  setCategory?: (category: string) => void; // Step1에만 필요
 }
+
+export type ProjectAuthType = "ReadOnly" | "Read&Write" | "None";
+
+export type CreateProjectResponseType = string;

@@ -1,93 +1,49 @@
 "use client";
 
-import React, { useCallback, useState, memo, useEffect, use } from "react";
+import React, { useCallback, useState, memo, useEffect } from "react";
 import StepIndicator from "@/components/project/create/step-indicator";
-import useCreateProject from "@/hooks/useCreateProject";
 import Step1 from "@/components/project/create/step1";
+import Step2 from "@/components/project/create/step2";
 import Step3 from "@/components/project/create/step3";
 import Step4 from "@/components/project/create/step4";
-import { CreateProjectType } from "@/types/projectType";
 import { useRouter } from "next/navigation";
 
 // Memoize step components
 const MemoizedStep1 = memo(Step1);
+const MemoizedStep2 = memo(Step2);
 const MemoizedStep3 = memo(Step3);
 const MemoizedStep4 = memo(Step4);
 
 const Page = () => {
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   useEffect(() => {
-    setIsMounted(true);
+    router.prefetch("/project");
+  }, [router]);
 
-    return () => {
-      setIsMounted(false);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isMounted) {
-      router.prefetch("/project");
-    }
-  }, [isMounted]);
   const [step, setStep] = useState(1);
-  const { state, dispatch } = useCreateProject();
 
   const handleMove = useCallback((stepNumber: number) => {
     setStep(stepNumber);
   }, []);
 
-  const handleProjectItemChange = useCallback(
-    (updates: Partial<CreateProjectType>) => {
-      dispatch({
-        type: "SET_PROJECT_ITEM",
-        payload: updates,
-      });
-    },
-    []
-  );
-
-  const handleCategoryChange = useCallback((category: string) => {
-    dispatch({
-      type: "SET_CATEGORY",
-      payload: category,
-    });
-  }, []);
-
   // Memoize the step rendering logic
   const renderStep = useCallback(() => {
     // 공통 props
-    const commonProps = {
-      projectItem: state.createProjectItem,
-      setProjectItem: handleProjectItemChange,
-      handleMove: handleMove,
-    };
 
     // Step에 따라 다른 컴포넌트를 렌더링
     switch (step) {
       case 1:
-        return (
-          <MemoizedStep1
-            {...commonProps}
-            category={state.category}
-            setCategory={handleCategoryChange}
-          />
-        );
+        return <MemoizedStep1 handleMove={handleMove} />;
       case 2:
-        return <MemoizedStep3 {...commonProps} />;
+        return <MemoizedStep2 handleMove={handleMove} />;
       case 3:
-        return <MemoizedStep4 {...commonProps} />;
+        return <MemoizedStep3 handleMove={handleMove} />;
+      case 4:
+        return <MemoizedStep4 handleMove={handleMove} />;
       default:
         return null;
     }
-  }, [
-    step,
-    state.createProjectItem,
-    state.category,
-    handleProjectItemChange,
-    handleMove,
-    handleCategoryChange,
-  ]);
+  }, [step, handleMove]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
