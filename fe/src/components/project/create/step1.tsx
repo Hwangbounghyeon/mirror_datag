@@ -9,7 +9,7 @@ import { ModelListResponseType } from "@/types/modelType";
 
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
-import { setProjectModelName } from "@/store/create-store";
+import { setProjectModelName, setProjectModelTask } from "@/store/create-store";
 import ButtonFooter from "./buttonFooter";
 
 const cards: {
@@ -35,7 +35,9 @@ const cards: {
 const Step1 = ({ handleMove }: StepProps) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [category, setCategory] = useState<string | null>(null);
+  const project_model_task = useSelector(
+    (state: RootState) => state.project.project_model_task
+  );
   const dispatch = useDispatch<AppDispatch>();
   const project_model_name = useSelector(
     (state: RootState) => state.project.project_model_name
@@ -56,7 +58,7 @@ const Step1 = ({ handleMove }: StepProps) => {
   // 마운트된 상태에서 선택이 바뀌면 모델 선택도 바뀌게 합니다
   useEffect(() => {
     dispatch(setProjectModelName(""));
-  }, [category]);
+  }, [project_model_task]);
 
   useEffect(() => {
     if (isMounted) {
@@ -81,46 +83,44 @@ const Step1 = ({ handleMove }: StepProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-6 w-full max-w-4xl lg:mx-auto p-4 min-h-[900px] lg:min-h-[400px]">
         {cards.map((card) => (
           <SelectCard
-            selected={category === card.value}
+            selected={project_model_task === card.value}
             key={card.title}
             imgUrl={card.imgUrl}
             title={card.title}
             description={card.description}
             onClick={() => {
-              if (setCategory) {
-                setCategory(card.value);
-                console.log("category", setCategory);
-                console.log("category", category);
-              }
+              dispatch(setProjectModelTask(card.value));
             }}
           />
         ))}
       </div>
-      {category && model_list && model_list[category] && (
-        <div className="w-full flex flex-col">
-          <p className="text-[22px] font-bold text-center mb-3">
-            관련된 모델을 선택해 주세요
-          </p>
-          <Autocomplete
-            required
-            onSelectionChange={(key) => {
-              if (typeof key === "string") {
-                dispatch(setProjectModelName(key));
+      {project_model_task !== "" &&
+        model_list &&
+        model_list[project_model_task] && (
+          <div className="w-full flex flex-col">
+            <p className="text-[22px] font-bold text-center mb-3">
+              관련된 모델을 선택해 주세요
+            </p>
+            <Autocomplete
+              required
+              onSelectionChange={(key) => {
+                if (typeof key === "string") {
+                  dispatch(setProjectModelName(key));
+                }
+              }}
+              size="lg"
+            >
+              {
+                // 모델 리스트를 AutocompleteItem으로 변환하여 렌더링합니다
+                model_list[project_model_task].map((model) => (
+                  <AutocompleteItem key={model} value={model}>
+                    {model}
+                  </AutocompleteItem>
+                ))
               }
-            }}
-            size="lg"
-          >
-            {
-              // 모델 리스트를 AutocompleteItem으로 변환하여 렌더링합니다
-              model_list[category].map((model) => (
-                <AutocompleteItem key={model} value={model}>
-                  {model}
-                </AutocompleteItem>
-              ))
-            }
-          </Autocomplete>
-        </div>
-      )}
+            </Autocomplete>
+          </div>
+        )}
       <ButtonFooter
         beforeButtonText="목록으로"
         beforeButtonFunction={() => {

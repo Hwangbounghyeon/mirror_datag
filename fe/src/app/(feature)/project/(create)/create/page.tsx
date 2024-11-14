@@ -20,7 +20,7 @@ const Page = () => {
     router.prefetch("/project");
   }, [router]);
 
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
 
   const handleMove = useCallback((stepNumber: number) => {
     setStep(stepNumber);

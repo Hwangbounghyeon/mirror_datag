@@ -10,6 +10,7 @@ const VALID_AUTH_TYPES: ProjectAuthType[] = ["ReadOnly", "Read&Write"];
 
 const initialState: CreateProjectType = {
   project_name: "",
+  project_model_task: "",
   project_model_name: "",
   description: "",
   accesscontrol: {
@@ -25,6 +26,9 @@ const projectSlice = createSlice({
   reducers: {
     setProjectName: (state, action: PayloadAction<string>) => {
       state.project_name = action.payload;
+    },
+    setProjectModelTask: (state, action: PayloadAction<string>) => {
+      state.project_model_task = action.payload;
     },
     setProjectModelName: (state, action: PayloadAction<string>) => {
       state.project_model_name = action.payload;
@@ -78,6 +82,7 @@ const projectSlice = createSlice({
 export const {
   setProjectName,
   setProjectModelName,
+  setProjectModelTask,
   setDescription,
   setIsPrivate,
   addUser,

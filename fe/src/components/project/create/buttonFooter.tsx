@@ -10,6 +10,7 @@ interface ButtonFooterProps {
   nextButtonText: string;
 }
 
+// ButtonFooter 컴포넌트 수정
 const ButtonFooter = ({
   beforeButtonFunction,
   nextButtonFunction,
@@ -29,7 +30,11 @@ const ButtonFooter = ({
         {beforeButtonText}
       </Button>
       <Button
-        onClick={nextButtonFunction}
+        onClick={() => {
+          if (nextButtonFunction) {
+            nextButtonFunction();
+          }
+        }}
         color="primary"
         variant="ghost"
         disabled={nextButtonDisabled}
