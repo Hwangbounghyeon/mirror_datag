@@ -5,6 +5,8 @@ pipeline {
         DOCKER_REGISTRY = 'jingluv'
         DOCKER_CREDENTIALS = credentials('khk-docker')
         GIT_VERSION = sh(script: 'git describe --tags --always', returnStdout: true).trim()
+        NEXT_PUBLIC_BACKEND_URL = credentials('NEXT_PUBLIC_BACKEND_URL')
+        NEXT_PUBLIC_FRONTEND_URL = credentials('NEXT_PUBLIC_FRONTEND_URL')
     }
     
     stages {
@@ -36,41 +38,26 @@ pipeline {
             }
         }
 
-        stage('체크아웃') {
+        stage('의존성 검사') {
             steps {
-                checkout scm
-            }
-        }
-        
-        stage('환경 변수 설정') {
-            steps {
-                script {
-                    dir('fe') {
-                        withCredentials([
-                            string(credentialsId: 'NEXT_PUBLIC_BACKEND_URL', variable: 'NEXT_PUBLIC_BACKEND_URL'),
-                            string(credentialsId: 'NEXT_PUBLIC_FRONTEND_URL', variable: 'NEXT_PUBLIC_FRONTEND_URL')
-                        ]) {
-                            sh '''
-                                cat << EOF > .env
-                                NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
-                                NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
-                                ACCESSTOKEN_DURATION=1800
-                                REFRESHTOKEN_DURATION=86400
-                                EOF
-                            '''
-                        }
-                    }
+                dir('fe') {
+                    sh 'npm ci'
+                    sh 'npm run lint'
+                    sh 'npx tsc --noEmit'
                 }
             }
         }
-
-        stage('Docker Image 빌드') {
+        
+        stage('Docker 이미지 빌드') {
             steps {
-                script {
-                    dir('fe') {
+                dir('fe') {
+                    script {
                         sh """
-                            docker-compose -f docker-compose-version.yml build
-                            docker-compose -f docker-compose-lts.yml build
+                            docker build \
+                                --build-arg NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL} \
+                                --build-arg NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL} \
+                                -t ${DOCKER_REGISTRY}/s108_frontend:${GIT_VERSION} \
+                                -t ${DOCKER_REGISTRY}/s108_frontend:lts .
                         """
                     }
                 }
@@ -92,17 +79,14 @@ pipeline {
             }
         }
         
-        stage('Docker Image 배포') {
+        stage('배포') {
             steps {
-                script {
-                    dir('fe') {
-                        sh """
-                            docker-compose -f docker-compose-lts.yml down
-                            docker rm -f frontend-lts || true
-                            docker rmi -f ${DOCKER_REGISTRY}/s108_frontend:lts || true
-                            docker-compose -f docker-compose-lts.yml up -d
-                        """
-                    }
+                dir('fe') {
+                    sh '''
+                        docker compose -f docker-compose-lts.yml down
+                        docker rm -f frontend || true
+                        docker compose -f docker-compose-lts.yml up -d
+                    '''
                 }
             }
         }
@@ -118,9 +102,14 @@ pipeline {
                 archiveArtifacts artifacts: 'version.properties'
             }
         }
+        failure {
+            echo '배포 실패'
+        }
         always {
-            sh 'rm -f .env'
-            // cleanWs()
+            // 작업 디렉토리 정리
+            cleanWs()
+            // 사용하지 않는 Docker 이미지 정리
+            sh 'docker image prune -f'
         }
     }
 }
