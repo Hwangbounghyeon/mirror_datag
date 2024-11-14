@@ -11,6 +11,7 @@ services:
       - "8000:8000"
     restart: unless-stopped
     networks:
+      - backend-network
       - be-redis
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/be/health"]
@@ -34,4 +35,8 @@ services:
 
 networks:
   be-redis:
+    name: be-redis
+    external: true
+  backend-network:
+    name: backend-network
     external: true
