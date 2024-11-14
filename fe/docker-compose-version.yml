@@ -18,8 +18,12 @@ services:
     restart: unless-stopped
     networks:
       - be-redis
+      - nginx-frontend
 
 networks:
   be-redis:
     name: be-redis
+    external: true
+  nginx-frontend:
+    name: nginx-frontend
     external: true
