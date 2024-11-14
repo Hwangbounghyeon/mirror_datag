@@ -21,4 +21,5 @@ services:
 
 networks:
   be-redis:
+    name: be-redis
     external: true
