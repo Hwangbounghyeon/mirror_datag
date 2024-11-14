@@ -7,15 +7,10 @@ import {
 
 export async function ImageDetailContent({
     params,
-    searchParams,
 }: {
     params: { imageId: string };
-    searchParams: { imageList?: string };
 }) {
     const imageId = params.imageId;
-    const imageList = searchParams.imageList
-        ? JSON.parse(searchParams.imageList)
-        : [];
     const data = await loadImageDetail(imageId);
 
     if (!data.data) {
@@ -62,7 +57,7 @@ export async function ImageDetailContent({
     return (
         <ImageDetailClient
             imageId={imageId}
-            imageList={imageList}
+            imageIdx={1}
             initialUserAuthorities={initialUserAuthorities}
             initialDepartmentAuthorities={initialDepartmentAuthorities}
             initialTags={initialTags}
