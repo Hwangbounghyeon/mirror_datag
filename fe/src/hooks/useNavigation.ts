@@ -18,18 +18,15 @@ export const useNavigation = (projectId: string) => {
     const goToLoadImages = useCallback(
         async (images: ImageFile[], currentFilter: TagBySearchRequest) => {
             try {
-                const uploadProcess = uploadImage({
-                    is_private: true,
-                    project_id: projectId,
-                    images,
-                });
+                const [uploadResponse, searchResponse] = await Promise.all([
+                    uploadImage({
+                        is_private: true,
+                        project_id: projectId,
+                        images,
+                    }),
+                    searchProjectImages(projectId, currentFilter),
+                ]);
 
-                const searchResponse = await searchProjectImages(
-                    projectId,
-                    currentFilter
-                );
-
-                await uploadProcess;
                 toast.success("Image Upload Success!", {
                     position: "bottom-right",
                     autoClose: 5000,
@@ -39,6 +36,8 @@ export const useNavigation = (projectId: string) => {
                     progress: undefined,
                     transition: Bounce,
                 });
+
+                router.push(`/project/${projectId}`);
             } catch (error) {
                 console.error("Upload failed:", error);
                 toast.error("Image Upload Failed!", {
