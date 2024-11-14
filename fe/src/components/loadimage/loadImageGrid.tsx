@@ -11,6 +11,5 @@ export const LoadImageGrid: FC<{ images: LoadImageType[] }> = ({ images }) => (
     <BaseImageGrid
         images={images}
         renderItem={(image) => <LoadImageCard key={image.id} src={image.url} />}
-        className="grid grid-cols-10 gap-4 px2"
     />
 );

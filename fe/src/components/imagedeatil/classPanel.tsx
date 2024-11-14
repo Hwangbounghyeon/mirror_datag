@@ -5,6 +5,7 @@ interface Classes {
 }
 
 function ClassPanel({ classes }: Classes) {
+    const uniqueClasses = Array.from(new Set(classes));
     const getClassColor = (index: number): string => {
         switch (index) {
             case 0:
@@ -30,8 +31,11 @@ function ClassPanel({ classes }: Classes) {
         <div className="flex flex-col">
             <div className="flex-1 min-h-0 overflow-y-auto px-2">
                 <div className="flex flex-col gap-2">
-                    {classes.map((className, index) => (
-                        <div key={index} className="flex items-center gap-2">
+                    {uniqueClasses.map((className, index) => (
+                        <div
+                            key={className}
+                            className="flex items-center gap-2"
+                        >
                             <div
                                 className="w-2 h-2 rounded-full"
                                 style={{
