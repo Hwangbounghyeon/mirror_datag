@@ -88,6 +88,8 @@ const AddAuthUser = ({ isOpen, onClose }: AddAuthUserProps) => {
     if (isOpen) {
       // 모달이 열리면 초기화
       setNowPage(1);
+      setWillSelectedUser([]);
+      setErrorMessage("");
       setTotalPage(1);
       setPageUsers([]);
       setSearchText("");
@@ -181,14 +183,14 @@ const AddAuthUser = ({ isOpen, onClose }: AddAuthUserProps) => {
                         handleSelectUser(user);
                       }}
                       size="sm"
-                      disabled={!!selectedUsers[user.user_id]}
+                      disabled={!!selectedUsers.hasOwnProperty(user.user_id)}
                       color={
                         willselectedUser.includes(user)
                           ? "secondary"
                           : "primary"
                       }
                     >
-                      {!!selectedUsers[user.user_id]
+                      {!!selectedUsers.hasOwnProperty(user.user_id)
                         ? "추가됨"
                         : willselectedUser.includes(user)
                         ? "목록 제거"
@@ -199,6 +201,7 @@ const AddAuthUser = ({ isOpen, onClose }: AddAuthUserProps) => {
               ))}
             </TableBody>
           </Table>
+
           <Pagination
             isDisabled={isLoading || errorMessage !== ""}
             onChange={setNowPage}

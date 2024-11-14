@@ -29,6 +29,7 @@ export const getUsers = async (pageNumber: number, searchName?: string) => {
         data: response.data,
       };
     } else {
+      console.error("response.error", response.error);
       return {
         error: response.error || "사용자를 불러오는 중 오류가 발생했습니다.",
         status: response.status,

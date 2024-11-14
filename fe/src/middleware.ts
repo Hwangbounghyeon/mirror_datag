@@ -17,6 +17,10 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.includes(path);
   const res = NextResponse.next();
 
+  if (path === "/") {
+    return NextResponse.next();
+  }
+
   // refreshToken으로 토큰 갱신 시도 중인지 확인
   const isRefreshing = request.headers.get("x-refreshing-token");
 

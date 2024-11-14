@@ -73,11 +73,13 @@ const AddAuthDeps = ({ isOpen, onClose }: AddAuthDpts) => {
         })
       );
     });
+    onClose();
   };
 
   useEffect(() => {
     setIsLoading(true);
     if (isOpen) {
+      setErrorMessage("");
       setNowPage(1);
       setTotalPage(1);
       setPageDpts([]);
