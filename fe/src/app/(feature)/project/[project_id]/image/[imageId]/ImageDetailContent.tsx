@@ -4,14 +4,27 @@ import {
     isClassificationPrediction,
     isDetectionPrediction,
 } from "@/types/metadata";
+import { TagBySearchRequest } from "@/types/tag";
+
+interface Props {
+    projectId: string;
+    imageId: string;
+    conditions?: TagBySearchRequest;
+}
 
 export async function ImageDetailContent({
-    params,
-}: {
-    params: { imageId: string };
-}) {
-    const imageId = params.imageId;
-    const data = await loadImageDetail(imageId);
+    projectId,
+    imageId,
+    conditions,
+}: Props) {
+    console.log("projectId: ", projectId);
+    const data = await loadImageDetail(
+        conditions || {
+            conditions: [],
+        },
+        imageId,
+        projectId
+    );
 
     if (!data.data) {
         throw new Error("Data is undefined");
@@ -19,6 +32,11 @@ export async function ImageDetailContent({
 
     const aiResult = data.data.metadata?.aiResults?.[0];
     const prediction = aiResult?.predictions?.[0];
+
+    const imageIdx = data.data.pagination.current_page;
+    const totalIdx = data.data.pagination.total_pages;
+    const nextId = data.data.pagination?.next_cursor || null;
+    const prevId = data.data.pagination?.previous_cursor || null;
 
     const detections =
         aiResult?.task === "det" && isDetectionPrediction(prediction)
@@ -57,7 +75,6 @@ export async function ImageDetailContent({
     return (
         <ImageDetailClient
             imageId={imageId}
-            imageIdx={1}
             initialUserAuthorities={initialUserAuthorities}
             initialDepartmentAuthorities={initialDepartmentAuthorities}
             initialTags={initialTags}
@@ -65,6 +82,12 @@ export async function ImageDetailContent({
             imageSrc={imageSrc}
             metadata={metadata}
             detections={detections}
+            imageIdx={imageIdx}
+            totalItem={totalIdx}
+            nextId={nextId}
+            prevId={prevId}
+            project_id={projectId}
+            conditions={conditions}
         />
     );
 }
