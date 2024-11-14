@@ -24,7 +24,7 @@ export function useTagManager(imageId: string, initialTags: string[]) {
         try {
             const request: DeleteTagRequest = {
                 image_id: imageId,
-                delete_tag_list: [tagName],
+                remove_tag_list: [tagName],
             };
             const newTag = await tagApi.delete(request);
             setTags(newTag);
