@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { Bounce, toast } from "react-toastify";
 
-export const useNavigation = () => {
+export const useNavigation = (projectId: string) => {
     const router = useRouter();
 
     const goBack = useCallback(() => {
@@ -20,16 +20,14 @@ export const useNavigation = () => {
             try {
                 const uploadProcess = uploadImage({
                     is_private: true,
-                    project_id: "6732f8c4fcec9d2c66a75080",
+                    project_id: projectId,
                     images,
                 });
 
                 const searchResponse = await searchProjectImages(
-                    "6732f8c4fcec9d2c66a75080",
+                    projectId,
                     currentFilter
                 );
-
-                // TODO 추후에 이동하도록
 
                 await uploadProcess;
                 toast.success("Image Upload Success!", {
@@ -54,7 +52,7 @@ export const useNavigation = () => {
                 });
             }
         },
-        []
+        [projectId]
     );
 
     return {
