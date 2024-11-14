@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { BaseImageGrid } from "./BaseImageGrid";
+import { BaseImageGrid } from "../image/BaseImageGrid";
 import { ImageCard } from "./ImageCard";
 
 interface UploadImageType {

@@ -1,23 +1,27 @@
 import { Button, Input, RadioGroup, Radio, ModalHeader, ModalBody, ModalFooter, Card } from "@nextui-org/react";
 import { useEffect, useState } from "react";
-import { postAnalysis } from "@/api/analysis/postAnalysis";
+import { postAutoAnalysis } from "@/api/analysis/postAnalysis";
+import FilterContainer from "./filter-container";
 import { FilterRow } from "./filter-container";
+import { tagApi } from "@/api/detail/tagApi";
+import { createInitialRow } from "./filter-container";
 
 interface AnalysisModalProps {
   onClose: () => void;
-  selectedImageIds: string[];
   projectId: string;
-  conditions: FilterRow[];
 }
 
-const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: AnalysisModalProps) => {
-  const [isBtnDisabled, setIsBtnDisaled] = useState(true);
+const AutoAnalysisModal = ({ onClose, projectId }: AnalysisModalProps) => {
   const [historyName, setHistoryName] = useState(`History_${new Date().toUTCString()}`)
   const [algorithm, setAlgorithm] = useState("tsne");
   const [isPrivate, setIsPrivate] = useState("open");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+
+  const [filterRows, setFilterRows] = useState<FilterRow[]>([
+      createInitialRow(),
+  ]);
+  const [tags, setTags] = useState<string[]>([]);
 
   const preventClick = (e: React.MouseEvent) => {
     e.stopPropagation(); 
@@ -27,7 +31,7 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
     setIsLoading(true);
 
     try {
-      const filteredConditions = conditions
+      const filteredConditions = filterRows
         .filter(row => 
           row.AND.length > 0 || 
           row.OR.length > 0 || 
@@ -45,10 +49,9 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
         history_name: historyName,
         is_private: isPrivate !== "open",
         selected_tags: filteredConditions,
-        image_ids: selectedImageIds
       }
   
-      await postAnalysis(bodyData);
+      await postAutoAnalysis(bodyData);
     } catch (error) {
       console.log(error);
     } finally {
@@ -56,15 +59,27 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
     }
   }
 
-  useEffect(() => {
-    if (selectedImageIds.length >= 10) {
-      setIsBtnDisaled(false)
-      setErrorMessage("")
-    } else {
-      setIsBtnDisaled(true)
-      setErrorMessage("최소 10개 이상의 데이터를 선택해주세요.")
+  const getTags = async () => {
+    try {
+        setIsLoading(true);
+        const response = await tagApi.getTag();
+        if (response.data) {
+            setTags(response.data.tags);
+        }
+    } catch (error) {
+        console.error("Failed to fetch images:", error);
+    } finally {
+        setIsLoading(false);
     }
-  }, [selectedImageIds])
+  };
+
+  useEffect(() => {
+    getTags()
+  }, [])
+
+  useEffect(() => {
+    console.log(filterRows)
+  }, [filterRows])
 
   return (
     <div>
@@ -159,11 +174,16 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
                 </Radio>
               </RadioGroup>
             </div>
+
+            <div className="w-full">
+              <label className="text-sm font-semibold text-gray-700">필터 조건 설정</label>
+              <FilterContainer tags={tags} filterRows={filterRows} setFilterRows={setFilterRows}/>
+            </div>
           </div>
         </Card>
       </ModalBody>
       <ModalFooter className="flex items-center justify-between px-6 py-4">
-        <div className="text-sm text-red-500 truncate">{errorMessage}</div>
+        <div className="text-sm text-red-500 truncate"></div>
         <div className="flex gap-2">
           <Button
             color="danger"
@@ -175,7 +195,6 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
           </Button>
           <Button
             color="primary"
-            isDisabled={isBtnDisabled}
             isLoading={isLoading}
             onPress={analysis}
             className="px-6"
@@ -188,4 +207,4 @@ const AnalysisModal = ({ onClose, selectedImageIds, projectId, conditions }: Ana
   );
 };
 
-export default AnalysisModal;
+export default AutoAnalysisModal;

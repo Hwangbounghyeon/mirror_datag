@@ -61,6 +61,7 @@ function TagPanel({ tags, onRemoveTag, onAddTag }: TagPanelProps) {
                     />
                     <button
                         onClick={handleAddTag}
+                        disabled={!newTag.trim()}
                         className="px-5 rounded-none bg-blue-400 text-black font-medium hover:bg-blue-500 transition-colors"
                     >
                         Add

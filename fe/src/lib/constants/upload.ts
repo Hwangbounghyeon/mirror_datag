@@ -2,6 +2,8 @@ export const ACCEPTED_FILE_TYPES = {
     "image/*": [".jpeg", ".jpg", ".png", ".gif"],
     "application/zip": [".zip"],
     "application/x-zip-compressed": [".zip"],
+    "application/x-7z-compressed": [".7z"],
+    "application/json": [".json"],
 } as const;
 
 export const ERROR_MESSAGES = {

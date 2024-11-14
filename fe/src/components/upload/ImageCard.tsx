@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { IoCloseCircle } from "react-icons/io5";
 import { ImageCardProps } from "@/types/upload";
-import BaseImageCard from "./BaseImageCard";
+import BaseImageCard from "../image/BaseImageCard";
 
 const DeleteButton: FC<{ onDelete: () => void }> = ({ onDelete }) => (
     <div

@@ -1,14 +1,6 @@
+import { Department, UserListResponse } from "@/types/auth";
 import apiClient from "../client";
-
-interface Department {
-    department_id: number;
-    department_name: string;
-}
-
-interface DepartmentUserResponse {
-    user_id: number;
-    user_name: string;
-}
+import { DefaultPaginationType } from "@/types/default";
 
 export const departmentApi = async () => {
     const response = await apiClient<{ status: number; data: Department[] }>(
@@ -27,10 +19,24 @@ export const departmentApi = async () => {
 };
 
 export const getUserByDepartment = async (
-    department_id: number
-): Promise<DepartmentUserResponse[]> => {
-    return apiClient<DepartmentUserResponse[]>(`/user/${department_id}`, {
-        method: "GET",
-        cache: "no-store",
+    page: number,
+    limit: number
+): Promise<UserListResponse> => {
+    const searchParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
     });
+    const response = await apiClient<DefaultPaginationType<UserListResponse>>(
+        `/user/search?${searchParams.toString()}`,
+        {
+            method: "GET",
+            cache: "no-store",
+        }
+    );
+
+    if (!response?.data?.data) {
+        throw new Error("No data received");
+    }
+
+    return response.data.data;
 };
