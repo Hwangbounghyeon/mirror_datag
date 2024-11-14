@@ -63,9 +63,17 @@ interface ImageDetail {
     aiResults: AiResult[];
 }
 
+interface Pagination {
+    previous_cursor?: string;
+    next_cursor?: string;
+    current_page: number;
+    total_pages: number;
+}
+
 interface ImageDetailResponseData {
     metadata: ImageDetail;
     access_control: AccessControlResponse;
+    pagination: Pagination;
 }
 
 export type ImageDetailResponse = DefaultResponseType<ImageDetailResponseData>;
