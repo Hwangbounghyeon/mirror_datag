@@ -31,7 +31,6 @@ export const check_auth = async (formData: FormData) => {
         cache: "no-store",
       }
     );
-    console.log("login try result", response);
 
     if (!response || !response.ok || response.status >= 400) {
       console.log("login fail here ---- ");
@@ -71,7 +70,7 @@ export const check_auth = async (formData: FormData) => {
       maxAge: accessTokenDuration,
     });
 
-    console.log()
+    console.log();
 
     return {
       status: response.status,

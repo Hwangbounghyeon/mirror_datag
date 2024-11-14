@@ -1,5 +1,4 @@
 "use server";
-import { refreshAccessToken } from "@/app/actions/auth";
 import { cookies } from "next/headers";
 
 // 상수 정의 - 에러메세지 DEFAULT
@@ -114,13 +113,15 @@ export async function customFetch<T>({
                 Object.fromEntries(response.headers.entries())
             );
 
-            // JSON 응답 확인
-            if (!isJsonResponse(response)) {
-                throw new Error(ERROR_MESSAGES.NON_JSON_RESPONSE);
-            }
+    // Token 가져오기
+    const cookieStore = cookies();
+    const accessToken = cookieStore.get("accessToken");
 
-            return response;
-        };
+    const response = await makeRequest(accessToken?.value);
+
+    if (!isJsonResponse(response)) {
+      throw new Error(ERROR_MESSAGES.NON_JSON_RESPONSE);
+    }
 
         // Token 가져오기
         const cookieStore = cookies();
@@ -167,4 +168,12 @@ export async function customFetch<T>({
                     : ERROR_MESSAGES.UNKNOWN_ERROR,
         };
     }
+  } catch (error) {
+    console.error("치명적 에러", error);
+    return {
+      status: 500,
+      error:
+        error instanceof Error ? error.message : ERROR_MESSAGES.UNKNOWN_ERROR,
+    };
+  }
 }
