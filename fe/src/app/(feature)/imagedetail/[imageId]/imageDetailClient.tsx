@@ -17,7 +17,8 @@ import { Detection } from "@/types/metadata";
 interface ImageDetailClientProps {
     imageId: string;
     imageIdx: number;
-    initialAuthorities: AuthUser[];
+    initialUserAuthorities: AuthUser[];
+    initialDepartmentAuthorities: string[];
     initialTags: string[];
     classes: string[];
     imageSrc: string;
@@ -34,7 +35,8 @@ interface ImageDetailClientProps {
 function ImageDetailClient({
     imageId,
     imageIdx,
-    initialAuthorities,
+    initialUserAuthorities,
+    initialDepartmentAuthorities,
     initialTags,
     classes,
     imageSrc,
@@ -44,13 +46,20 @@ function ImageDetailClient({
     const router = useRouter();
     const totalImages = 300;
 
-    const { authorities, addAuthorities, removeAuthority } =
-        useAuthorityManager("672d73396eb2c6ffde3bee1a", initialAuthorities); //TODO imageId로 추후 수정
-
-    const { tags, addTag, removeTag } = useTagManager(
-        "672d73396eb2c6ffde3bee1a", //TODO 추후 imageId로 수정
-        initialTags
+    const {
+        userAuthorities,
+        departmentAuthorities,
+        addUserAuthorities,
+        addDepartmentAuthorities,
+        removeUserAuthority,
+        removeDepartmentAuthority,
+    } = useAuthorityManager(
+        imageId,
+        initialUserAuthorities,
+        initialDepartmentAuthorities
     );
+
+    const { tags, addTag, removeTag } = useTagManager(imageId, initialTags);
 
     const handleNavigate = useCallback(
         (direction: "prev" | "next") => {
@@ -129,9 +138,16 @@ function ImageDetailClient({
                         </div>
                         <div className="h-1/3 border-b border-gray-700 dark:border-gray-50">
                             <AuthPanel
-                                authorities={authorities}
-                                onRemove={removeAuthority}
-                                onAdd={addAuthorities}
+                                userAuthorities={userAuthorities}
+                                departmentAuthorities={departmentAuthorities}
+                                onUserAuthorityAdd={addUserAuthorities}
+                                onUserAuthorityRemove={removeUserAuthority}
+                                onDepartmentAuthorityAdd={
+                                    addDepartmentAuthorities
+                                }
+                                onDepartmentAuthorityRemove={
+                                    removeDepartmentAuthority
+                                }
                             />
                         </div>
                         <div className="h-1/3">

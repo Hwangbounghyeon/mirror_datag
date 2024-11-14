@@ -24,30 +24,16 @@ async function apiClient<T>(endpoint: string, options: ApiOptions): Promise<T> {
         });
 
         if (response.error || !response.data) {
-            const errorMessage = response.error
-                ? typeof response.error === "string"
-                    ? response.error
-                    : JSON.stringify(response.error)
-                : "No data returned from API";
-            throw new Error(errorMessage);
+            throw new Error(response.error);
         }
 
         return response.data;
     } catch (error) {
-        console.error(`API Error (${endpoint}):`, {
-            message: error instanceof Error ? error.message : "Unknown error",
-            error,
+        console.error("API client error:", {
+            endpoint,
+            error: error instanceof Error ? error.message : error,
         });
-
-        if (error instanceof Error) {
-            throw error;
-        } else {
-            throw new Error(
-                typeof error === "object"
-                    ? JSON.stringify(error)
-                    : String(error)
-            );
-        }
+        throw error;
     }
 }
 

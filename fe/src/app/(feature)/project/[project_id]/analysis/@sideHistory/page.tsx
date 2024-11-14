@@ -23,30 +23,43 @@ const GetHistories = async ({
     endpoint: `/project/history/${projectId}/list`,
     searchParams: requestParams,
   });
+
   if (!response.data) {
-    return <div>데이터가 없습니다.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="p-6 text-center rounded-lg">
+          <p className="text-lg font-medium">데이터가 없습니다.</p>
+        </div>
+      </div>
+    );
   }
+
   const result = response.data;
   return (
-    <div className="h-full w-full flex flex-col flex-grow items-center">
-      <div className="h-[85%] w-[95%] flex flex-col overflow-y-scroll">
-        {result.data.data.map((history) => (
-          <HistoryCard
-            key={history.history_id}
-            project_id={projectId}
-            {...history}
-            queryStrings={requestParams}
-          />
-        ))}
+    // 전체 컨테이너를 flex로 설정하고 높이 지정
+    <div className="flex flex-col w-full h-full justify-between">
+      {/* 스크롤될 컨텐츠 영역 */}
+      <div className="flex-1 overflow-y-auto px-4 py-8 scrollbar-hide">
+        <div className="space-y-4">
+          {result.data.data.map((history) => (
+            <HistoryCard
+              key={history.history_id}
+              project_id={projectId}
+              {...history}
+              queryStrings={requestParams}
+            />
+          ))}
+        </div>
       </div>
-      <PaginationBar
-        prefetch={false}
-        queryStrings={requestParams}
-        totalPage={result.data.total_pages}
-        currentPage={
-          page > result.data.total_pages ? result.data.total_pages : page
-        }
-      />
+      {/* 페이지네이션 영역 */}
+      <div className="px-4 py-6 border-t border-divider">
+        <PaginationBar
+          prefetch={false}
+          queryStrings={requestParams}
+          totalPage={result.data.total_pages}
+          currentPage={page > result.data.total_pages ? result.data.total_pages : page}
+        />
+      </div>
     </div>
   );
 };
@@ -67,8 +80,17 @@ const Page = ({ params, searchParams }: PageProps) => {
   const projectId = params.project_id;
   const nowPage = searchParams.page ? parseInt(searchParams.page) : 1;
   const queryStrings = new URLSearchParams(searchParams);
+  
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense 
+      fallback={
+        <div className="flex items-center justify-center h-[70vh] min-h-[40rem]">
+          <div className="p-4 rounded-lg">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      }
+    >
       <GetHistories
         projectId={projectId}
         nowPage={nowPage}

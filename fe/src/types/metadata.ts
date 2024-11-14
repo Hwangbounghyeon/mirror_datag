@@ -1,9 +1,33 @@
 import { User } from "./auth";
 import { DefaultResponseType } from "./default";
 
+interface BaseAiPrediction {
+    fileIndex: number;
+    inferenceStartedAt: string;
+    elapsedTime: number;
+    tags: string[];
+}
+
+// Detection task용 prediction
+interface DetectionPrediction extends BaseAiPrediction {
+    detections: Detection[];
+}
+
+// Classification task용 prediction
+interface ClassificationPrediction extends BaseAiPrediction {
+    prediction: string;
+    confidence: number;
+}
+
+interface AiResult {
+    aiModel: string;
+    task: "det" | "cls";
+    predictions: DetectionPrediction[] | ClassificationPrediction[];
+}
+
 interface AccessControlResponse {
     users: User[];
-    department: string[];
+    departments: string[];
 }
 
 interface AccessControl {
@@ -31,20 +55,6 @@ export interface Detection {
     bbox: number[];
 }
 
-interface Prediction {
-    fileIndex: number;
-    detections: Detection[];
-    inferenceStartedAt: string;
-    elapsedTime: number;
-    tags: string[];
-}
-
-interface AiResult {
-    aiModel: string;
-    task: string;
-    predictions: Prediction[];
-}
-
 interface ImageDetail {
     _id: string;
     schemaVersion: string;
@@ -59,3 +69,15 @@ interface ImageDetailResponseData {
 }
 
 export type ImageDetailResponse = DefaultResponseType<ImageDetailResponseData>;
+
+export function isDetectionPrediction(
+    prediction: DetectionPrediction | ClassificationPrediction
+): prediction is DetectionPrediction {
+    return "detections" in prediction;
+}
+
+export function isClassificationPrediction(
+    prediction: DetectionPrediction | ClassificationPrediction
+): prediction is ClassificationPrediction {
+    return "prediction" in prediction;
+}
