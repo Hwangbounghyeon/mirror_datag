@@ -79,19 +79,22 @@ def test_search_user_name():
 def test_filter_image_add(auth_headers, mock_upload_service, mock_db):
     add_filtering_image_request = {
     "project_id": "6732f477fcec9d2c66a7507c",
-    "conditions": ["and_condition"]
+    "conditions":
+        [
+            {
+            "and_condition": ["cat", "Seoul"],
+            "or_condition": ["2024_11"],
+            "not_condition": ["Zone A"]
+            }
+        ]
     }
-    files = [
-        ("files", ("test1.jpg", b"file_content_1", "image/jpeg")),
-        ("files", ("test2.jpg", b"file_content_2", "image/jpeg"))
-    ]
+    
     session = mongo_client.start_session()
     session.start_transaction()
 
     response = client.post(
         "be/api/project/filterImage/{project_id}/list",
         data={"add_filtering_image_request": json.dumps(add_filtering_image_request)},
-        files=files,
         headers=auth_headers
     )
 

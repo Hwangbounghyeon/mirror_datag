@@ -16,9 +16,10 @@ client = TestClient(app)
 # 1. 해당 이미지 유저 권한 추가
 def test_add_user_permission(auth_headers, mock_upload_service, mock_db):
     image_user_permission_add_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "user_id_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "user_id_list": [1, 2]
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -41,9 +42,10 @@ def test_add_user_permission(auth_headers, mock_upload_service, mock_db):
 # 2. 해당 이미지 유저 권한 삭제
 def test_remove_user_permission(auth_headers, mock_upload_service, mock_db):
     image_user_permission_remove_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "user_id_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "user_id_list": [1, 2]
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -66,9 +68,10 @@ def test_remove_user_permission(auth_headers, mock_upload_service, mock_db):
 # 3. 해당 이미지 부서 권한 추가
 def test_add_department_permission(auth_headers, mock_upload_service, mock_db):
     image_department_permission_add_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "department_name_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "department_name_list": ["Research and Development", "Human Resource"]
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -91,9 +94,10 @@ def test_add_department_permission(auth_headers, mock_upload_service, mock_db):
 # 4. 해당 이미지 부서 권한 삭제
 def test_remove_department_permission(auth_headers, mock_upload_service, mock_db):
     image_department_permission_remove_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "department_name_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "department_name_list": ["Research and Development", "Human Resource"]
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -116,8 +120,9 @@ def test_remove_department_permission(auth_headers, mock_upload_service, mock_db
 # 5. 이미지 정보 조회 (리퀘스트가 없으면 ??)
 def test_get_image_detail(auth_headers, mock_upload_service, mock_db):
     image_department_permission_remove_request = {
-    "image_id": "6732f477fcec9d2c66a7507c"
-}
+    "image_id": "6732f4f3db3183653e78ac44"
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -140,9 +145,10 @@ def test_get_image_detail(auth_headers, mock_upload_service, mock_db):
 # 6. 해당 이미지에 태그 추가
 def test_add_image_tag(auth_headers, mock_upload_service, mock_db):
     image_detail_tag_add_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "tag_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "tag_list": ["dog", "bird"]
+    }
+
     session = mongo_client.start_session()
     session.start_transaction()
 
@@ -165,9 +171,10 @@ def test_add_image_tag(auth_headers, mock_upload_service, mock_db):
 # 7. 해당 이미지에 태그 삭제
 def test_remove_image_tag(auth_headers, mock_upload_service, mock_db):
     image_detail_tag_remove_request = {
-    "image_id": "6732f477fcec9d2c66a7507c",
-    "remove_tag_list": ["false"]
-}
+    "image_id": "6732f4f3db3183653e78ac44",
+    "remove_tag_list": ["dog", "bird"]
+    }
+    
     session = mongo_client.start_session()
     session.start_transaction()
 
