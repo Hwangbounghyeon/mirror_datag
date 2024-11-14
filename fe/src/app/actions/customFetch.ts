@@ -112,6 +112,10 @@ export async function customFetch<T>({
 
     const response = await makeRequest(accessToken?.value);
 
+    if (!isJsonResponse(response)) {
+      throw new Error(ERROR_MESSAGES.NON_JSON_RESPONSE);
+    }
+
     const responseData = await response.json();
 
     if (!response.ok) {
