@@ -79,13 +79,15 @@ pipeline {
             }
         }
         
-        stage('배포') {
+        stage('Docker Image 배포') {
             steps {
                 dir('fe') {
                     sh '''
-                        docker compose -f docker-compose-lts.yml down
+                        docker-compose -f docker-compose-lts.yml down
                         docker rm -f frontend || true
-                        docker compose -f docker-compose-lts.yml up -d
+                        docker rmi -f jingluv/s108_frontend:lts || true
+                        docker-compose -f docker-compose-lts.yml up -d
+
                     '''
                 }
             }
