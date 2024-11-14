@@ -16,6 +16,7 @@ export type SearchDepartmentWithAutyType = DepartmentType & {
 
 export type CreateProjectType = {
   project_name: string;
+  project_model_task: string;
   project_model_name: string;
   description: string;
   accesscontrol: {
@@ -28,6 +29,7 @@ export type CreateProjectType = {
 export type CreateProjectRequestType = {
   project_name: string;
   project_model_name: string;
+  project_model_task: string;
   description: string;
   accesscontrol: {
     view_users: string[];
