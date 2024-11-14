@@ -10,6 +10,7 @@ import { ModelListResponseType } from "@/types/modelType";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setProjectModelName } from "@/store/create-store";
+import ButtonFooter from "./buttonFooter";
 
 const cards: {
   imgUrl: string;
@@ -21,7 +22,7 @@ const cards: {
     imgUrl: "/images/object-detection.png",
     title: "Object Detection",
     description: "Idenify objecdts and their positions with bounding boxes",
-    value: "dts",
+    value: "det",
   },
   {
     imgUrl: "/images/classification.png",
@@ -62,7 +63,11 @@ const Step1 = ({ handleMove }: StepProps) => {
       // 모델 리스트를 가져오는 API를 호출합니다
       getModels().then((data) => {
         if (!data.data) {
-          console.error("모델 리스트 가져오기 에러", data.error);
+          console.error("모델 리스트 가져오기 에러, Default값", data.error);
+          setModelList({
+            cls: ["efficientnet_v2_s", "convnext_base", "regnet_y_3_2gf"],
+            det: ["yolov5n", "yolov8n", "yolo11n"],
+          });
         } else {
           console.log("모델 리스트 가져오기 성공", data.data);
           setModelList(data.data);
@@ -83,7 +88,6 @@ const Step1 = ({ handleMove }: StepProps) => {
             description={card.description}
             onClick={() => {
               if (setCategory) {
-                console.log("category", card.value);
                 setCategory(card.value);
                 console.log("category", setCategory);
                 console.log("category", category);
@@ -92,7 +96,7 @@ const Step1 = ({ handleMove }: StepProps) => {
           />
         ))}
       </div>
-      {category && model_list && (
+      {category && model_list && model_list[category] && (
         <div className="w-full flex flex-col">
           <p className="text-[22px] font-bold text-center mb-3">
             관련된 모델을 선택해 주세요
@@ -117,23 +121,19 @@ const Step1 = ({ handleMove }: StepProps) => {
           </Autocomplete>
         </div>
       )}
-      <footer className="w-full mt-5 flex flex-row justify-between">
-        <Button
-          onClick={() => router.push("/project")}
-          color="primary"
-          variant="ghost"
-        >
-          나가기
-        </Button>
-        <Button
-          onClick={() => handleMove(2)}
-          disabled={project_model_name === "" || !category}
-          color="primary"
-          variant="ghost"
-        >
-          이후
-        </Button>
-      </footer>
+      <ButtonFooter
+        beforeButtonText="목록으로"
+        beforeButtonFunction={() => {
+          router.push("/project");
+        }}
+        nextButtonText="다음"
+        nextButtonFunction={() => {
+          if (project_model_name) {
+            handleMove(2);
+          }
+        }}
+        nextButtonDisabled={!project_model_name}
+      />
     </div>
   );
 };

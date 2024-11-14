@@ -10,11 +10,12 @@ const StepIndicator = ({ currentStep, handleMove }: StepIndicatorProps) => {
     { id: 1, title: "주제 선택" },
     { id: 2, title: "정보 입력" },
     { id: 3, title: "권한 설정" },
+    { id: 4, title: "최종 확인" },
   ];
 
   return (
     <div className="w-full px-6 py-2 ">
-      <div className="grid grid-cols-3 gap-[40px]">
+      <div className="grid grid-cols-4 gap-[40px]">
         {steps.map((step) => (
           <div
             key={step.id}

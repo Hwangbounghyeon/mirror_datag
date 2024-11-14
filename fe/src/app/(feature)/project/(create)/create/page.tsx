@@ -5,12 +5,14 @@ import StepIndicator from "@/components/project/create/step-indicator";
 import Step1 from "@/components/project/create/step1";
 import Step2 from "@/components/project/create/step2";
 import Step3 from "@/components/project/create/step3";
+import Step4 from "@/components/project/create/step4";
 import { useRouter } from "next/navigation";
 
 // Memoize step components
 const MemoizedStep1 = memo(Step1);
 const MemoizedStep2 = memo(Step2);
 const MemoizedStep3 = memo(Step3);
+const MemoizedStep4 = memo(Step4);
 
 const Page = () => {
   const router = useRouter();
@@ -36,6 +38,8 @@ const Page = () => {
         return <MemoizedStep2 handleMove={handleMove} />;
       case 3:
         return <MemoizedStep3 handleMove={handleMove} />;
+      case 4:
+        return <MemoizedStep4 handleMove={handleMove} />;
       default:
         return null;
     }

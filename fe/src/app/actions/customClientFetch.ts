@@ -1,4 +1,4 @@
-"use server";
+import { refreshAccessToken } from "@/app/actions/auth";
 import { cookies } from "next/headers";
 
 // 상수 정의 - 에러메세지 DEFAULT
@@ -109,8 +109,24 @@ export async function customFetch<T>({
     // Token 가져오기
     const cookieStore = cookies();
     const accessToken = cookieStore.get("accessToken");
+    const refreshToken = cookieStore.get("refreshToken");
 
-    const response = await makeRequest(accessToken?.value);
+    let response = await makeRequest(accessToken?.value);
+
+    if (response.status === 401 && refreshToken) {
+      const refreshResponse = await refreshAccessToken();
+      if (refreshResponse) {
+        const retryResult = await makeRequest(refreshResponse);
+        response = retryResult;
+      } else {
+        cookieStore.delete("accessToken");
+        cookieStore.delete("refreshToken");
+        return {
+          status: 401,
+          error: ERROR_MESSAGES.LOGIN_REQUIRED,
+        };
+      }
+    }
 
     const responseData = await response.json();
 

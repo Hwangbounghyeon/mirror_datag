@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setProjectName, setDescription } from "@/store/create-store";
+import ButtonFooter from "./buttonFooter";
 
 const Step2 = ({ handleMove }: StepProps) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -40,16 +41,17 @@ const Step2 = ({ handleMove }: StepProps) => {
         }}
       />
 
-      <Button
-        disabled={project_name.length === 0 || description.length === 0}
-        onClick={() => {
-          if (handleMove) {
-            handleMove(3);
-          }
+      <ButtonFooter
+        beforeButtonText="이전"
+        beforeButtonFunction={() => {
+          handleMove(1);
         }}
-      >
-        Next
-      </Button>
+        nextButtonText="다음"
+        nextButtonFunction={() => {
+          handleMove(3);
+        }}
+        nextButtonDisabled={!project_name || !description}
+      />
     </div>
   );
 };
