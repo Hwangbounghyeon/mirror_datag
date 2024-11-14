@@ -3,18 +3,11 @@ import apiClient from "../client";
 import { TagBySearchRequest } from "@/types/tag";
 
 export const searchProjectImages = async (
-    projectId: string,
-    filterConditions: TagBySearchRequest,
-    page: number = 1,
-    limit: number = 40
+    project_id: string,
+    filterConditions: TagBySearchRequest
 ): Promise<number> => {
-    const searchParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-    });
-
     const response = await apiClient<LoadImageByFilterResponse>(
-        `/project/image/${projectId}/list?${searchParams.toString()}`,
+        `/project/filterImage/${project_id}/list`,
         {
             method: "POST",
             body: JSON.stringify(filterConditions),
@@ -22,8 +15,10 @@ export const searchProjectImages = async (
         }
     );
 
-    if (response.status !== 0) {
-        throw new Error("Failed to process request");
+    console.log(filterConditions);
+    console.log(response);
+    if (!response.data) {
+        throw new Error("No data received");
     }
 
     return response.status;
