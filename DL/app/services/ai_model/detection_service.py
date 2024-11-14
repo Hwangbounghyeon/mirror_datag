@@ -137,7 +137,7 @@ class ObjectDetectionService:
                 cls = int(box.cls)
                 class_name = class_names[cls] if cls in class_names else f"Class {cls}"
                 
-                if class_name not in ['cat', 'truck', 'car', 'dog', 'bird']:
+                if class_name not in ["bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe"]:
                     continue
 
                 conf = float(box.conf)
