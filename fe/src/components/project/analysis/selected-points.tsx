@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from "next/image";
+import { Button } from '@nextui-org/react';
 import { Pagination } from "@nextui-org/react";
 import { ReductionResults } from "@/types/historyType";
 import { ObjectDetectionLabels } from "@/types/historyType";
+import { downloadImages, startDownload } from '@/api/image/imageDownload';
 
 interface SelectedPointsListProps {
   selectedPoints: ReductionResults[];
@@ -21,13 +23,53 @@ export function SelectedPointsList({
   handlePageChange,
   isObjectDetectionLabels
 }: SelectedPointsListProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (isDownloading) return;
+    
+    try {
+      setIsDownloading(true);
+      const imageIds = selectedPoints
+        .map(point => point.imageId)
+        .filter((id, index, self) => self.indexOf(id) === index);
+    
+      console.log(imageIds);
+
+      const blob = await downloadImages(imageIds);
+      
+      console.log(blob)
+      startDownload(blob);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="w-[40%] bg-white rounded-xl shadow-sm p-6 border border-divider">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-foreground">선택된 이미지</h2>
-        <span className="text-sm text-default-500">
-          {selectedPoints.length}개 선택됨
-        </span>
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">선택된 이미지</h2>
+          <span className="text-sm text-default-500">
+            {selectedPoints.length}개 선택됨
+          </span>
+        </div>
+        <Button
+          onClick={handleDownload}
+          isDisabled={selectedPoints.length === 0 || isDownloading}
+          size="sm"
+          color="primary"
+          variant="solid"
+          radius="full"
+          isLoading={isDownloading}
+          spinner={
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          }
+        >
+          {isDownloading ? "다운로드 중..." : "다운로드"}
+        </Button>
       </div>
       <div className="max-h-[44rem] flex-grow overflow-y-auto scrollbar-hide">
         {selectedPoints.length > 0 ? (
