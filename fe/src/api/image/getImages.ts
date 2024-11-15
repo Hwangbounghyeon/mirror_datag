@@ -2,13 +2,12 @@ import { ProjectImageListResponse, SearchRequest } from "@/types/ImagesType";
 import { DefaultPaginationType } from "@/types/default";
 import apiClient from "../client";
 
-export const getProjectImages = async (
-  projectId: string,
+export const getImages = async (
   searchParams?: SearchRequest
 ): Promise<DefaultPaginationType<ProjectImageListResponse>> => {
   if (searchParams) {
     const response = await apiClient<DefaultPaginationType<ProjectImageListResponse>>(
-      `/project/image/${projectId}/list?page=${searchParams?.page}&limit=${searchParams?.limit}`,
+      `/image/search?page=${searchParams?.page}&limit=${searchParams?.limit}`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -25,7 +24,7 @@ export const getProjectImages = async (
     return response;
   } else {
     const response = await apiClient<DefaultPaginationType<ProjectImageListResponse>>(
-      `/project/image/${projectId}/list`,
+      `/image/search`,
       {
         method: "POST",
         cache: "no-store",

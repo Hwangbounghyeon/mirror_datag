@@ -237,16 +237,18 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
                   />
                 </div>
                 <div className="w-full lg:w-1/2 h-[30rem]">
-                  <PieChart 
-                    data={selectedData.results} 
-                    selectedIndex={selectedIndex}
-                    setSelectedIndex={(n: number | null) => setSelectedIndex(n)}
-                    onDataSelect={(points) => {
-                      setSelectedLabels([]);
-                      setSelectedPoints(points);
-                      setCurrentPage(1); // 페이지 리셋
-                    }}
-                  />
+                  {selectedData.results 
+                    ? (<PieChart 
+                      data={selectedData.results} 
+                      selectedIndex={selectedIndex}
+                      setSelectedIndex={(n: number | null) => setSelectedIndex(n)}
+                      onDataSelect={(points) => {
+                        setSelectedLabels([]);
+                        setSelectedPoints(points);
+                        setCurrentPage(1);
+                      }}
+                    />) : (<></>)
+                  }
                 </div>
               </div>
             </div>

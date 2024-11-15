@@ -6,26 +6,18 @@ import {
     ModalContent,
     useDisclosure,
     Spinner,
-    Dropdown,
-    DropdownTrigger,
-    DropdownMenu,
-    DropdownItem,
     Chip,
 } from "@nextui-org/react";
 import Image from "next/image";
 
-import { TagBySearchRequest } from "@/types/tag";
 import { createInitialRow, FilterRow } from "@/components/loadimage/filterBox";
 import { ImagesType, ProjectImageListResponse } from "@/types/ImagesType";
-import ImageList from "@/components/project/dataset/image-list";
+import ImageList from "@/components/image/AllImageList";
 import PaginationFooter from "@/components/project/dataset/pagination-footer";
 import { FilterModal } from "@/components/project/dataset/filter-modal";
-import AnalysisModal from "@/components/project/dataset/analysis-modal";
-import AutoAnalysisModal from "@/components/project/dataset/auto-analysis-modal";
 import Filter from "@/public/filter.svg";
 import { tagApi } from "@/api/detail/tagApi";
-
-import { getProjectImages } from "@/api/project/getProjectImages";
+import { getImages } from "@/api/image/getImages";
 import { DefaultPaginationType } from "@/types/default";
 
 type SizeType =
@@ -40,9 +32,8 @@ type SizeType =
     | "5xl"
     | "full";
 
-const Page = ({ params }: { params: { project_id: string } }) => {
+const Page = () => {
     const [images, setImages] = useState<ImagesType[]>([]);
-
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [size, setSize] = useState<SizeType>("3xl");
     const [selectedModal, setSelectedModal] = useState<string | null>(null);
@@ -115,7 +106,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         setSelectedCount(0);
     };
 
-    const getImages = async () => {
+    const getFilteredImages = async () => {
         setIsLoading(true);
 
         const conditions = filterRows
@@ -137,27 +128,32 @@ const Page = ({ params }: { params: { project_id: string } }) => {
             ...(conditions.length > 0 && { conditions }),
         };
 
-        const response: DefaultPaginationType<ProjectImageListResponse> =
-            await getProjectImages(params.project_id, searchParams);
+        try {
+            const response: DefaultPaginationType<ProjectImageListResponse> = await getImages(searchParams);
 
-        if (response.data) {
-            const transformedImages: ImagesType[] = Object.entries(
-                response.data.data.images
-            ).map(([id, imageUrl]) => ({
-                id: id,
-                imageUrl: imageUrl,
-                checked: selectedImageIds.includes(id),
-            }));
+            console.log(response)
 
-            setTotalPage(response.data.total_pages);
-            setImages(transformedImages);
-        } else {
-            setPage(1);
-            setTotalPage(1);
-            setImages([]);
+            if (response.data) {
+                const transformedImages: ImagesType[] = Object.entries(
+                    response.data.data.images
+                ).map(([id, imageUrl]) => ({
+                    id: id,
+                    imageUrl: imageUrl,
+                    checked: selectedImageIds.includes(id),
+                }));
+
+                setTotalPage(response.data.total_pages);
+                setImages(transformedImages);
+            } else {
+                setPage(1);
+                setTotalPage(1);
+                setImages([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch images:", error);
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     const getTags = async () => {
@@ -168,7 +164,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
                 setTags(response.data.tags);
             }
         } catch (error) {
-            console.error("Failed to fetch images:", error);
+            console.error("Failed to fetch tags:", error);
         } finally {
             setIsLoading(false);
         }
@@ -180,7 +176,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
 
     useEffect(() => {
         setImages([]);
-        getImages();
+        getFilteredImages();
     }, [page, filterRows]);
 
     const handleModalOpen = (componentName: string) => {
@@ -188,76 +184,27 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         onOpen();
     };
 
-    const handleAnalysisSelect = (key: string) => {
-        switch (key) {
-            case "manual":
-                handleModalOpen("analysis");
-                break;
-            case "auto":
-                handleModalOpen("autoAnalysis");
-                break;
-        }
-    };
-
     const getModalBody = () => {
-        switch (selectedModal) {
-            case "analysis":
-                return (
-                    <AnalysisModal
-                        onClose={onClose}
-                        selectedImageIds={selectedImageIds}
-                        projectId={params.project_id}
-                        conditions={filterRows}
-                    />
-                );
-            case "autoAnalysis":
-                return (
-                    <AutoAnalysisModal
-                        onClose={onClose}
-                        projectId={params.project_id}
-                    />
-                );
-            case "filter":
-                return (
-                    <FilterModal
-                        isOpen={selectedModal === "filter"}
-                        onClose={onClose}
-                        tags={tags}
-                        filterRows={filterRows}
-                        setFilterRows={setFilterRows}
-                    />
-                );
-            default:
-                return null;
+        if (selectedModal === "filter") {
+            return (
+                <FilterModal
+                    isOpen={selectedModal === "filter"}
+                    onClose={onClose}
+                    tags={tags}
+                    filterRows={filterRows}
+                    setFilterRows={setFilterRows}
+                />
+            );
         }
+        return null;
     };
 
     return (
         <div className="w-full min-h-screen p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-                    Dataset (Project ID: {params.project_id})
+                    Dataset
                 </h1>
-                <Dropdown>
-                    <DropdownTrigger>
-                        <Button
-                            color="primary"
-                            className="font-semibold w-full md:w-auto"
-                            size="lg"
-                        >
-                            Analysis
-                        </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                        aria-label="Analysis options"
-                        onAction={(key) => handleAnalysisSelect(key as string)}
-                    >
-                        <DropdownItem key="manual">
-                            Manual Analysis
-                        </DropdownItem>
-                        <DropdownItem key="auto">Auto Analysis</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
             </div>
 
             <div className="flex items-center mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
@@ -339,7 +286,6 @@ const Page = ({ params }: { params: { project_id: string } }) => {
                     unSelectImageAll={unSelectImageAll}
                     clearAllSelection={clearAllSelection}
                     filterRows={filterRows}
-                    projectId={params.project_id}
                 />
                 <PaginationFooter
                     currentPage={page}
