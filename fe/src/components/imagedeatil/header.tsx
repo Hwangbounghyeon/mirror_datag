@@ -9,6 +9,7 @@ interface HeaderProps {
     totalCount: number;
     prevLink: string | null;
     nextLink: string | null;
+    project_id: string;
 }
 
 function Header({
@@ -17,6 +18,7 @@ function Header({
     totalCount,
     prevLink,
     nextLink,
+    project_id,
 }: HeaderProps) {
     const isFirstPage = currentNumber === 1;
     const isLastPage = currentNumber === totalCount;
@@ -25,10 +27,11 @@ function Header({
         <div className="w-full flex items-center relative pt-1 pb-2 bg-gray-50 dark:bg-gray-500">
             <div className="flex flex-col px-2">
                 <p className="pb-1">
-                    <Link href="/dataset">
-                        <a>
-                            <FaArrowLeftLong className="cursor-pointer" />
-                        </a>
+                    <Link
+                        href={`/project/${project_id}`}
+                        className="cursor-pointer"
+                    >
+                        <FaArrowLeftLong />
                     </Link>
                 </p>
                 <span>{fileName}</span>
@@ -39,20 +42,22 @@ function Header({
                     {isFirstPage || !prevLink ? (
                         <div className="w-8" />
                     ) : (
-                        <Link href={prevLink}>
-                            <a className="w-8 p-1 hover:bg-gray-700 rounded-full transition-colors">
-                                <IoIosArrowBack size={24} />
-                            </a>
+                        <Link
+                            href={prevLink}
+                            className="w-8 p-1 hover:bg-gray-700 rounded-full transition-colors"
+                        >
+                            <IoIosArrowBack size={24} />
                         </Link>
                     )}
                     <span className="mx-2 w-16 text-center">{`${currentNumber} / ${totalCount}`}</span>
                     {isLastPage || !nextLink ? (
                         <div className="w-8" />
                     ) : (
-                        <Link href={nextLink}>
-                            <a className="w-8 p-1 hover:bg-gray-700 rounded-full transition-colors">
-                                <IoIosArrowForward size={24} />
-                            </a>
+                        <Link
+                            href={nextLink}
+                            className="w-8 p-1 hover:bg-gray-700 rounded-full transition-colors"
+                        >
+                            <IoIosArrowForward size={24} />
                         </Link>
                     )}
                 </div>
