@@ -1,27 +1,28 @@
 import React, { Suspense } from "react";
 import SelectOptions from "@/components/project/select-options";
 import { Spinner } from "@nextui-org/react";
-import { getModels } from "@/lib/constants/model";
+import { getModels } from "@/app/actions/model";
 
-const getDepartments = async () => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/department/list`
-  );
-  const data = await response.json();
-  return data.data;
-};
+const Page = async ({
+  searchParams,
+}: {
+  searchParams: {
+    page?: string;
+    model_name?: string;
+  };
+}) => {
+  const modelRespone = await getModels();
+  const model_list_data = modelRespone.data;
+  const modelData = model_list_data
+    ? Object.values(model_list_data).flat()
+    : [];
 
-const Page = async () => {
-  const [department_list, model_list] = await Promise.all([
-    getDepartments(),
-    getModels(),
-  ]);
   return (
-    <Suspense fallback={<Spinner size="lg" />}>
-      <SelectOptions
-        department_list={department_list}
-        model_list={model_list}
-      />
+    <Suspense
+      key={searchParams.model_name || ""}
+      fallback={<Spinner size="lg" />}
+    >
+      <SelectOptions model_list={modelData} />
     </Suspense>
   );
 };
