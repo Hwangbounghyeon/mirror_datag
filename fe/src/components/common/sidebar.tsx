@@ -3,16 +3,17 @@
 import { AiFillDatabase } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
 import { FaUser } from "react-icons/fa";
-import {
-  IoIosArrowForward,
-  IoIosArrowBack
-} from "react-icons/io";
+import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
 import SidebarItem from "./sidebar-item";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RiLoader2Fill } from "react-icons/ri";
 import { MdCloudUpload } from "react-icons/md";
-
+import { userState } from "@/store/store";
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { Spinner } from "@nextui-org/react";
+import { fetchUserProfile } from "@/store/user";
+import { useUserDispatch, useUserSelector } from "@/hooks/userProfileHook";
 
 const ThemeSelect = dynamic(() => import("@/components/common/theme-select"), {
   ssr: false,
@@ -48,8 +49,30 @@ const dummyItemList = [
 ];
 
 const Sidebar = () => {
+  const dispatch = useUserDispatch();
   const [isExpanded, setIsExpanded] = useState(false);
+  const isLoading = useSelector((state: userState) => state.user.loading);
+  const profile = useSelector((state: userState) => state.user.profile);
+  const error = useSelector((state: userState) => state.user.error);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!profile) {
+          dispatch(fetchUserProfile());
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log("Current state:", { isLoading, profile, error });
+  }, [isLoading, profile, error]);
   return (
     <>
       {/* Hover trigger area */}
@@ -64,7 +87,22 @@ const Sidebar = () => {
           ${isExpanded ? "w-64 translate-x-0" : "w-64 -translate-x-64"}`}
         onMouseLeave={() => setIsExpanded(false)}
       >
-        <header className="mt-3 mb-3">Header</header>
+        <header className="mt-3 mb-3">
+          <div className="w-[90%] h-[100px] rounded-sm flex flex-col items-center border-red-200 border-2">
+            {isLoading ? (
+              <Spinner color="primary" />
+            ) : profile ? (
+              <div>
+                <p>{profile?.name}</p>
+              </div>
+            ) : (
+              <div>
+                <p>{error}</p>
+              </div>
+            )}
+            <p>header</p>
+          </div>
+        </header>
         <section className="mt-3 w-full">
           {dummyItemList.map((item) => (
             <SidebarItem

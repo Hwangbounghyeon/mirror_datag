@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import Sidebar from "@/components/common/sidebar";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { UserStoreReduxProvider } from "@/components/common/redux-provider";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -32,13 +33,16 @@ export default function RootLayout({
     >
       <body id="root">
         <ThemeProvider attribute="class">
-          <div className="min-h-screen min-w-screen flex">
-            <Sidebar />
-            <main className="flex-1">
-              <div className="ps-3 ">{children}</div>
-            </main>
-          </div>
-          <ToastContainer />
+          <UserStoreReduxProvider>
+            <div className="min-h-screen min-w-screen flex">
+              <Sidebar />
+              <main className="flex-1">
+                <div className="ps-3 ">{children}</div>
+              </main>
+            </div>
+
+            <ToastContainer />
+          </UserStoreReduxProvider>
         </ThemeProvider>
 
         <div id="modal-root"></div>
