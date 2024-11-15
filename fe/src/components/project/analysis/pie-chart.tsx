@@ -1,7 +1,21 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { 
+  Chart as ChartJS, 
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  ChartEvent, 
+  ActiveElement,
+  TooltipItem,
+  ChartTypeRegistry,
+  TooltipModel,
+  ChartOptions as ChartJSOptions,
+  ChartData,
+  DefaultDataPoint,
+  Plugin
+} from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 import { Card } from "@nextui-org/card";
 import { ObjectDetectionLabels, ReductionResults } from '@/types/historyType';
@@ -9,18 +23,13 @@ import { ObjectDetectionLabels, ReductionResults } from '@/types/historyType';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface PieChartProps {
-  data: ReductionResults[] | undefined;
+  data: ReductionResults[];
   selectedIndex: number | null;
   setSelectedIndex: (n: number | null) => void;
   onDataSelect?: (points: ReductionResults[]) => void;
 }
 
 const PieChart = ({ data, selectedIndex, setSelectedIndex, onDataSelect }: PieChartProps) => {
-  // const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-  if (!data) return;
-
-  // 타입 가드
   const isObjectDetectionLabels = (
     label: ObjectDetectionLabels | string | undefined
   ): label is ObjectDetectionLabels => {
@@ -81,7 +90,7 @@ const PieChart = ({ data, selectedIndex, setSelectedIndex, onDataSelect }: PieCh
     };
   }, [filteredData, selectedIndex]);
 
-  const options = {
+  const options: ChartJSOptions<'pie'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -97,24 +106,21 @@ const PieChart = ({ data, selectedIndex, setSelectedIndex, onDataSelect }: PieCh
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            const label = context.label || '';
-            const value = context.raw || 0;
-            const total = context.dataset.data.reduce((acc: number, curr: number) => acc + curr, 0);
+          label: function(this: TooltipModel<"pie">, tooltipItem: TooltipItem<"pie">) {
+            const label = tooltipItem.label || '';
+            const value = tooltipItem.raw as number;
+            const total = tooltipItem.dataset.data.reduce((acc: number, curr: number) => acc + curr, 0);
             const percentage = ((value / total) * 100).toFixed(1);
             return `${label}: ${value} (${percentage}%)`;
           }
         }
       }
     },
-    onClick: (event: any, elements: any[]) => {
+    onClick: (event: ChartEvent, elements: ActiveElement[]) => {
       if (elements.length > 0) {
         const { matching, mismatch, labelOnly } = filteredData;
         const index = elements[0].index;
-        
-        console.log(index)
 
-        // 이미 선택된 섹션을 다시 클릭하면 선택 해제
         if (selectedIndex === index) {
           setSelectedIndex(null);
           onDataSelect?.([]);
@@ -123,7 +129,6 @@ const PieChart = ({ data, selectedIndex, setSelectedIndex, onDataSelect }: PieCh
 
         setSelectedIndex(index);
         
-        // 클릭된 섹션에 따라 해당하는 데이터 선택
         switch(index) {
           case 0:
             onDataSelect?.(matching);
