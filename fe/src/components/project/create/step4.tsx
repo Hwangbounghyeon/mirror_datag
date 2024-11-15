@@ -88,10 +88,11 @@ const Step4 = ({ handleMove }: StepProps) => {
                 body: JSON.stringify(sendData),
             });
             if (!response.data) {
-                console.error(response);
                 setErrorMessage("프로젝트 생성에 실패했습니다.");
             } else {
-                router.push(`/project/${response.data}/image_manage`);
+                const projectId = response.data.data;
+                console.log(projectId);
+                router.push(`/project/${projectId}/image_manage`);
             }
         } catch (error) {
             console.error(error);
