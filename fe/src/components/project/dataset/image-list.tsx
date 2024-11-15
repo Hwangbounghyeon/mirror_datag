@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Button, Card } from "@nextui-org/react";
 
-import DetailModal from "@/components/project/dataset/detail-modal";
-import CountModal from "@/components/project/dataset/count-modal";
 import { ImagesType } from "@/types/ImagesType";
 import CheckMark from "@/public/check-mark.svg";
 import { FilterRow } from "@/components/loadimage/filterBox";
@@ -32,9 +30,6 @@ const ImageList = ({
     filterRows,
     projectId,
 }: ImageListProps) => {
-    const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [isCountModalOpen, setIsCountModalOpen] = useState(false);
-    const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
     const router = useRouter();
 
     const handleImageClick = (imageId: string) => {
@@ -59,24 +54,6 @@ const ImageList = ({
                 : "";
 
         router.push(`/project/${projectId}/image/${imageId}${searchParams}`);
-    };
-
-    // const detailOpen = (imageId: string) => {
-    //     setSelectedImageId(imageId);
-    //     setIsDetailOpen(true);
-    // };
-
-    // const detailClose = () => {
-    //     setIsDetailOpen(false);
-    // };
-
-    const CountOpen = () => {
-        setIsCountModalOpen(true);
-        console.log(selectedImageIds);
-    };
-
-    const CountClose = () => {
-        setIsCountModalOpen(false);
     };
 
     return (
@@ -110,7 +87,6 @@ const ImageList = ({
                 </div>
                 <div
                     className="text-lg cursor-pointer w-full sm:w-auto text-center sm:text-right"
-                    onClick={CountOpen}
                 >
                     {selectedCount} Items Selected
                 </div>
@@ -156,19 +132,6 @@ const ImageList = ({
                     ))}
                 </div>
             </div>
-
-            {/* {isDetailOpen && (
-                <DetailModal
-                    imageId={selectedImageId}
-                    modalClose={detailClose}
-                />
-            )} */}
-            {isCountModalOpen && (
-                <CountModal
-                    selectedImageIds={selectedImageIds}
-                    modalClose={CountClose}
-                />
-            )}
         </div>
     );
 };

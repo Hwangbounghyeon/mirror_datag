@@ -4,14 +4,18 @@ import { TagBySearchRequest } from "@/types/tag";
 
 export const loadImageDetail = async (
     filterConditions: TagBySearchRequest,
-    imageId: string,
-    project_id: string
+    imageId: string
 ): Promise<ImageDetailResponse> => {
+    const requestForm = {
+        image_id: imageId,
+        conditions: [...filterConditions.conditions]
+    }
+
     const response = await apiClient<ImageDetailResponse>(
-        `/image/detail/${project_id}/${imageId}`,
+        `/project/image/detail`,
         {
             method: "POST",
-            body: JSON.stringify(filterConditions),
+            body: JSON.stringify(requestForm),
             cache: "no-store",
         }
     );
