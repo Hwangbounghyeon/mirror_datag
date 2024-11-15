@@ -1,11 +1,13 @@
 "use server";
 
 import { ModelListResponseType } from "@/types/modelType";
-import { customFetch } from "./customFetch";
+import { DefaultResponseType, customFetch } from "./customFetch";
 
 export const getModels = async () => {
   try {
-    const response = await customFetch<ModelListResponseType>({
+    const response = await customFetch<
+      DefaultResponseType<ModelListResponseType>
+    >({
       endpoint: "/project/model/list",
       method: "GET",
       cache: "no-store",
@@ -15,10 +17,10 @@ export const getModels = async () => {
       return response.data;
     } else {
       console.error(response.error);
-      return {};
+      return undefined;
     }
   } catch (error) {
     console.error(error);
-    return {};
+    return undefined;
   }
 };

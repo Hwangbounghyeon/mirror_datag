@@ -1,7 +1,6 @@
 import { getUserProfile } from "@/app/actions/auth";
 import { UserType } from "@/types/auth";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-
 interface UserState {
   profile: UserType | null;
   loading: boolean;
@@ -9,14 +8,16 @@ interface UserState {
 }
 
 export const fetchUserProfile = createAsyncThunk(
-  "user/fetchProfile",
+  "user",
   async (_, { rejectWithValue }) => {
     try {
       const response = await getUserProfile();
-      if (!response.data) {
+      console.log("userData response", response);
+      if (!response.data || !response.data.data) {
         throw new Error(response.error || "Failed to fetch profile");
       } else {
-        return response.data as UserType;
+        console.log("userData response.data", response.data);
+        return response.data.data;
       }
     } catch (error) {
       return rejectWithValue((error as Error).message);

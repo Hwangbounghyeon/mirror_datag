@@ -64,15 +64,15 @@ const Step1 = ({ handleMove }: StepProps) => {
     if (isMounted) {
       // 모델 리스트를 가져오는 API를 호출합니다
       getModels().then((data) => {
-        if (!data.data) {
-          console.error("모델 리스트 가져오기 에러, Default값", data.error);
+        if (!data) {
+          console.error("모델 리스트 가져오기 에러, Default값");
           setModelList({
             cls: ["efficientnet_v2_s", "convnext_base", "regnet_y_3_2gf"],
             det: ["yolov5n", "yolov8n", "yolo11n"],
           });
         } else {
           console.log("모델 리스트 가져오기 성공", data.data);
-          setModelList(data);
+          setModelList(data.data || {});
         }
       });
     }

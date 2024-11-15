@@ -201,7 +201,7 @@ export const getAccessToken = async () => {
 // accessToken이 유효하면 true, 그렇지 않으면 false를 반환 (없는 경우도 고려)
 export const getUserProfile = async () => {
   try {
-    const response = await customFetch({
+    const response = await customFetch<DefaultResponseType<UserType>>({
       endpoint: "/user/profile",
       method: "GET",
     });
@@ -214,7 +214,7 @@ export const getUserProfile = async () => {
     } else {
       return {
         status: response.status,
-        data: response.data as UserType,
+        data: response.data,
       };
     }
   } catch (error) {
