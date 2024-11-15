@@ -17,7 +17,6 @@ import {
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import ButtonFooter from "./buttonFooter";
 import { customFetch } from "@/app/actions/customFetch";
 import { useRouter } from "next/navigation";
 

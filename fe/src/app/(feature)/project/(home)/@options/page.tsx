@@ -11,10 +11,9 @@ const Page = async ({
     model_name?: string;
   };
 }) => {
-  const modelRespone = await getModels();
-  const model_list_data = modelRespone.data;
-  const modelData = model_list_data
-    ? Object.values(model_list_data).flat()
+  const modelResponse = await getModels();
+  const modelData = modelResponse?.data
+    ? Object.values(modelResponse.data).flat()
     : [];
 
   return (

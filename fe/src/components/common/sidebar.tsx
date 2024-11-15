@@ -83,24 +83,24 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`z-50 fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-black border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
+        className={`z-50  fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-black border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
           ${isExpanded ? "w-64 translate-x-0" : "w-64 -translate-x-64"}`}
         onMouseLeave={() => setIsExpanded(false)}
       >
         <header className="mt-3 mb-3">
-          <div className="w-[90%] h-[100px] rounded-sm flex flex-col items-center border-red-200 border-2">
+          <div className="w-[200px] h-[100px] rounded-sm flex flex-col items-center border-red-200 border-2">
             {isLoading ? (
               <Spinner color="primary" />
             ) : profile ? (
-              <div>
+              <div className="flex flex-col items-center">
                 <p>{profile?.name}</p>
+                <p>logout</p>
               </div>
             ) : (
               <div>
-                <p>{error}</p>
+                <p>로그인을 해주세요</p>
               </div>
             )}
-            <p>header</p>
           </div>
         </header>
         <section className="mt-3 w-full">
