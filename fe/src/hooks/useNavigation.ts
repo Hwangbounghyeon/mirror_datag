@@ -18,24 +18,28 @@ export const useNavigation = (projectId: string) => {
     const goToLoadImages = useCallback(
         async (images: ImageFile[], currentFilter: TagBySearchRequest) => {
             try {
-                const [uploadResponse, searchResponse] = await Promise.all([
-                    uploadImage({
-                        is_private: true,
-                        project_id: projectId,
-                        images,
-                    }),
-                    searchProjectImages(projectId, currentFilter),
-                ]);
+                if (!images || images.length === 0) {
+                    await searchProjectImages(projectId, currentFilter);
+                } else {
+                    await Promise.all([
+                        uploadImage({
+                            is_private: true,
+                            project_id: projectId,
+                            images,
+                        }),
+                        searchProjectImages(projectId, currentFilter),
+                    ]);
 
-                toast.success("Image Upload Success!", {
-                    position: "bottom-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    draggable: true,
-                    progress: undefined,
-                    transition: Bounce,
-                });
+                    toast.success("Image Upload Success!", {
+                        position: "bottom-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        draggable: true,
+                        progress: undefined,
+                        transition: Bounce,
+                    });
+                }
 
                 router.push(`/project/${projectId}`);
             } catch (error) {
@@ -51,7 +55,7 @@ export const useNavigation = (projectId: string) => {
                 });
             }
         },
-        [projectId]
+        [projectId, router]
     );
 
     return {

@@ -19,7 +19,6 @@ export const uploadImage = async (
             formData.append("files", item.data);
         });
 
-        console.log("Sending request to API");
         const response = await apiClient<UploadResponse>(
             "/project/image/upload",
             {
