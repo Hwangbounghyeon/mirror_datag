@@ -38,16 +38,6 @@ const dummyItemList = [
     icon: FaUser,
     link: "/users",
   },
-  {
-    title: "Load Image",
-    icon: RiLoader2Fill,
-    link: "/loadimage",
-  },
-  {
-    title: "Upload",
-    icon: MdCloudUpload,
-    link: "/upload",
-  },
 ];
 
 const Sidebar = () => {
@@ -90,29 +80,30 @@ const Sidebar = () => {
           ${isExpanded ? "w-64 translate-x-0" : "w-64 -translate-x-64"}`}
         onMouseLeave={() => setIsExpanded(false)}
       >
-        <header className="mt-3 mb-3">
-          <div className="w-[200px] h-[100px] rounded-sm flex flex-col items-center border-red-200 border-2">
-            {isLoading ? (
-              <Spinner color="primary" />
-            ) : profile ? (
-              <div className="flex flex-col items-center">
-                <p>{profile.name}님 환영합니다.</p>
-                <Button
-                  onClick={() => {
-                    logout();
-                    dispatch(clearUserProfile());
-                    router.push("/login");
-                  }}
-                >
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div>
-                <p>로그인을 해주세요</p>
-              </div>
-            )}
-          </div>
+        <header className="mt-3 mb-3 w-[200px] h-[100px] bg-slate-200 dark:bg-gray-800 rounded-md flex flex-col justify-center items-center">
+          {isLoading ? (
+            <Spinner color="primary" />
+          ) : profile ? (
+            <div className="flex flex-col items-center rounded-sm ">
+              <p>{profile.name}님 환영합니다.</p>
+              <Button
+                onClick={() => {
+                  logout();
+                  dispatch(clearUserProfile());
+                  router.push("/login");
+                }}
+              >
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <p>로그인을 해주세요</p>
+              <Button onClick={() => router.push("/login")} color="primary">
+                로그인
+              </Button>
+            </div>
+          )}
         </header>
         <section className="mt-3 w-full">
           {dummyItemList.map((item) => (
