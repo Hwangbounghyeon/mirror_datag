@@ -10,10 +10,12 @@ import { useEffect, useState } from "react";
 import { RiLoader2Fill } from "react-icons/ri";
 import { MdCloudUpload } from "react-icons/md";
 import { userState } from "@/store/store";
-import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { Spinner } from "@nextui-org/react";
-import { fetchUserProfile } from "@/store/user";
-import { useUserDispatch, useUserSelector } from "@/hooks/userProfileHook";
+import { useSelector } from "react-redux";
+import { Button, Spinner } from "@nextui-org/react";
+import { clearUserProfile, fetchUserProfile } from "@/store/user";
+import { useUserDispatch } from "@/hooks/userProfileHook";
+import { logout } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const ThemeSelect = dynamic(() => import("@/components/common/theme-select"), {
   ssr: false,
@@ -54,6 +56,7 @@ const Sidebar = () => {
   const isLoading = useSelector((state: userState) => state.user.loading);
   const profile = useSelector((state: userState) => state.user.profile);
   const error = useSelector((state: userState) => state.user.error);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,8 +96,16 @@ const Sidebar = () => {
               <Spinner color="primary" />
             ) : profile ? (
               <div className="flex flex-col items-center">
-                <p>{profile?.name}</p>
-                <p>logout</p>
+                <p>{profile.name}님 환영합니다.</p>
+                <Button
+                  onClick={() => {
+                    logout();
+                    dispatch(clearUserProfile());
+                    router.push("/login");
+                  }}
+                >
+                  Logout
+                </Button>
               </div>
             ) : (
               <div>
