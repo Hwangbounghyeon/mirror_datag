@@ -130,6 +130,7 @@ function ImageDetailClient({
                         ? `/project/${project_id}/image/${nextId}${searchParams}`
                         : null
                 }
+                project_id={project_id}
             />
 
             <div className="w-full h-[1px] bg-gray-400 " />
