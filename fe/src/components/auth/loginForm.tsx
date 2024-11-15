@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { DefaultResponseType } from "@/types/default";
 import { UserType } from "@/types/auth";
 import { useRouter } from "next/navigation";
+import { useUserDispatch } from "@/hooks/userProfileHook/index";
+import { fetchUserProfile } from "@/store/user";
 
 type LoginFormValues = {
   email: string;
@@ -18,6 +20,8 @@ interface LoginResult {
 }
 
 export const LoginForm = () => {
+  const dispatch = useUserDispatch();
+
   const {
     register,
     handleSubmit,
@@ -48,6 +52,8 @@ export const LoginForm = () => {
       console.log(response.error);
       SetErrorMessage(response.error || "An error occurred");
     } else {
+      // 로그인 성공 후 프로필 정보 가져오기
+      await dispatch(fetchUserProfile());
       router.push("/project");
     }
   };

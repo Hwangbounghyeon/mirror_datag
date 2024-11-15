@@ -17,7 +17,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { DepartmentType } from "@/types/departmentType";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { CreateProjectAppDispatch, CreateProjectState } from "@/store/store";
 import { getDepartments } from "@/app/actions/depatment";
 import { addDepartment } from "@/store/create-store";
 
@@ -29,7 +29,7 @@ interface AddAuthDpts {
 const ItemsPerPage = 5; // 한 페이지에 보여줄 아이템 수
 
 const AddAuthDeps = ({ isOpen, onClose }: AddAuthDpts) => {
-  const dispatch = useDispatch<AppDispatch>(); // redux dispatch
+  const dispatch = useDispatch<CreateProjectAppDispatch>(); // redux dispatch
   const [isLoading, setIsLoading] = useState(false); // 로딩 중인가?
   const [nowPgae, setNowPage] = useState(1); // 현재 페이지
   const [totalPage, setTotalPage] = useState(1); // 총 페이지
@@ -40,7 +40,7 @@ const AddAuthDeps = ({ isOpen, onClose }: AddAuthDpts) => {
   ); // 추가할 선택된 부서 목록
 
   const selectedDeps = useSelector(
-    (state: RootState) => state.project.accesscontrol.departments
+    (state: CreateProjectState) => state.project.accesscontrol.departments
   ); // 선택된 부서 목록
 
   const fetchDpts = useCallback(async () => {
