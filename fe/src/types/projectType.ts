@@ -42,9 +42,8 @@ export type CreateProjectRequestType = {
 };
 
 export type ProjectRequest = {
-    page: string;
-    limit: string;
-    model_name?: string;
+  page: string;
+  model_name?: string;
 };
 
 // 실제 이용할 때는 아래와 같이 사용
