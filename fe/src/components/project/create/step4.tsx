@@ -81,23 +81,24 @@ const Step4 = ({ handleMove }: StepProps) => {
         is_private: is_private,
       };
 
-      const response = await customFetch<CreateProjectResponseType>({
-        endpoint: "/project/create",
-        method: "POST",
-        body: JSON.stringify(sendData),
-      });
-      if (!response.data) {
-        console.error(response);
-        setErrorMessage("프로젝트 생성에 실패했습니다.");
-      } else {
-        router.push(`/project/${response.data}/image_manage`);
-      }
-    } catch (error) {
-      console.error(error);
-      setErrorMessage("프로젝트 생성에 실패했습니다.");
-      setIsLoading(false);
-    }
-  };
+            const response = await customFetch<CreateProjectResponseType>({
+                endpoint: "/project/create",
+                method: "POST",
+                body: JSON.stringify(sendData),
+            });
+            if (!response.data) {
+                setErrorMessage("프로젝트 생성에 실패했습니다.");
+            } else {
+                const projectId = response.data.data;
+                console.log(projectId);
+                router.push(`/project/${projectId}/image_manage`);
+            }
+        } catch (error) {
+            console.error(error);
+            setErrorMessage("프로젝트 생성에 실패했습니다.");
+            setIsLoading(false);
+        }
+    };
 
   const [selected, setSelected] = useState<string>("User");
 
