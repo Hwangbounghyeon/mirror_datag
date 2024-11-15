@@ -11,7 +11,7 @@ import {
 import Image from "next/image";
 
 import { createInitialRow, FilterRow } from "@/components/loadimage/filterBox";
-import { ImagesType, ProjectImageListResponse } from "@/types/ImagesType";
+import { ImageListResponse, ImagesNonCheckType, ProjectImageListResponse } from "@/types/ImagesType";
 import ImageList from "@/components/image/AllImageList";
 import PaginationFooter from "@/components/project/dataset/pagination-footer";
 import { FilterModal } from "@/components/project/dataset/filter-modal";
@@ -33,13 +33,10 @@ type SizeType =
     | "full";
 
 const Page = () => {
-    const [images, setImages] = useState<ImagesType[]>([]);
+    const [images, setImages] = useState<ImagesNonCheckType[]>([]);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [size, setSize] = useState<SizeType>("3xl");
     const [selectedModal, setSelectedModal] = useState<string | null>(null);
-
-    const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
-    const [selectedCount, setSelectedCount] = useState(0);
 
     const [page, setPage] = useState(1);
     const [totalPage, setTotalPage] = useState(1);
@@ -51,60 +48,6 @@ const Page = () => {
     ]);
 
     const [isLoading, setIsLoading] = useState(false);
-
-    const selectImage = (e: React.MouseEvent, targetId: string) => {
-        e.stopPropagation();
-        const currentImage = images.find((image) => image.id === targetId);
-        if (currentImage?.checked) {
-            setSelectedCount((prev) => prev - 1);
-            setSelectedImageIds((prev) => prev.filter((id) => id !== targetId));
-        } else {
-            setSelectedCount((prev) => prev + 1);
-            setSelectedImageIds((prev) => [...prev, targetId]);
-        }
-        setImages((prevImages) =>
-            prevImages.map((image) =>
-                image.id === targetId
-                    ? { ...image, checked: !image.checked }
-                    : image
-            )
-        );
-    };
-
-    const selectImageAll = () => {
-        const uncheckedImages = images.filter((image) => !image.checked);
-
-        setImages((prevImages) =>
-            prevImages.map((image) => ({ ...image, checked: true }))
-        );
-
-        setSelectedImageIds((prev) => [
-            ...prev,
-            ...uncheckedImages.map((image) => image.id),
-        ]);
-        setSelectedCount((prev) => prev + uncheckedImages.length);
-    };
-
-    const unSelectImageAll = () => {
-        const checkedImages = images.filter((image) => image.checked);
-
-        setImages((prevImages) =>
-            prevImages.map((image) => ({ ...image, checked: false }))
-        );
-
-        setSelectedImageIds((prev) =>
-            prev.filter((id) => !checkedImages.find((image) => image.id === id))
-        );
-        setSelectedCount((prev) => prev - checkedImages.length);
-    };
-
-    const clearAllSelection = () => {
-        setImages((prevImages) =>
-            prevImages.map((image) => ({ ...image, checked: false }))
-        );
-        setSelectedImageIds([]);
-        setSelectedCount(0);
-    };
 
     const getFilteredImages = async () => {
         setIsLoading(true);
@@ -129,18 +72,17 @@ const Page = () => {
         };
 
         try {
-            const response: DefaultPaginationType<ProjectImageListResponse> = await getImages(searchParams);
-
-            console.log(response)
+            const response: DefaultPaginationType<ImageListResponse[]> = await getImages(searchParams);
 
             if (response.data) {
-                const transformedImages: ImagesType[] = Object.entries(
-                    response.data.data.images
-                ).map(([id, imageUrl]) => ({
-                    id: id,
-                    imageUrl: imageUrl,
-                    checked: selectedImageIds.includes(id),
-                }));
+                const transformedImages: ImagesNonCheckType[] = response.data.data.map(item => {
+                    const [id, imageUrl] = Object.entries(item.images)[0];
+                    
+                    return {
+                        id: id,
+                        imageUrl: imageUrl,
+                    };
+                });
 
                 setTotalPage(response.data.total_pages);
                 setImages(transformedImages);
@@ -279,12 +221,6 @@ const Page = () => {
             <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
                 <ImageList
                     images={images}
-                    selectImage={selectImage}
-                    selectedCount={selectedCount}
-                    selectedImageIds={selectedImageIds}
-                    selectImageAll={selectImageAll}
-                    unSelectImageAll={unSelectImageAll}
-                    clearAllSelection={clearAllSelection}
                     filterRows={filterRows}
                 />
                 <PaginationFooter

@@ -1,4 +1,4 @@
-import { loadProjectImageDetail } from "@/api/detail/loadProjectImageDetail";
+import { loadImageDetail } from "@/api/image/loadImageDetail";
 import ImageDetailClient from "./imageDetailClient";
 import {
     isClassificationPrediction,
@@ -7,23 +7,19 @@ import {
 import { TagBySearchRequest } from "@/types/tag";
 
 interface Props {
-    projectId: string;
     imageId: string;
     conditions?: TagBySearchRequest;
 }
 
 export async function ImageDetailContent({
-    projectId,
     imageId,
     conditions,
 }: Props) {
-    console.log("projectId: ", projectId);
-    const data = await loadProjectImageDetail(
+    const data = await loadImageDetail(
         conditions || {
             conditions: [],
         },
-        imageId,
-        projectId
+        imageId
     );
 
     if (!data.data) {
@@ -86,7 +82,6 @@ export async function ImageDetailContent({
             totalItem={totalIdx}
             nextId={nextId}
             prevId={prevId}
-            project_id={projectId}
             conditions={conditions}
         />
     );
