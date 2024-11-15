@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import SelectCard from "./select-card";
 
 import { StepProps } from "@/types/projectType";
-import { AutocompleteItem, Autocomplete, Button } from "@nextui-org/react";
+import { AutocompleteItem, Autocomplete } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { getModels } from "@/app/actions/model";
 import { ModelListResponseType } from "@/types/modelType";
 
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { CreateProjectAppDispatch, CreateProjectState } from "@/store/store";
 import { setProjectModelName, setProjectModelTask } from "@/store/create-store";
 import ButtonFooter from "./buttonFooter";
 
@@ -36,11 +36,11 @@ const Step1 = ({ handleMove }: StepProps) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const project_model_task = useSelector(
-    (state: RootState) => state.project.project_model_task
+    (state: CreateProjectState) => state.project.project_model_task
   );
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<CreateProjectAppDispatch>();
   const project_model_name = useSelector(
-    (state: RootState) => state.project.project_model_name
+    (state: CreateProjectState) => state.project.project_model_name
   );
   // 마운트 여부를 확인하는 변수를 추가하고 useEffect를 사용하여 마운트 여부를 설정
   useEffect(() => {
@@ -72,7 +72,7 @@ const Step1 = ({ handleMove }: StepProps) => {
           });
         } else {
           console.log("모델 리스트 가져오기 성공", data.data);
-          setModelList(data.data);
+          setModelList(data);
         }
       });
     }

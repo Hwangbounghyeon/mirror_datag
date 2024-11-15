@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import ReduxProvider from "@/components/common/redux-provider";
+import { CreateProjectReduxProvider } from "@/components/common/redux-provider";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="w-full">
-      <ReduxProvider>{children}</ReduxProvider>
+      <CreateProjectReduxProvider>{children}</CreateProjectReduxProvider>
     </div>
   );
 };
