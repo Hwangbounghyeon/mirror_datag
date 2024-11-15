@@ -6,9 +6,13 @@ export type ImagesType = {
   checked: boolean;
 };
 
-export type ImageListResponse = {
+export type ProjectImageListResponse = {
   images: Record<string, string>;
 };
+
+export type ImageListResponse = {
+  
+}
 
 export type SearchCondition = {
   and_condition: string[];
