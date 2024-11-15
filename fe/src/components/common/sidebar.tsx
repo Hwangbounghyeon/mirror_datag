@@ -1,6 +1,6 @@
 "use client";
 
-import { AiFillDatabase } from "react-icons/ai";
+import { AiFillDatabase, AiFillFileImage } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
 import { FaUser } from "react-icons/fa";
 import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
@@ -23,6 +23,11 @@ const ThemeSelect = dynamic(() => import("@/components/common/theme-select"), {
 });
 
 const dummyItemList = [
+  {
+    title: "Image",
+    icon: AiFillFileImage,
+    link: "/image",
+  },
   {
     title: "Project",
     icon: AiFillDatabase,

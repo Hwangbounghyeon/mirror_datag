@@ -6,7 +6,16 @@ export type ImagesType = {
   checked: boolean;
 };
 
+export type ImagesNonCheckType = {
+  id: string;
+  imageUrl: string;
+};
+
 export type ProjectImageListResponse = {
+  images: Record<string, string>;
+};
+
+export type ImageListResponse = {
   images: Record<string, string>;
 };
 
@@ -21,3 +30,15 @@ export type SearchRequest = {
   limit?: number;
   conditions?: SearchCondition[];
 };
+
+export type DownloadRequest = {
+  image_list: string[];
+}
+
+export type UploadBatch = {
+  userId: number;
+  projectId: string;
+  isDone: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
