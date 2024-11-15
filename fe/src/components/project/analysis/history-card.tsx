@@ -29,7 +29,6 @@ const HistoryCard = ({
 
   const status = statusConfig[is_done as keyof typeof statusConfig] || statusConfig[0];
 
-  // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
@@ -42,30 +41,41 @@ const HistoryCard = ({
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  return (
+  const CardContent = () => (
+    <div className={`p-4 rounded-lg bg-content2 shadow-sm transition-all duration-200 
+                    border border-transparent 
+                    ${is_done === 1 
+                      ? 'hover:shadow-md hover:translate-x-1 hover:border-primary/20 cursor-pointer' 
+                      : 'opacity-60 cursor-not-allowed'}`}>
+      <div className="space-y-3">
+        <h3 className={`text-lg font-semibold text-foreground line-clamp-1 
+                      ${is_done === 1 ? 'group-hover:text-primary' : ''}`}>
+          {history_name}
+        </h3>
+        <div className="flex justify-between items-center">
+          <time className="text-sm text-foreground-500 truncate">
+            {formatDate(created_at)}
+          </time>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-flex items-center justify-center ${status.color}`}>
+            {status.text}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  return is_done === 1 ? (
     <Link
       prefetch={prefetch}
       href={`/project/${project_id}/analysis?${searchParams.toString()}`}
       className="block group"
     >
-      <div className="p-4 rounded-lg bg-content2 shadow-sm transition-all duration-200 
-                    hover:shadow-md hover:translate-x-1 border border-transparent 
-                    hover:border-primary/20">
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-foreground line-clamp-1 group-hover:text-primary">
-            {history_name}
-          </h3>
-          <div className="flex justify-between items-center">
-            <time className="text-sm text-foreground-500 truncate">
-              {formatDate(updated_at)}
-            </time>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-flex items-center justify-center ${status.color}`}>
-              {status.text}
-            </span>
-          </div>
-        </div>
-      </div>
+      <CardContent />
     </Link>
+  ) : (
+    <div className="block">
+      <CardContent />
+    </div>
   );
 };
 
