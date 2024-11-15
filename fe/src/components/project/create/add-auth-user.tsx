@@ -18,7 +18,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { SearchUserType } from "@/types/projectType";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { CreateProjectAppDispatch, CreateProjectState } from "@/store/store";
 import { getUsers } from "@/app/actions/user";
 import { addUser } from "@/store/create-store";
 
@@ -38,10 +38,10 @@ const AddAuthUser = ({ isOpen, onClose }: AddAuthUserProps) => {
     []
   ); // 추가할 선택된 유저 목록
   const selectedUsers = useSelector(
-    (state: RootState) => state.project.accesscontrol.users
+    (state: CreateProjectState) => state.project.accesscontrol.users
   ); // 선택된 유저 목록
 
-  const dispatch = useDispatch<AppDispatch>(); // redux dispatch
+  const dispatch = useDispatch<CreateProjectAppDispatch>(); // redux dispatch
 
   const fetchUsers = useCallback(
     async (pageNumber: number, searchName?: string) => {
