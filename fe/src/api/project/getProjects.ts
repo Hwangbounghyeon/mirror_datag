@@ -1,40 +1,39 @@
 import { ProjectType, ProjectRequest } from "@/types/projectType";
 import { DefaultPaginationType } from "@/types/default";
-import apiClient from "../client";
+import { customFetch } from "@/app/actions/customFetch";
 
 export const getProjects = async (
   searchParams?: ProjectRequest
 ): Promise<DefaultPaginationType<ProjectType[]>> => {
-  if (searchParams) {
-    const requestParams = new URLSearchParams(searchParams);
-
-    const response = await apiClient<DefaultPaginationType<ProjectType[]>>(
-      `/project/list`,
-      {
-        method: "GET",
-        cache: "no-store",
-        searchParams: requestParams
-      }
-    );
-  
-    if (!response.data) {
-      throw new Error("No data received");
-    }
-
-    return response;
+  // Remove the unused variable declaration and assignment
+  const queryStrings = new URLSearchParams();
+  if (searchParams?.model_name) {
+    queryStrings.set("model_name", searchParams.model_name);
   }
-
-  const response = await apiClient<DefaultPaginationType<ProjectType[]>>(
-    `/project/list`,
-    {
+  if (searchParams?.page) {
+    queryStrings.set("page", searchParams.page);
+  }
+  try {
+    const response = await customFetch<DefaultPaginationType<ProjectType[]>>({
+      endpoint: "/project/list",
       method: "GET",
-      cache: "no-store",
+      searchParams: queryStrings,
+    });
+
+    if (!response.data || !response.data.data) {
+      console.error(response.error);
+      return {
+        status: response.status,
+        error: response.error || "Bad Request",
+      };
+    } else {
+      return {
+        status: response.status,
+        data: response.data.data,
+      };
     }
-  );
-
-  if (!response.data) {
-    throw new Error("No data received");
+  } catch (error) {
+    console.error(error);
+    return { status: 500, error: "Internal Server Error" };
   }
-
-  return response;
 };

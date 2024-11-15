@@ -3,16 +3,19 @@
 import { AiFillDatabase } from "react-icons/ai";
 import { FaPeopleRoof } from "react-icons/fa6";
 import { FaUser } from "react-icons/fa";
-import {
-  IoIosArrowForward,
-  IoIosArrowBack
-} from "react-icons/io";
+import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
 import SidebarItem from "./sidebar-item";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RiLoader2Fill } from "react-icons/ri";
 import { MdCloudUpload } from "react-icons/md";
-
+import { userState } from "@/store/store";
+import { useSelector } from "react-redux";
+import { Button, Spinner } from "@nextui-org/react";
+import { clearUserProfile, fetchUserProfile } from "@/store/user";
+import { useUserDispatch } from "@/hooks/userProfileHook";
+import { logout } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const ThemeSelect = dynamic(() => import("@/components/common/theme-select"), {
   ssr: false,
@@ -35,21 +38,34 @@ const dummyItemList = [
     icon: FaUser,
     link: "/users",
   },
-  {
-    title: "Load Image",
-    icon: RiLoader2Fill,
-    link: "/loadimage",
-  },
-  {
-    title: "Upload",
-    icon: MdCloudUpload,
-    link: "/upload",
-  },
 ];
 
 const Sidebar = () => {
+  const dispatch = useUserDispatch();
   const [isExpanded, setIsExpanded] = useState(false);
+  const isLoading = useSelector((state: userState) => state.user.loading);
+  const profile = useSelector((state: userState) => state.user.profile);
+  const error = useSelector((state: userState) => state.user.error);
+  const router = useRouter();
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!profile) {
+          dispatch(fetchUserProfile());
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log("Current state:", { isLoading, profile, error });
+  }, [isLoading, profile, error]);
   return (
     <>
       {/* Hover trigger area */}
@@ -60,11 +76,35 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`z-50 fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-black border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
+        className={`z-50  fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-black border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
           ${isExpanded ? "w-64 translate-x-0" : "w-64 -translate-x-64"}`}
         onMouseLeave={() => setIsExpanded(false)}
       >
-        <header className="mt-3 mb-3">Header</header>
+        <header className="mt-3 mb-3 w-[200px] h-[100px] bg-slate-200 dark:bg-gray-800 rounded-md flex flex-col justify-center items-center">
+          {isLoading ? (
+            <Spinner color="primary" />
+          ) : profile ? (
+            <div className="flex flex-col items-center rounded-sm ">
+              <p>{profile.name}님 환영합니다.</p>
+              <Button
+                onClick={() => {
+                  logout();
+                  dispatch(clearUserProfile());
+                  router.push("/login");
+                }}
+              >
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <p>로그인을 해주세요</p>
+              <Button onClick={() => router.push("/login")} color="primary">
+                로그인
+              </Button>
+            </div>
+          )}
+        </header>
         <section className="mt-3 w-full">
           {dummyItemList.map((item) => (
             <SidebarItem

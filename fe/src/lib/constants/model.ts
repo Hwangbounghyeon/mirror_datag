@@ -66,11 +66,3 @@ export const models = {
     },
   ],
 };
-
-export const getModels = async (): Promise<ModelType[]> => {
-  await delay(1000);
-  return [
-    { model_id: 1, model_name: "Model 1" },
-    { model_id: 2, model_name: "Model 2" },
-  ];
-};

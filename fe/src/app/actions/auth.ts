@@ -2,12 +2,13 @@
 
 import { cookies } from "next/headers";
 
-import { LoginResponseType, RefreshResponseType } from "@/types/auth";
+import { LoginResponseType, RefreshResponseType, UserType } from "@/types/auth";
 import {
   accessTokenDuration,
   refreshTokenDuration,
 } from "@/lib/constants/token-duration";
 import { DefaultResponseType } from "@/types/default";
+import { customFetch } from "./customFetch";
 
 export const check_auth = async (formData: FormData) => {
   console.log("check_auth");
@@ -193,5 +194,34 @@ export const getAccessToken = async () => {
     } else {
       return null;
     }
+  }
+};
+
+// 쿠키에 담긴 accessToken을 이용하여 사용자의 인증 상태를 확인
+// accessToken이 유효하면 true, 그렇지 않으면 false를 반환 (없는 경우도 고려)
+export const getUserProfile = async () => {
+  try {
+    const response = await customFetch<DefaultResponseType<UserType>>({
+      endpoint: "/user/profile",
+      method: "GET",
+    });
+
+    if (!response.data) {
+      return {
+        status: response.status,
+        error: response.error || "Failed to fetch profile",
+      };
+    } else {
+      return {
+        status: response.status,
+        data: response.data,
+      };
+    }
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return {
+      status: 500,
+      error: "Failed to fetch profile",
+    };
   }
 };

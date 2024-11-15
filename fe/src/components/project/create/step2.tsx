@@ -1,15 +1,15 @@
 import { StepProps } from "@/types/projectType";
-import { Button, Input, Textarea } from "@nextui-org/react";
+import { Input, Textarea } from "@nextui-org/react";
 import { memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { CreateProjectAppDispatch, CreateProjectState } from "@/store/store";
 import { setProjectName, setDescription } from "@/store/create-store";
 import ButtonFooter from "./buttonFooter";
 
 const Step2 = ({ handleMove }: StepProps) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<CreateProjectAppDispatch>();
   const { project_name, description } = useSelector(
-    (state: RootState) => state.project
+    (state: CreateProjectState) => state.project
   );
   return (
     <div className="flex flex-col item-center max-w-[700px] w-[90%] flex-wrap md:flex-nowrap ">

@@ -4,6 +4,8 @@ import { ProjectRequest, ProjectType } from "@/types/projectType";
 import { getProjects } from "@/api/project/getProjects";
 import PaginationBar from "@/components/common/pagination";
 
+export const dynamic = "force-dynamic";
+
 const ProjectList = async ({
   searchParams,
 }: {
