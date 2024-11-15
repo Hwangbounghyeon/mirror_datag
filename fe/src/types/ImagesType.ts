@@ -10,10 +10,6 @@ export type ProjectImageListResponse = {
   images: Record<string, string>;
 };
 
-export type ImageListResponse = {
-  
-}
-
 export type SearchCondition = {
   and_condition: string[];
   or_condition: string[];
