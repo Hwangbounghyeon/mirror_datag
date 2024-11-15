@@ -1,6 +1,6 @@
 import { StepProps } from "@/types/projectType";
 
-import { AppDispatch, RootState } from "@/store/store";
+import { CreateProjectAppDispatch, CreateProjectState } from "@/store/store";
 import {
   updateDepartmentAuth,
   updateUserAuth,
@@ -32,14 +32,16 @@ import AddAuthDeps from "./add-auth-deps";
 import ButtonFooter from "./buttonFooter";
 
 export default function Step3({ handleMove }: StepProps) {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch<CreateProjectAppDispatch>();
   const addedAuthUsers = useSelector(
-    (state: RootState) => state.project.accesscontrol.users
+    (state: CreateProjectState) => state.project.accesscontrol.users
   );
   const addedAuthDeps = useSelector(
-    (state: RootState) => state.project.accesscontrol.departments
+    (state: CreateProjectState) => state.project.accesscontrol.departments
   );
-  const isPrivate = useSelector((state: RootState) => state.project.is_private);
+  const isPrivate = useSelector(
+    (state: CreateProjectState) => state.project.is_private
+  );
 
   const [isOpenUserModal, setIsOpenUserModal] = useState(false);
   const [isOpenDepModal, setIsOpenDepModal] = useState(false);
