@@ -13,11 +13,23 @@ import {
 import { Select, SelectItem, Pagination } from "@nextui-org/react";
 import { getHistoryDetail } from "@/api/analysis/getHistoryDetail";
 import Image from "next/image";
+import SelectedPointsList from "./selected-points";
+import CountUp from "react-countup";
 
 const ScatterPlot = dynamic(
   () => import("@/components/project/analysis/scatter-plot"),
   { ssr: false }
 );
+
+const LabelBarChart = dynamic(
+  () => import("@/components/project/analysis/label-bar-chart"),
+  { ssr: false }
+)
+
+const PieChart = dynamic(
+  () => import("@/components/project/analysis/pie-chart"),
+  { ssr: false }
+)
 
 interface SelectedIndices {
   x: number;
@@ -34,9 +46,24 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
     y: 1,
   });
   const [selectedData, setSelectedData] = useState<HistoryData | null>(null);
-  const [plotData, setPlotData] = useState<DataPoint[]>([]);
   const [selectedPoints, setSelectedPoints] = useState<ReductionResults[]>([]);
   
+  const [displayMode, setDisplayMode] = useState<'prediction' | 'real'>('prediction');
+
+  const [initialValues, setInitialValues] = useState({
+    totalImages: 0,
+    duration: 0
+  });
+
+  // PieChart
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // BarChart
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+
+  // ScatterPlot
+  const [plotData, setPlotData] = useState<DataPoint[]>([]);
+
   // 페이지네이션 관련 상태
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -64,6 +91,17 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
     const response = await getHistoryDetail(selectedHistory);
     if (!response.data) return;
     setSelectedData(response.data);
+
+    const duration = response.data?.createdAt && response.data?.updatedAt
+      ? Math.round(
+          new Date(response.data.updatedAt).getTime() - 
+          new Date(response.data.createdAt).getTime()
+        )
+      : 0;
+    setInitialValues({
+      totalImages: response.data.results?.length || 0,
+      duration: duration
+    });
   };
 
   const featureOptions = Array.from({ length: 10 }, (_, i) => ({
@@ -87,14 +125,29 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
 
   function extractFeatureData(data: HistoryData): DataPoint[] {
     if (!data.results) return [];
+
     return data.results
-      .filter(result => result.features && Array.isArray(result.features))
-      .map((result) => ({
+    .filter(result => result.features && Array.isArray(result.features))
+    .filter(result => {
+      if (displayMode === 'real') {
+        return isObjectDetectionLabels(result.label) && result.label.label;
+      }
+      return true;
+    })
+    .map((result) => {
+      const realValue = isObjectDetectionLabels(result.label) 
+        ? result.label.label 
+        : (result.label || null);
+        
+      return {
         id: result.detailId,
         x: (result.features as number[])[selectedIndices.x],
         y: (result.features as number[])[selectedIndices.y],
-        label: result.predictions?.prediction || 'unknown',
-      }));
+        label: displayMode === 'prediction' 
+          ? (result.predictions?.prediction || 'unknown')
+          : (realValue || 'unknown'),
+      };
+    });
   }
 
   const selectPoints = (imageIds: string[]) => {
@@ -103,7 +156,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
         imageIds.includes(result.detailId)
       );
       setSelectedPoints(matchingResults);
-      setCurrentPage(1); // 새로운 포인트가 선택되면 첫 페이지로 이동
+      setCurrentPage(1);
     }
   };
 
@@ -112,178 +165,175 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
       const extractedData = extractFeatureData(selectedData);
       setPlotData(extractedData);
     }
-  }, [selectedData, selectedIndices]);
+  }, [selectedData, selectedIndices, displayMode]);
 
   useEffect(() => {
     getHistory();
   }, [selectedHistory]);
 
   return (
-    <div className="flex flex-col w-full flex-grow bg-content1 mx-4 rounded-xl shadow-medium">
-      <div className="flex flex-col p-6 space-y-6">
-        <div className="flex gap-6">
-          {/* Chart Container */}
-          <div className="w-[60%] bg-white rounded-xl shadow-sm p-4 border border-divider shrink-0">
-            <div className="h-[45rem]">
-              <ScatterPlot
-                data={plotData}
-                selectedIndices={selectedIndices}
-                onSelectPoints={selectPoints}
+    <div className="flex flex-col w-full min-w-[1000px] flex-grow bg-content1 mx-4 rounded-xl shadow-medium">
+      {
+        selectedHistory && selectedData ? (
+          <div className="flex flex-col p-6 space-y-6">
+            {/* History Name Header */}
+            <div className="w-full grid grid-cols-1">
+              <div className="max-w-full overflow-hidden">
+                <p className="text-[1.6rem] lg:text-[1.8rem] 2xl:text-[2rem] font-bold truncate">
+                  History Name: {selectedData?.historyName}
+                </p>
+              </div>
+            </div>
+
+            {/* Info Cards Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {/* Selected Algorithm Card */}
+              <div className="bg-white rounded-lg p-4 shadow">
+                <h2 className="font-semibold truncate">선택된 알고리즘</h2>
+                <p className="truncate text-[2.8rem] lg:text-[3.3rem] 2xl:text-[3.8rem]">
+                  {selectedData.parameters?.selectedAlgorithm.toUpperCase()}
+                </p>
+              </div>
+              {/* Total Images Card */}
+              <div className="bg-white rounded-lg p-4 shadow">
+                <h2 className="font-semibold truncate">총 이미지 갯수</h2>
+                <p className="truncate text-[2.8rem] lg:text-[3.3rem] 2xl:text-[3.8rem]">
+                  <CountUp
+                    end={initialValues.totalImages}
+                    duration={2}
+                    suffix=" 개"
+                    redraw={false}
+                  />
+                </p>
+              </div>
+              {/* Analysis Duration Card */}
+              <div className="bg-white rounded-lg p-4 shadow">
+                <h2 className="font-semibold truncate">분석에 소요된 시간</h2>
+                <p className="truncate text-[2.8rem] lg:text-[3.3rem] 2xl:text-[3.8rem]">
+                  <CountUp
+                    end={initialValues.duration}
+                    duration={2.5}
+                    suffix=" ms"
+                    redraw={false}
+                  />
+                </p>
+              </div>
+            </div>
+
+            {/* Label Distribution Chart */}
+            <div className="bg-white rounded-lg p-4 shadow mb-4 w-full">
+              <div className="flex w-full gap-4">
+                <div className="w-full lg:w-1/2 h-[30rem]">
+                  <LabelBarChart 
+                    data={selectedData}
+                    selectedLabels={selectedLabels}
+                    setSelectedLabels={(s: string[]) => setSelectedLabels(s)}
+                    displayMode={displayMode} 
+                    onLabelsSelect={(points) => {
+                      setSelectedIndex(null);
+                      setSelectedPoints(points);
+                      setCurrentPage(1);
+                    }}
+                  />
+                </div>
+                <div className="w-full lg:w-1/2 h-[30rem]">
+                  <PieChart 
+                    data={selectedData.results} 
+                    selectedIndex={selectedIndex}
+                    setSelectedIndex={(n: number | null) => setSelectedIndex(n)}
+                    onDataSelect={(points) => {
+                      setSelectedLabels([]);
+                      setSelectedPoints(points);
+                      setCurrentPage(1); // 페이지 리셋
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Chart Container */}
+            <div className="flex gap-6">
+              <div className="w-[60%] bg-white rounded-xl shadow-sm p-4 border border-divider shrink-0">
+                <h2 className="text-xl font-semibold text-foreground">Feature 산점도</h2>
+                <div className="h-[45rem]">
+                  <ScatterPlot
+                    data={plotData}
+                    selectedIndices={selectedIndices}
+                    selectedPoints={selectedPoints}
+                    onSelectPoints={selectPoints}
+                    displayMode={displayMode}
+                    setDisplayMode={() => setDisplayMode(displayMode === 'prediction' ? 'real' : 'prediction')}
+                    dragCallBack={() => {
+                      setSelectedIndex(null);
+                      setSelectedLabels([]);
+                    }}
+                  />
+                </div>
+                <div className="mt-4 flex gap-4">
+                  <Select
+                    label="X축 Feature"
+                    selectedKeys={[selectedIndices.x.toString()]}
+                    onChange={(e) => handleIndexChange("x", e.target.value)}
+                    classNames={{
+                      base: "flex-1 bg-default-100",
+                      trigger: "h-12 rounded-lg border-2 border-divider data-[hover=true]:bg-default-200",
+                      label: "text-foreground font-medium",
+                      listbox: "rounded-lg border-2 border-divider",
+                    }}
+                  >
+                    {featureOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        isDisabled={parseInt(option.value) === selectedIndices.y}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  <Select
+                    label="Y축 Feature"
+                    selectedKeys={[selectedIndices.y.toString()]}
+                    onChange={(e) => handleIndexChange("y", e.target.value)}
+                    classNames={{
+                      base: "flex-1 bg-default-100",
+                      trigger: "h-12 rounded-lg border-2 border-divider data-[hover=true]:bg-default-200",
+                      label: "text-foreground font-medium",
+                      listbox: "rounded-lg border-2 border-divider",
+                    }}
+                  >
+                    {featureOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        isDisabled={parseInt(option.value) === selectedIndices.x}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+              {/* Selected Points Panel */}
+              <SelectedPointsList 
+                selectedPoints={selectedPoints}
+                currentItems={currentItems}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+                isObjectDetectionLabels={isObjectDetectionLabels}
               />
             </div>
-            <div className="mt-4 flex gap-4">
-              <Select
-                label="X축 Feature"
-                selectedKeys={[selectedIndices.x.toString()]}
-                onChange={(e) => handleIndexChange("x", e.target.value)}
-                classNames={{
-                  base: "flex-1 bg-default-100",
-                  trigger: "h-12 rounded-lg border-2 border-divider data-[hover=true]:bg-default-200",
-                  label: "text-foreground font-medium",
-                  listbox: "rounded-lg border-2 border-divider",
-                }}
-              >
-                {featureOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    isDisabled={parseInt(option.value) === selectedIndices.y}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </Select>
-              <Select
-                label="Y축 Feature"
-                selectedKeys={[selectedIndices.y.toString()]}
-                onChange={(e) => handleIndexChange("y", e.target.value)}
-                classNames={{
-                  base: "flex-1 bg-default-100",
-                  trigger: "h-12 rounded-lg border-2 border-divider data-[hover=true]:bg-default-200",
-                  label: "text-foreground font-medium",
-                  listbox: "rounded-lg border-2 border-divider",
-                }}
-              >
-                {featureOptions.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    isDisabled={parseInt(option.value) === selectedIndices.x}
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </Select>
+            <div className="flex gap-6">
+              
             </div>
           </div>
-
-          {/* Selected Points Panel */}
-          <div className="w-[40%] bg-white rounded-xl shadow-sm p-6 border border-divider">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-foreground">선택된 포인트</h2>
-              <span className="text-sm text-default-500">
-                {selectedPoints.length}개 선택됨
-              </span>
-            </div>
-            <div className="max-h-[44rem] flex-grow overflow-y-auto scrollbar-hide">
-              {selectedPoints.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 gap-4">
-                    {currentItems.map((point, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col bg-default-50 rounded-lg border border-divider overflow-hidden hover:border-primary transition-colors"
-                      >
-                        <div className="flex">
-                          <div className="relative flex-grow bg-default-200">
-                            <Image
-                              src={point.imageUrl}
-                              alt={`Selected point ${index + 1}`}
-                              fill={true}
-                              sizes="100%"
-                              style={{ objectFit: 'cover' }}
-                            />
-                          </div>
-                          <div className="w-[70%] p-4 space-y-2">
-                            <div className="flex justify-between items-start">
-                              <div className="flex flex-col">
-                                <span className="text-sm text-default-500 truncate">
-                                  ID: {point.imageId}
-                                </span>
-                                <span className="text-sm text-default-500 truncate">
-                                  Detail ID: {point.detailId}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                {point.predictions && (
-                                  <>
-                                    <span className="text-sm text-default-600">예측:</span>
-                                    <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                                      {point.predictions.prediction}
-                                    </span>
-                                  </>
-                                )}
-                                {point.label && (
-                                  <>
-                                    <span className="text-sm text-default-600">실제:</span>
-                                    <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
-                                      {isObjectDetectionLabels(point.label)
-                                        ? point.label.label
-                                        : point.label}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* 페이지네이션 */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-4">
-                      <Pagination
-                        total={totalPages}
-                        page={currentPage}
-                        onChange={handlePageChange}
-                        showControls
-                        classNames={{
-                          wrapper: "gap-2",
-                          item: "w-8 h-8",
-                        }}
-                      />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-default-500">
-                  <svg
-                    className="w-12 h-12 mb-4 text-default-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="text-center">선택된 포인트가 없습니다</p>
-                  <p className="text-sm text-default-400">
-                    차트에서 포인트를 선택해주세요
-                  </p>
-                </div>
-              )}
-            </div>
+        ) : (
+          <div className="flex justify-center items-center h-[90vh]">
+            기록을 선택해주세요.
           </div>
-        </div>
-      </div>
+        )
+      }
     </div>
   );
 }
