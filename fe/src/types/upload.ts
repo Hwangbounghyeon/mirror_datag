@@ -28,3 +28,18 @@ export interface ImageGridProps {
     images: ImageFile[];
     onDeleteImage: (index: number) => void;
 }
+
+export type UploadBatchRequest = {
+    project_id: string,
+    page: string,
+    limit: string
+}
+
+export type UploadBatchResponse = {
+    batch_id: string;
+    user_id: number;
+    project_id: string;
+    is_done: boolean;
+    created_at: string;
+    updated_at: string;
+}
