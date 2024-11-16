@@ -56,13 +56,13 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 }) => (
     <div className="flex gap-48">
         <Button
-            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded bg-gray-100"
+            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded"
             onClick={onSelectFiles}
         >
             Select Files
         </Button>
         <Button
-            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded bg-gray-100"
+            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded"
             onClick={onSelectFolder}
         >
             Select Folder
@@ -73,7 +73,7 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 const SupportedFormats: FC = () => (
     <div className="flex flex-col items-center justify-center text-center">
         <p className="text-base mt-10 mb-3">Supported Formats</p>
-        <p className="text-base text-opacity-80 text-gray-300">
+        <p className="text-base text-opacity-80">
             .jpg .jpeg .png .gif .webp .bmp .svg .zip .json .7z
         </p>
     </div>
