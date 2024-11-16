@@ -1,48 +1,70 @@
-// "use client";
+"use client";
 
-// import React from "react";
-// import { FaRegCheckCircle } from "react-icons/fa";
-// import { IoMdCloseCircleOutline } from "react-icons/io";
+import React, { useEffect, useState } from "react";
+import { UploadBatchResponse } from "@/types/upload";
+import { getUploadBatch } from "@/api/upload/uploadBatch";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { IoMdCloseCircleOutline } from "react-icons/io";
+import { Pagination } from "@nextui-org/react";
 
-// const BatchList = () => {
-//     const batches = [
-//         {
-//             id: 4,
-//             date: "2024-10-26",
-//             imageCount: 12,
-//             isLoaded: true,
-//         },
-//         {
-//             id: 3,
-//             date: "2024-10-25",
-//             imageCount: 8,
-//             isLoaded: false,
-//         },
-//         {
-//             id: 2,
-//             date: "2024-10-24",
-//             imageCount: 15,
-//             isLoaded: true,
-//         },
-//     ];
+interface BaseImage {
+    projectId: string;
+}
 
-//     return (
-//         <div className="flex flex-col space-y-4">
-//             {batches.map((batch) => (
-//                 <div key={batch.id} className={`p-4 border rounded-lg`}>
-//                     <h2 className="text-lg font-bold">{batch.date}</h2>
-//                     <p className="text-sm">{batch.imageCount} images</p>
-//                     <div className="flex justify-end items-end">
-//                         {batch.isLoaded ? (
-//                             <FaRegCheckCircle className="text-green-500 size-6" />
-//                         ) : (
-//                             <IoMdCloseCircleOutline className="text-red-500 size-6" />
-//                         )}
-//                     </div>
-//                 </div>
-//             ))}
-//         </div>
-//     );
-// };
+const BatchList = ({ projectId }: BaseImage) => {
+    const [batches, setBatches] = useState<UploadBatchResponse[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [total, setTotal] = useState(1);
+    const rowsPerPage = 10;
 
-// export default BatchList;
+    const getUploadBatches = async (page: number) => {
+        const searchParams = {
+            project_id: projectId,
+            page: page.toString(),
+            limit: rowsPerPage.toString()
+        }
+        const response = await getUploadBatch(searchParams);
+
+        if (!response.data) {
+            return;
+        }
+        setBatches(response.data.data);
+        // API 응답에서 total pages를 받아온다고 가정
+        setTotal(Math.ceil(response.data.total_count / rowsPerPage));
+    }
+
+    useEffect(() => {
+        setBatches([])
+        getUploadBatches(currentPage);
+    }, [currentPage, projectId]);
+
+    return (
+        <div className="flex flex-col space-y-4">
+            <div className="space-y-4">
+                {batches.map((batch) => (
+                    <div key={batch.batch_id} className={`p-4 border rounded-lg`}>
+                        <h2 className="text-lg font-bold truncate">{batch.created_at}</h2>
+                        <div className="flex justify-end items-end">
+                            {batch.is_done ? (
+                                <FaRegCheckCircle className="text-green-500 size-6" />
+                            ) : (
+                                <IoMdCloseCircleOutline className="text-red-500 size-6" />
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-center mt-4">
+                <Pagination
+                    total={total}
+                    page={currentPage}
+                    onChange={setCurrentPage}
+                    showControls
+                    variant="bordered"
+                />
+            </div>
+        </div>
+    );
+};
+
+export default BatchList;
