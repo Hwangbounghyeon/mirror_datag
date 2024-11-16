@@ -13,6 +13,7 @@ import { TagBySearchRequest } from "@/types/tag";
 import { useState } from "react";
 import { FilterSection } from "@/components/loadimage/FilterSection";
 import { useParams } from "next/navigation";
+import BatchList from "@/components/image/BatchList";
 
 export default function ImageManage() {
     const params = useParams();
@@ -72,12 +73,19 @@ export default function ImageManage() {
 
                 <div className="mt-4">
                     {selectedTab === "upload" ? (
-                        <UploadContent
-                            images={images}
-                            onFileUpload={handleFileValidation}
-                            onDeleteImage={deleteImage}
-                            onDeleteAllImages={deleteAllImages}
-                        />
+                        <div className="flex">
+                            <div className="w-[80%]">
+                                <UploadContent
+                                    images={images}
+                                    onFileUpload={handleFileValidation}
+                                    onDeleteImage={deleteImage}
+                                    onDeleteAllImages={deleteAllImages}
+                                />
+                            </div>
+                            <div className="w-[20%] h-[80vh] mx-8 mb-8 p-6 min-h-[80vh] border border-solid border-gray-300 rounded-lg overflow-y-auto">
+                                <BatchList projectId={ProjectId}/>
+                            </div>
+                        </div>
                     ) : (
                         <LoadContent {...loadContentState} />
                     )}
