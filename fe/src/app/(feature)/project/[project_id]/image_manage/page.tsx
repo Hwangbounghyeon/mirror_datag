@@ -17,6 +17,7 @@ import { useParams } from "next/navigation";
 export default function ImageManage() {
     const params = useParams();
     const ProjectId = params.project_id as string;
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedTab, setSelectedTab] = useState("upload");
     const { images, addImages, deleteImage, deleteAllImages } = useImageState();
     const { goBack, goToLoadImages } = useNavigation(ProjectId);
@@ -29,7 +30,12 @@ export default function ImageManage() {
     const { tags, currentFilter, searchByFilter, setPage } = loadContentState;
 
     const handleMoveToDataset = async () => {
-        await goToLoadImages(images, currentFilter);
+        setIsLoading(true);
+        try {
+            await goToLoadImages(images, currentFilter);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleFilterApply = (filterData: TagBySearchRequest) => {
@@ -44,6 +50,7 @@ export default function ImageManage() {
                 rightButtonText="Upload and Move to Dataset"
                 onRightButtonClick={handleMoveToDataset}
                 onPrevious={goBack}
+                isLoading={isLoading}
             />
 
             <div className="w-full">
