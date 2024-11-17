@@ -27,36 +27,45 @@ const HistoryCard = ({
     2: { color: "bg-danger-100 text-danger-700", text: "실패" },
   };
 
-  const status = statusConfig[is_done as keyof typeof statusConfig] || statusConfig[0];
+  const status =
+    statusConfig[is_done as keyof typeof statusConfig] || statusConfig[0];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const CardContent = () => (
-    <div className={`p-4 rounded-lg bg-content2 shadow-sm transition-all duration-200 
+    <div
+      className={`p-4 rounded-lg bg-content2 shadow-sm transition-all duration-200 
                     border border-transparent 
-                    ${is_done === 1 
-                      ? 'hover:shadow-md hover:translate-x-1 hover:border-primary/20 cursor-pointer' 
-                      : 'opacity-60 cursor-not-allowed'}`}>
+                    ${
+                      is_done === 1
+                        ? "hover:shadow-md hover:translate-x-1 hover:border-primary/20 cursor-pointer"
+                        : "opacity-60 cursor-not-allowed"
+                    }`}
+    >
       <div className="space-y-3">
-        <h3 className={`text-lg font-semibold text-foreground line-clamp-1 
-                      ${is_done === 1 ? 'group-hover:text-primary' : ''}`}>
+        <h3
+          className={`text-lg text-gray-900 dark:text-gray-300 font-semibold text-foreground line-clamp-1 
+                      ${is_done === 1 ? "group-hover:text-primary" : ""}`}
+        >
           {history_name}
         </h3>
         <div className="flex justify-between items-center">
           <time className="text-sm text-foreground-500 truncate">
             {formatDate(created_at)}
           </time>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-flex items-center justify-center ${status.color}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap inline-flex items-center justify-center ${status.color}`}
+          >
             {status.text}
           </span>
         </div>
