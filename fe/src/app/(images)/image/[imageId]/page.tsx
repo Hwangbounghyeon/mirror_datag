@@ -6,7 +6,7 @@ export default async function ImageDetailPage({
     params,
     searchParams,
 }: {
-    params: { project_id: string; imageId: string };
+    params: { imageId: string };
     searchParams: { conditions?: string };
 }) {
     const conditions: TagBySearchRequest | undefined = searchParams.conditions
