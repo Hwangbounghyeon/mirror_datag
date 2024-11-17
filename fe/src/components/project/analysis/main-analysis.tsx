@@ -268,8 +268,8 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
 
           {/* Chart Container */}
           <div className="flex gap-6">
-            <div className="w-[60%] bg-white rounded-xl shadow-sm p-4 border border-divider shrink-0">
-              <h2 className="text-xl font-semibold text-foreground">
+            <div className="w-[60%] bg-white  dark:bg-gray-700  rounded-xl shadow-sm p-4 border border-divider shrink-0">
+              <h2 className="text-xl text-gray-900 dark:text-white font-semibold text-foreground">
                 Feature 산점도
               </h2>
               <div className="h-[45rem]">
