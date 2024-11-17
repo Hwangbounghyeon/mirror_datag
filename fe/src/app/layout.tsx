@@ -7,46 +7,46 @@ import { ToastContainer } from "react-toastify";
 import { UserStoreReduxProvider } from "@/components/common/redux-provider";
 
 const pretendard = localFont({
-  src: "./fonts/PretendardVariable.woff2",
-  display: "swap",
-  weight: "45 920",
-  variable: "--font-pretendard",
+    src: "./fonts/PretendardVariable.woff2",
+    display: "swap",
+    weight: "45 920",
+    variable: "--font-pretendard",
 });
 
 const BMJUA = localFont({
-  src: "./fonts/BMJUA.woff",
-  display: "swap",
-  weight: "400",
-  variable: "--font-bmjua",
+    src: "./fonts/BMJUA.woff",
+    display: "swap",
+    weight: "400",
+    variable: "--font-bmjua",
 });
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactElement;
+    children: React.ReactElement;
 }>) {
-  return (
-    <html
-      suppressHydrationWarning
-      lang="en"
-      className={` ${pretendard.variable} ${BMJUA.variable}`}
-    >
-      <body id="root">
-        <ThemeProvider attribute="class">
-          <UserStoreReduxProvider>
-            <div className="min-h-screen min-w-screen flex">
-              <Sidebar />
-              <main className="flex-1">
-                <div className="ps-3 ">{children}</div>
-              </main>
-            </div>
+    return (
+        <html
+            suppressHydrationWarning
+            lang="en"
+            className={` ${pretendard.variable} ${BMJUA.variable}`}
+        >
+            <body id="root">
+                <ThemeProvider attribute="class">
+                    <UserStoreReduxProvider>
+                        <div className="min-h-screen min-w-screen flex bg-gray-50 dark:bg-gray-900">
+                            <Sidebar />
+                            <main className="flex-1">
+                                <div className="ps-3 ">{children}</div>
+                            </main>
+                        </div>
 
-            <ToastContainer />
-          </UserStoreReduxProvider>
-        </ThemeProvider>
+                        <ToastContainer />
+                    </UserStoreReduxProvider>
+                </ThemeProvider>
 
-        <div id="modal-root"></div>
-      </body>
-    </html>
-  );
+                <div id="modal-root"></div>
+            </body>
+        </html>
+    );
 }

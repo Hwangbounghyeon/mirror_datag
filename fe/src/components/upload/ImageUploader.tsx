@@ -11,7 +11,7 @@ const ImageUploader = ({
     onSelectFolder,
 }: ImageUploaderProps) => {
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center">
+        <div className="w-full h-[100dvh] shadow-lg overflow-hidden rounded-lg bg-white dark:bg-gray-800 flex flex-col items-center justify-center">
             <UploadIcon />
             <UploadInstructions />
             <UploadButtons
@@ -56,14 +56,18 @@ const UploadButtons: FC<ImageUploaderProps> = ({
 }) => (
     <div className="flex gap-48">
         <Button
-            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded"
+            className="px-12 py-6 border border-dashed rounded"
             onClick={onSelectFiles}
+            color="primary"
+            variant="ghost"
         >
             Select Files
         </Button>
         <Button
-            className="px-12 py-6 border border-dashed hover:border-gray-500 rounded"
+            className="px-12 py-6 border border-dashed rounded"
             onClick={onSelectFolder}
+            color="primary"
+            variant="ghost"
         >
             Select Folder
         </Button>

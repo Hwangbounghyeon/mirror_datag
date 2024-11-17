@@ -236,7 +236,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         <div className="w-full min-h-screen p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-                    Dataset (Project ID: {params.project_id})
+                    Dataset
                 </h1>
                 <Dropdown>
                     <DropdownTrigger>
