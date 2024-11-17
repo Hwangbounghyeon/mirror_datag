@@ -12,7 +12,7 @@ export const loadImageDetail = async (
     }
 
     const response = await apiClient<ImageDetailResponse>(
-        `/project/image/detail`,
+        `/image/detail`,
         {
             method: "POST",
             body: JSON.stringify(requestForm),
