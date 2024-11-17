@@ -47,7 +47,7 @@ export default function ImageManage() {
         <PageContainer>
             <PageHeader
                 title="Image Management"
-                rightButtonText="Upload and Move to Dataset"
+                rightButtonText="Upload&Load"
                 onRightButtonClick={handleMoveToDataset}
                 onPrevious={goBack}
                 isLoading={isLoading}
@@ -61,9 +61,16 @@ export default function ImageManage() {
                         size="lg"
                         radius="sm"
                         selectedKey={selectedTab}
+                        color="primary"
                         onSelectionChange={(key) =>
                             setSelectedTab(key.toString())
                         }
+                        classNames={{
+                            tabList: "border-primary",
+                            cursor: "bg-primary",
+                            tab: "border-primary data-[hover=true]:border-primary",
+                            tabContent: "group-data-[selected=true]:text-white",
+                        }}
                     >
                         <Tab key="upload" title="Upload" />
                         <Tab key="load" title="Load" />

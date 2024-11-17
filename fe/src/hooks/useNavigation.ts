@@ -43,7 +43,6 @@ export const useNavigation = (projectId: string) => {
 
                 router.push(`/project/${projectId}`);
             } catch (error) {
-                console.error("Upload failed:", error);
                 toast.error("Image Upload Failed!", {
                     position: "bottom-right",
                     autoClose: 5000,

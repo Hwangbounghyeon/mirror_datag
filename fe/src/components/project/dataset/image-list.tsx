@@ -85,9 +85,7 @@ const ImageList = ({
                         Clear
                     </Button>
                 </div>
-                <div
-                    className="text-lg cursor-pointer w-full sm:w-auto text-center sm:text-right"
-                >
+                <div className="text-lg cursor-pointer w-full sm:w-auto text-center sm:text-right">
                     {selectedCount} Items Selected
                 </div>
             </div>
@@ -99,9 +97,9 @@ const ImageList = ({
                             <Card
                                 isPressable
                                 onPress={() => handleImageClick(image.id)}
-                                className="aspect-square w-full max-w-[10rem]"
+                                className="aspect-square w-full max-w-[10rem] p-0"
                             >
-                                <div className="relative w-full h-full bg-black">
+                                <div className="relative w-full h-full">
                                     <img
                                         src={image.imageUrl}
                                         alt=""

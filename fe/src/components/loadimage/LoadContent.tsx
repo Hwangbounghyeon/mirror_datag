@@ -48,7 +48,7 @@ export function LoadContent(props: LoadContentProps) {
             <div className="flex flex-1">
                 <ContentContainer>
                     <div className="flex-[10] min-h-[80vh]">
-                        <div className="h-full border border-solid border-gray-300 rounded-lg p-6">
+                        <div className="h-full rounded-lg p-6 overflow-hidden bg-white dark:bg-gray-800 shadow-lg">
                             <Suspense
                                 fallback={
                                     <div className="flex items-center justify-center h-full">

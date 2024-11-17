@@ -18,8 +18,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => (
     <div className="flex justify-between items-center px-6 pb-8 pt-4 relative">
         <Button
-            className="px-6 py-2 mx-2 border border-solid"
             onClick={onPrevious}
+            color="primary"
+            className="font-semibold w-full md:w-auto"
+            size="lg"
         >
             Previous
         </Button>
@@ -29,7 +31,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </h1>
 
         <Button
-            className="px-6 mx-2 py-2 rounded-lg border border-solid"
+            color="primary"
+            className="font-semibold w-full md:w-auto"
+            size="lg"
             onClick={onRightButtonClick}
             isLoading={isLoading}
         >
