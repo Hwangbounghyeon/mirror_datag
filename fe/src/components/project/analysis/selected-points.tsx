@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import Image from "next/image";
-import { Button } from '@nextui-org/react';
+import { Button } from "@nextui-org/react";
 import { Pagination } from "@nextui-org/react";
 import { ReductionResults } from "@/types/historyType";
 import { ObjectDetectionLabels } from "@/types/historyType";
-import { downloadImages, startDownload } from '@/api/image/imageDownload';
+import { downloadImages, startDownload } from "@/api/image/imageDownload";
 
 interface SelectedPointsListProps {
   selectedPoints: ReductionResults[];
@@ -12,7 +12,9 @@ interface SelectedPointsListProps {
   currentPage: number;
   totalPages: number;
   handlePageChange: (page: number) => void;
-  isObjectDetectionLabels: (label: ObjectDetectionLabels | string | undefined) => label is ObjectDetectionLabels;
+  isObjectDetectionLabels: (
+    label: ObjectDetectionLabels | string | undefined
+  ) => label is ObjectDetectionLabels;
 }
 
 export function SelectedPointsList({
@@ -21,37 +23,39 @@ export function SelectedPointsList({
   currentPage,
   totalPages,
   handlePageChange,
-  isObjectDetectionLabels
+  isObjectDetectionLabels,
 }: SelectedPointsListProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     if (isDownloading) return;
-    
+
     try {
       setIsDownloading(true);
       const imageIds = selectedPoints
-        .map(point => point.imageId)
+        .map((point) => point.imageId)
         .filter((id, index, self) => self.indexOf(id) === index);
-    
+
       console.log(imageIds);
 
       const blob = await downloadImages(imageIds);
-      
-      console.log(blob)
+
+      console.log(blob);
       startDownload(blob);
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error("Download failed:", error);
     } finally {
       setIsDownloading(false);
     }
   };
 
   return (
-    <div className="w-[40%] bg-white rounded-xl shadow-sm p-6 border border-divider">
+    <div className="w-[40%] bg-white dark:bg-gray-700  text-gray-900 dark:text-gray-300 rounded-xl shadow-sm p-6 border border-divider">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">선택된 이미지</h2>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+            선택된 이미지
+          </h2>
           <span className="text-sm text-default-500">
             {selectedPoints.length}개 선택됨
           </span>
@@ -87,7 +91,7 @@ export function SelectedPointsList({
                         alt={`Selected point ${index + 1}`}
                         fill={true}
                         sizes="100%"
-                        style={{ objectFit: 'cover' }}
+                        style={{ objectFit: "cover" }}
                       />
                     </div>
                     <div className="w-[70%] p-4 space-y-2">
@@ -105,7 +109,9 @@ export function SelectedPointsList({
                         <div className="flex items-center gap-2">
                           {point.predictions && (
                             <>
-                              <span className="text-sm text-default-600">예측:</span>
+                              <span className="text-sm text-default-600">
+                                예측:
+                              </span>
                               <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
                                 {point.predictions.prediction}
                               </span>
@@ -113,7 +119,9 @@ export function SelectedPointsList({
                           )}
                           {point.label && (
                             <>
-                              <span className="text-sm text-default-600">실제:</span>
+                              <span className="text-sm text-default-600">
+                                실제:
+                              </span>
                               <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
                                 {isObjectDetectionLabels(point.label)
                                   ? point.label.label
@@ -128,7 +136,7 @@ export function SelectedPointsList({
                 </div>
               ))}
             </div>
-            
+
             {totalPages > 1 && (
               <div className="flex justify-center mt-4">
                 <Pagination
@@ -145,7 +153,7 @@ export function SelectedPointsList({
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-default-500">
+          <div className="flex flex-col items-center justify-center py-12  text-gray-600 dark:text-gray-200">
             <svg
               className="w-12 h-12 mb-4 text-default-300"
               fill="none"
@@ -153,6 +161,7 @@ export function SelectedPointsList({
               viewBox="0 0 24 24"
             >
               <path
+                className="text-gray-600 dark:text-gray-300"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
@@ -160,7 +169,7 @@ export function SelectedPointsList({
               />
             </svg>
             <p className="text-center">선택된 포인트가 없습니다</p>
-            <p className="text-sm text-default-400">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               차트에서 포인트를 선택해주세요
             </p>
           </div>

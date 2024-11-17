@@ -16,88 +16,86 @@ import { useParams } from "next/navigation";
 import BatchList from "@/components/image/BatchList";
 
 export default function ImageManage() {
-    const params = useParams();
-    const ProjectId = params.project_id as string;
-    const [isLoading, setIsLoading] = useState(false);
-    const [selectedTab, setSelectedTab] = useState("upload");
-    const { images, addImages, deleteImage, deleteAllImages } = useImageState();
-    const { goBack, goToLoadImages } = useNavigation(ProjectId);
-    const { handleFileValidation } = useFileValidation({
-        images,
-        onValidFiles: addImages,
-    });
+  const params = useParams();
+  const ProjectId = params.project_id as string;
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("upload");
+  const { images, addImages, deleteImage, deleteAllImages } = useImageState();
+  const { goBack, goToLoadImages } = useNavigation(ProjectId);
+  const { handleFileValidation } = useFileValidation({
+    images,
+    onValidFiles: addImages,
+  });
 
-    const loadContentState = useLoadContentState();
-    const { tags, currentFilter, searchByFilter, setPage } = loadContentState;
+  const loadContentState = useLoadContentState();
+  const { tags, currentFilter, searchByFilter, setPage } = loadContentState;
 
-    const handleMoveToDataset = async () => {
-        setIsLoading(true);
-        try {
-            await goToLoadImages(images, currentFilter);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const handleMoveToDataset = async () => {
+    setIsLoading(true);
+    try {
+      await goToLoadImages(images, currentFilter);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const handleFilterApply = (filterData: TagBySearchRequest) => {
-        setPage(1);
-        searchByFilter(filterData, 1);
-    };
+  const handleFilterApply = (filterData: TagBySearchRequest) => {
+    setPage(1);
+    searchByFilter(filterData, 1);
+  };
 
-    return (
-        <PageContainer>
-            <PageHeader
-                title="Image Management"
-                rightButtonText="Upload and Move to Dataset"
-                onRightButtonClick={handleMoveToDataset}
-                onPrevious={goBack}
-                isLoading={isLoading}
+  return (
+    <div className="min-h-screen flex flex-col dark:bg-zinc-900 mx-auto">
+      <PageHeader
+        title="Image Management"
+        rightButtonText="Upload and Move to Dataset"
+        onRightButtonClick={handleMoveToDataset}
+        onPrevious={goBack}
+        isLoading={isLoading}
+      />
+
+      <div className="w-full">
+        <div className="mx-8 flex justify-between items-center">
+          <Tabs
+            aria-label="For Image Management"
+            variant="bordered"
+            size="lg"
+            radius="sm"
+            selectedKey={selectedTab}
+            onSelectionChange={(key) => setSelectedTab(key.toString())}
+          >
+            <Tab key="upload" title="Upload" />
+            <Tab key="load" title="Load" />
+          </Tabs>
+          {selectedTab === "load" && (
+            <FilterSection
+              tags={tags}
+              currentFilter={currentFilter}
+              onFilterApply={handleFilterApply}
             />
+          )}
+        </div>
 
-            <div className="w-full">
-                <div className="mx-8 flex justify-between items-center">
-                    <Tabs
-                        aria-label="For Image Management"
-                        variant="bordered"
-                        size="lg"
-                        radius="sm"
-                        selectedKey={selectedTab}
-                        onSelectionChange={(key) =>
-                            setSelectedTab(key.toString())
-                        }
-                    >
-                        <Tab key="upload" title="Upload" />
-                        <Tab key="load" title="Load" />
-                    </Tabs>
-                    {selectedTab === "load" && (
-                        <FilterSection
-                            tags={tags}
-                            currentFilter={currentFilter}
-                            onFilterApply={handleFilterApply}
-                        />
-                    )}
-                </div>
-
-                <div className="mt-4">
-                    {selectedTab === "upload" ? (
-                        <div className="flex">
-                            <div className="w-[80%]">
-                                <UploadContent
-                                    images={images}
-                                    onFileUpload={handleFileValidation}
-                                    onDeleteImage={deleteImage}
-                                    onDeleteAllImages={deleteAllImages}
-                                />
-                            </div>
-                            <div className="w-[20%] h-[80vh] mx-8 mb-8 p-6 min-h-[80vh] border border-solid border-gray-300 rounded-lg overflow-y-auto">
-                                <BatchList projectId={ProjectId}/>
-                            </div>
-                        </div>
-                    ) : (
-                        <LoadContent {...loadContentState} />
-                    )}
-                </div>
+        <div className="mt-4">
+          {selectedTab === "upload" ? (
+            <div className="flex">
+              <div className="w-[80%]">
+                <UploadContent
+                  images={images}
+                  onFileUpload={handleFileValidation}
+                  onDeleteImage={deleteImage}
+                  onDeleteAllImages={deleteAllImages}
+                />
+              </div>
+              <div className="w-[20%] h-[80vh] mx-8 mb-8 p-6 min-h-[80vh] border border-solid border-gray-300 rounded-lg overflow-y-auto">
+                <BatchList projectId={ProjectId} />
+              </div>
             </div>
-        </PageContainer>
-    );
+          ) : (
+            <LoadContent {...loadContentState} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

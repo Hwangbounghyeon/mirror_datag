@@ -81,7 +81,7 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`z-50  fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-black border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
+        className={`z-50  fixed top-0 left-0 h-screen px-3 py-3 bg-slate-100 dark:bg-zinc-950 border-r-2 border-r-slate-300 dark:border-r-[#1e1e1e] flex flex-col items-center transition-all duration-300 ease-in-out
           ${isExpanded ? "w-64 translate-x-0" : "w-64 -translate-x-64"}`}
         onMouseLeave={() => setIsExpanded(false)}
       >

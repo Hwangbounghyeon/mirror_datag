@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen dark:bg-zinc-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-200 sm:text-5xl md:text-6xl">
@@ -48,39 +48,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="relative group">
-              <div className="h-64 w-full overflow-hidden rounded-lg bg-white shadow-lg transition-all duration-300 group-hover:shadow-xl">
-                <div className="p-6">
-                  <div className="h-8 w-8 text-indigo-600 mb-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Auto Tagging
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Advanced AI algorithms automatically analyze and tag your
-                    images
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Add more feature cards as needed */}
           </div>
         </div>
       </div>
