@@ -6,6 +6,7 @@ interface PageHeaderProps {
     onPrevious: () => void;
     rightButtonText: string;
     onRightButtonClick?: () => void;
+    isLoading: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -13,6 +14,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     onPrevious,
     rightButtonText,
     onRightButtonClick,
+    isLoading,
 }) => (
     <div className="flex justify-between items-center px-6 pb-8 pt-4 relative">
         <Button
@@ -29,6 +31,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         <Button
             className="px-6 mx-2 py-2 rounded-lg border border-solid"
             onClick={onRightButtonClick}
+            isLoading={isLoading}
         >
             {rightButtonText}
         </Button>
