@@ -8,6 +8,8 @@ import { IoIosCube } from "react-icons/io"; // model logo
 import ProjectItemInfoCard from "./project-item-infocard";
 import { ProjectType } from "@/types/projectType";
 import { useRouter } from "next/navigation";
+import { Button } from "@nextui-org/react";
+import { customFetch } from "@/app/actions/customFetch";
 
 dayjs.extend(relativeTime);
 
@@ -63,6 +65,31 @@ export function ProjectItem({ project }: ProjectCardProps) {
           Icon={IoIosCube}
         />
       </div>
+      {project.is_editor && (
+        <Button
+          color="danger"
+          onClick={() => {
+            if (
+              window.confirm("Are you sure you want to delete this project?")
+            ) {
+              customFetch({
+                endpoint: `/project/delete/${project.project_id}`,
+                method: "DELETE",
+              })
+                .then(() => {
+                  location.reload();
+                })
+                .catch((err) => {
+                  console.error(err);
+                  window.alert("Failed to delete the project.");
+                });
+            }
+          }}
+          className="mt-2"
+        >
+          Delete This Project
+        </Button>
+      )}
     </div>
   );
 }
