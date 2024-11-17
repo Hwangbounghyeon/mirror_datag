@@ -32,8 +32,8 @@ const ProjectList = async ({
     queryStrings.set("page", searchParams.page);
   }
   return (
-    <div className="w-full flex flex-col gap-1 items-center">
-      <div className="w-full flex flex-col items-center flex-grow mt-5">
+    <div className="w-full flex flex-col gap-1 items-center ">
+      <div className="w-full flex flex-col items-center flex-grow mt-5 ">
         {projects.map((project) => (
           <ProjectItem key={project.project_id} project={project} />
         ))}
@@ -62,7 +62,7 @@ const Page = ({ searchParams }: PageProps) => {
     ...(searchParams.model_name && { model_name: searchParams.model_name }),
   };
   return (
-    <div className="overflow-y-scroll bg-slate-100 dark:bg-gray-700 py-2 px-2 my-3 rounded-md w-full h-full flex flex-col items-center flex-grow remove_scrollbar">
+    <div className="bg-slate-100 dark:bg-zinc-800 py-2 px-2 my-3 rounded-md w-full h-full flex flex-col items-center flex-grow remove_scrollbar">
       <Suspense
         key={`${searchParams.page || "1"}-${searchParams.model_name || ""}`}
         fallback={<div>Loading...</div>}
