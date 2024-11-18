@@ -181,4 +181,8 @@ Cookie에는 유효시간이 매우 짧은 AccessToken, 그나마 긴 RefreshTok
 대량의 이미지를 분류하고 탐지하는 것은 시간을 오래 쓰는 일입니다.
 AI를 활용하여 대량의 이미지를 분류하고 탐지하면 시간을 절약할 수 있습니다.
 
+AI Server를 분리하여 Classification 모델 3개, Object Detection 모델 3개를 각 pre-traning시켜 weight를 부여하였습니다. 출력값 이전에 hook을 하여 각 이미지의 feature를 추출하고 Mongodb에 저장하였습니다.
+
+해당 작업은 추출된 feature를 사용하여 API Server에서 차원축소를 진행하여 사용자에게 시각화 정보를 제공합니다.
+
 
