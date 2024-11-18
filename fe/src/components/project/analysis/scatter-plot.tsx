@@ -65,7 +65,8 @@ const ScatterPlot = ({
   setDisplayMode,
   dragCallBack,
 }: ScatterPlotProps) => {
-  const { theme } = useTheme();
+  const { theme, systemTheme } = useTheme();
+
   const chartRef = useRef<CustomChart | null>(null);
   const [isDragMode, setIsDragMode] = useState(false);
   const [selectedPointsId, setSelectedPointsId] = useState<string[]>([]);
@@ -74,6 +75,14 @@ const ScatterPlot = ({
   );
   const [isDragging, setIsDragging] = useState(false);
   const animationFrameRef = useRef<number>();
+
+  // 현재 적용되어야 할 실제 테마 계산
+  const currentTheme = useMemo(() => {
+    if (theme === "system") {
+      return systemTheme;
+    }
+    return theme;
+  }, [theme, systemTheme]);
 
   const groupedData = useMemo(() => {
     return data.reduce((acc, point) => {
@@ -96,6 +105,8 @@ const ScatterPlot = ({
         })),
         backgroundColor: LABEL_COLORS[label] || "rgba(0, 0, 0, 0.6)",
         pointBackgroundColor: LABEL_COLORS[label] || "rgba(0, 0, 0, 0.6)",
+        titleColor: theme === "dark" ? "#fff" : "#334155",
+        bodyColor: theme === "dark" ? "#fff" : "#334155",
         // 선택된 점의 테두리 스타일
         pointBorderWidth: points.map((p) =>
           selectedPointsId.includes(p.id) ? 3 : 1
@@ -133,7 +144,7 @@ const ScatterPlot = ({
         x: {
           grid: {
             color:
-              theme === "dark"
+              currentTheme === "dark"
                 ? "rgba(255, 255, 255, 0.1)"
                 : "rgba(0, 0, 0, 0.06)",
             drawBorder: false,
@@ -143,7 +154,7 @@ const ScatterPlot = ({
           title: {
             display: true,
             text: `Feature ${selectedIndices.x}`,
-            color: theme === "dark" ? "#fff" : "#000",
+            color: currentTheme === "dark" ? "#fff" : "#000",
             font: {
               size: 14,
               weight: "bold",
@@ -154,14 +165,14 @@ const ScatterPlot = ({
             font: {
               size: 12,
             },
-            color: theme === "dark" ? "#9ca3af" : "#64748b",
+            color: currentTheme === "dark" ? "#9ca3af" : "#64748b",
             padding: 8,
           },
         },
         y: {
           grid: {
             color:
-              theme === "dark"
+              currentTheme === "dark"
                 ? "rgba(255, 255, 255, 0.1)"
                 : "rgba(0, 0, 0, 0.06)",
 
@@ -172,7 +183,7 @@ const ScatterPlot = ({
           title: {
             display: true,
             text: `Feature ${selectedIndices.y}`,
-            color: theme === "dark" ? "#fff" : "#000",
+            color: currentTheme === "dark" ? "#fff" : "#000",
             font: {
               size: 14,
               weight: "bold",
@@ -183,7 +194,7 @@ const ScatterPlot = ({
             font: {
               size: 12,
             },
-            color: theme === "dark" ? "#9ca3af" : "#64748b",
+            color: currentTheme === "dark" ? "#9ca3af" : "#64748b",
             padding: 8,
           },
         },
@@ -275,7 +286,7 @@ const ScatterPlot = ({
         axis: "xy",
       },
     }),
-    [selectedIndices, data]
+    [selectedIndices, data, theme]
   );
 
   useEffect(() => {
