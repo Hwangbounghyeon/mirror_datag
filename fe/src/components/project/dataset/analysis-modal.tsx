@@ -66,6 +66,8 @@ const AnalysisModal = ({
             };
 
             await postAnalysis(bodyData);
+
+            onClose()
         } catch (error) {
             console.log(error);
         } finally {
