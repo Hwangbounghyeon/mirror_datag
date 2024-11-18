@@ -5,7 +5,7 @@ import BaseImageCard from "../image/BaseImageCard";
 
 const DeleteButton: FC<{ onDelete: () => void }> = ({ onDelete }) => (
     <div
-        className="absolute top-2 right-2 cursor-pointer z-10 rounded-full hover:opacity-80"
+        className="absolute top-2 right-2 cursor-pointer hover:opacity-80 z-10"
         onClick={onDelete}
     >
         <IoCloseCircle size={24} color="#ff0000" />
@@ -17,8 +17,10 @@ const ImageName: FC<{ name: string }> = ({ name }) => (
 );
 
 export const ImageCard: FC<ImageCardProps> = ({ src, name, onDelete }) => (
-    <BaseImageCard src={src}>
+    <div className="relative w-fit">
         <DeleteButton onDelete={onDelete} />
-        <ImageName name={name} />
-    </BaseImageCard>
+        <BaseImageCard src={src}>
+            <ImageName name={name} />
+        </BaseImageCard>
+    </div>
 );
