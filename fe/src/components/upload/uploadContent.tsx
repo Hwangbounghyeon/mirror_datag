@@ -35,7 +35,7 @@ export const UploadContent = ({
         <div className="flex-1 mx-8 h-full mb-8 items-center">
             <div
                 {...getRootProps()}
-                className="min-h-[80vh] border border-solid border-gray-300 rounded-lg p-6"
+                className="min-h-[80vh] rounded-lg overflow-hidden shadow-lg"
             >
                 <input {...getInputProps()} />
                 {images.length > 0 ? (
