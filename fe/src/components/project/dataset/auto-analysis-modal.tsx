@@ -64,6 +64,8 @@ const AutoAnalysisModal = ({ onClose, projectId }: AnalysisModalProps) => {
             };
 
             await postAutoAnalysis(bodyData);
+
+            onClose()
         } catch (error) {
             console.log(error);
         } finally {
