@@ -42,7 +42,7 @@ const UploadedContent: React.FC<UploadedContentProps> = ({
                 Select Folder
             </Button>
         </div>
-        <div className="flex flex-wrap gap-4 h-full">
+        <div className="flex flex-col gap-4 h-full">
             <ImageGrid images={images} onDeleteImage={onDeleteImage} />
         </div>
     </div>
