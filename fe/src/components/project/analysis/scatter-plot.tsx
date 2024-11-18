@@ -218,14 +218,20 @@ const ScatterPlot = ({
           },
         },
         tooltip: {
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          titleColor: "#334155",
-          bodyColor: "#334155",
+          backgroundColor:
+            currentTheme === "dark"
+              ? "rgba(0, 0, 0, 0.85)"
+              : "rgba(255, 255, 255, 0.95)",
+          titleColor: currentTheme === "dark" ? "#fff" : "#334155",
+          bodyColor: currentTheme === "dark" ? "#fff" : "#334155",
+          borderColor:
+            currentTheme === "dark"
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(0, 0, 0, 0.1)",
           bodyFont: {
             size: 12,
           },
           padding: 12,
-          borderColor: "rgba(0, 0, 0, 0.1)",
           borderWidth: 1,
           displayColors: true,
           enabled: (ctx: ScriptableTooltipContext<"scatter">) => {
@@ -242,16 +248,16 @@ const ScatterPlot = ({
           },
         },
         legend: {
-          position: "top",
-          align: "end",
+          position: "top" as const,
+          align: "end" as const,
           labels: {
             usePointStyle: true,
             pointStyle: "circle",
             padding: 20,
             font: {
-              size: 12,
+              size: 14,
             },
-            color: "#334155",
+            color: currentTheme === "dark" ? "#fff" : "#334155",
             generateLabels: (chart: Chart) => {
               const datasets = chart.data.datasets;
               return datasets.map((dataset, index) => ({
