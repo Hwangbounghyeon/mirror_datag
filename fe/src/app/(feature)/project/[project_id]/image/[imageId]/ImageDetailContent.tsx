@@ -17,11 +17,18 @@ export async function ImageDetailContent({
     imageId,
     conditions,
 }: Props) {
-    console.log("projectId: ", projectId);
+    console.log("Received conditions:", conditions);
+    const defaultConditions: TagBySearchRequest = {
+        conditions: [
+            {
+                and_condition: [],
+                or_condition: [],
+                not_condition: [],
+            },
+        ],
+    };
     const data = await loadProjectImageDetail(
-        conditions || {
-            conditions: [],
-        },
+        conditions || defaultConditions,
         imageId,
         projectId
     );
