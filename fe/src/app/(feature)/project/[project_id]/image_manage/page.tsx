@@ -26,7 +26,7 @@ export default function ImageManage() {
         onValidFiles: addImages,
     });
 
-    const loadContentState = useLoadContentState();
+    const loadContentState = useLoadContentState(ProjectId);
     const { tags, currentFilter, searchByFilter, setPage } = loadContentState;
 
     const handleMoveToDataset = async () => {
