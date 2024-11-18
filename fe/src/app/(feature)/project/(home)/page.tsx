@@ -24,10 +24,12 @@ const ProjectList = async ({
   } else if (!response.data.data || response.data.data.length === 0) {
     return (
       <div className="w-full flex flex-col items-center flex-grow mt-5">
-        <p className="text-[16px]">프로젝트가 없습니다</p>
+        <p className="text-[24px]">프로젝트가 없습니다</p>
         <p>
-          <Link href={"/project/create"}>여기</Link>를 눌러 프로젝트를 생성해
-          주세요 주세요
+          <Link className="text-emerald-500 font-bold" href={"/project/create"}>
+            여기
+          </Link>
+          를 눌러 프로젝트를 생성해 주세요 주세요
         </p>
       </div>
     );
