@@ -13,7 +13,7 @@ import { useAuthorityManager } from "@/hooks/imageDetail/useAuthorityManager";
 import { useTagManager } from "@/hooks/imageDetail/useTagManager";
 import { AuthUser } from "@/types/auth";
 import { Detection } from "@/types/metadata";
-import { TagBySearchRequest } from "@/types/tag";
+import { FilterCondition, TagBySearchRequest } from "@/types/tag";
 
 interface ImageDetailClientProps {
     imageId: string;
@@ -35,7 +35,7 @@ interface ImageDetailClientProps {
     nextId: string | null;
     prevId: string | null;
     project_id: string;
-    conditions?: TagBySearchRequest;
+    conditions?: FilterCondition[];
 }
 
 function ImageDetailClient({
