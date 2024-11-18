@@ -72,7 +72,7 @@ export function FilterSection({
     return (
         <div className="flex-col gap-4 max-w-[25%] min-w-[15%]">
             <div
-                className="relative h-[8%] hover:border-gray-500 flex justify-between border border-solid border-gray-300 rounded-lg p-2 cursor-pointer items-center"
+                className="relative h-[8%] flex justify-between border border-solid border-primary rounded-lg p-2 cursor-pointer items-center hover:bg-primary/10 hover:scale-[1.02] transition-all duration-200"
                 onClick={() => setIsFilterOpen(true)}
             >
                 <div className="flex justify-between items-center min-w-full">

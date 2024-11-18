@@ -9,10 +9,7 @@ interface ImageListProps {
     filterRows: FilterRow[];
 }
 
-const ImageList = ({
-    images,
-    filterRows
-}: ImageListProps) => {
+const ImageList = ({ images, filterRows }: ImageListProps) => {
     const router = useRouter();
 
     const handleImageClick = (imageId: string) => {
@@ -48,9 +45,9 @@ const ImageList = ({
                             <Card
                                 isPressable
                                 onPress={() => handleImageClick(image.id)}
-                                className="aspect-square w-full max-w-[10rem]"
+                                className="aspect-square w-full max-w-[10rem] p-0"
                             >
-                                <div className="relative w-full h-full bg-black">
+                                <div className="relative w-full h-full">
                                     <img
                                         src={image.imageUrl}
                                         alt=""

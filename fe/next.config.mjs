@@ -9,12 +9,6 @@ const nextConfig = {
   // 빌드 시 API 호출 타임아웃 설정
   staticPageGenerationTimeout: 120,
   // 빌드 시 타입 체크 비활성화
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;

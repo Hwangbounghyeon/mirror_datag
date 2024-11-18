@@ -225,10 +225,10 @@ const Page = ({ params }: { params: { project_id: string } }) => {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 md:p-8 bg-gray-50 dark:bg-zinc-900">
+    <div className="w-full min-h-screen p-4 md:p-8 bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-          Dataset (Project ID: {params.project_id})
+          Dataset
         </h1>
         <Dropdown>
           <DropdownTrigger>
@@ -250,7 +250,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         </Dropdown>
       </div>
 
-      <div className="flex items-center mb-6 bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-x-auto">
+      <div className="flex items-center mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-x-auto">
         <Button
           isIconOnly
           className="m-2 shrink-0"
@@ -298,7 +298,7 @@ const Page = ({ params }: { params: { project_id: string } }) => {
         </div>
       </div>
 
-      <div className="relative bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-4 md:p-6">
+      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 md:p-6">
         <ImageList
           images={images}
           selectImage={selectImage}
