@@ -184,7 +184,7 @@ export function MainAnalysis({ selectedHistory }: MainAnalysisProps) {
   }, [selectedHistory]);
 
   return (
-    <div className="flex flex-col w-full min-w-[1000px] flex-grow bg-content1 mx-4 rounded-xl shadow-medium">
+    <div className="flex flex-col w-full min-w-[1000px] flex-grow bg-content1 dark:bg-gray-800 mx-4 rounded-xl shadow-medium">
       {selectedHistory && selectedData ? (
         <div className="flex flex-col p-6 space-y-6">
           {/* History Name Header */}

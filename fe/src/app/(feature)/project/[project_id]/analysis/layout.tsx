@@ -7,12 +7,12 @@ interface LayoutProps {
 
 const Layout = ({ sideHistory, children }: LayoutProps) => {
   return (
-    <div className="w-full h-screen flex flex-col dark:bg-zinc-950 min-h-[30rem]">
+    <div className="w-full h-screen flex flex-col dark:bg-gray-900 min-h-[30rem]">
       {/* Main Content */}
       <div className="flex flex-row flex-grow p-6 gap-6">
         {/* Sidebar */}
         <div className="w-[17%] min-w-[15rem] h-[85vh] sticky top-[4rem]">
-          <div className="w-full h-full rounded-xl bg-content1 shadow-medium overflow-hidden">
+          <div className="w-full h-full rounded-xl bg-content1 dark:bg-gray-800 shadow-medium overflow-hidden">
             <div className="w-full h-12 flex items-center px-4 bg-content2 border-b border-divider">
               <h2 className="text-lg font-semibold">History</h2>
             </div>
@@ -21,7 +21,7 @@ const Layout = ({ sideHistory, children }: LayoutProps) => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-grow">{children}</div>
+        <div className="flex-grow ">{children}</div>
       </div>
     </div>
   );

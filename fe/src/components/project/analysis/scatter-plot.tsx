@@ -286,7 +286,7 @@ const ScatterPlot = ({
         axis: "xy",
       },
     }),
-    [selectedIndices, data, theme]
+    [selectedIndices, data, currentTheme]
   );
 
   useEffect(() => {
