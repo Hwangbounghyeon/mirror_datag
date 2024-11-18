@@ -29,7 +29,7 @@ const ProjectList = async ({
           <Link className="text-emerald-500 font-bold" href={"/project/create"}>
             여기
           </Link>
-          를 눌러 프로젝트를 생성해 주세요 주세요
+          를 눌러 프로젝트를 생성해 주세요.
         </p>
       </div>
     );
