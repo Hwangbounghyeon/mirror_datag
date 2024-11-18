@@ -4,12 +4,12 @@ import {
     isClassificationPrediction,
     isDetectionPrediction,
 } from "@/types/metadata";
-import { TagBySearchRequest } from "@/types/tag";
+import { FilterCondition, TagBySearchRequest } from "@/types/tag";
 
 interface Props {
     projectId: string;
     imageId: string;
-    conditions?: TagBySearchRequest;
+    conditions?: FilterCondition[];
 }
 
 export async function ImageDetailContent({
@@ -17,9 +17,8 @@ export async function ImageDetailContent({
     imageId,
     conditions,
 }: Props) {
-    console.log("Received conditions:", conditions);
-    const defaultConditions: TagBySearchRequest = {
-        conditions: [
+    const formattedConditions: TagBySearchRequest = {
+        conditions: conditions || [
             {
                 and_condition: [],
                 or_condition: [],
@@ -28,7 +27,7 @@ export async function ImageDetailContent({
         ],
     };
     const data = await loadProjectImageDetail(
-        conditions || defaultConditions,
+        formattedConditions,
         imageId,
         projectId
     );
