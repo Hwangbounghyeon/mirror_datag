@@ -170,9 +170,6 @@ Cookie에는 유효시간이 매우 짧은 AccessToken, 그나마 긴 RefreshTok
 또한 유저 정보에 대한 호출은 Redux-toolkit의 thunk를 활용하여  
 첫 접속시 바로 유저를 불러 올 수 있도록 하였습니다.
 
-### Drag & Drop
-
-### Chart.js
 
 ## 🖥️ Back End
 
