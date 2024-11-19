@@ -67,6 +67,16 @@
 [MariaDB](./S108.sql)
 [MongoDB](./compass-connections.json)
 
+# Back End build(API) 방법
+
+1. be/app 디렉토리로 이동
+2. uvicorn main:app 실행
+
+# Back End build(DL) 방법
+
+1. dl/app 디렉토리로 이동
+2. python main.py 실행(host를 8001로 자동 설정)
+
 # Front End build 방법
 
 1. fe 디렉토리로 이동
