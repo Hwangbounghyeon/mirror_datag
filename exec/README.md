@@ -64,7 +64,8 @@ EC2 포트번호
 
 # DB 덤프 파일 최신본
 
-[DB](./S108.sql)
+[MariaDB](./S108.sql)
+[MongoDB](./compass-connections.json)
 
 
 
