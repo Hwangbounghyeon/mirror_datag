@@ -10,7 +10,8 @@ import { ProjectType } from "@/types/projectType";
 import { useRouter } from "next/navigation";
 import { Button } from "@nextui-org/react";
 import { customFetch } from "@/app/actions/customFetch";
-import { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
@@ -21,7 +22,8 @@ interface ProjectCardProps {
 export function ProjectItem({ project }: ProjectCardProps) {
   const router = useRouter();
   const timeAgo = dayjs(project.updated_at).fromNow();
-  const queryClient = new QueryClient();
+  const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState(false);
   return (
     <div
       onClick={() => router.push(`/project/${project.project_id}`)}
@@ -68,11 +70,14 @@ export function ProjectItem({ project }: ProjectCardProps) {
       </div>
       {project.is_editor && (
         <Button
+          disabled={isDeleting}
+          isLoading={isDeleting}
           color="danger"
           onClick={() => {
             if (
               window.confirm("Are you sure you want to delete this project?")
             ) {
+              setIsDeleting(true);
               customFetch({
                 endpoint: `/project/delete/${project.project_id}`,
                 method: "DELETE",
@@ -83,6 +88,7 @@ export function ProjectItem({ project }: ProjectCardProps) {
                   });
                 })
                 .catch((err) => {
+                  setIsDeleting(false);
                   console.error(err);
                   window.alert("Failed to delete the project.");
                 });
