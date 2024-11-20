@@ -1,43 +1,45 @@
-"use server";
+'use server';
 
-import { cookies } from "next/headers";
+import { cookies } from 'next/headers';
 
-import { LoginResponseType, RefreshResponseType, UserType } from "@/types/auth";
+import { LoginResponseType, RefreshResponseType, UserType } from '@/types/auth';
 import {
   accessTokenDuration,
   refreshTokenDuration,
-} from "@/lib/constants/token-duration";
-import { DefaultResponseType } from "@/types/default";
-import { customFetch } from "./customFetch";
+} from '@/lib/constants/token-duration';
+import { DefaultResponseType } from '@/types/default';
+import { customFetch } from './customFetch';
+import { redirect } from 'next/dist/server/api-utils';
+import { url } from 'inspector';
 
 export const check_auth = async (formData: FormData) => {
-  console.log("check_auth");
-  const email = formData.get("email");
-  const password = formData.get("password");
+  console.log('check_auth');
+  const email = formData.get('email');
+  const password = formData.get('password');
   if (!email || !password) {
     return {
       status: 400,
-      error: "Email and password are required",
+      error: 'Email and password are required',
     };
   }
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        cache: "no-store",
+        cache: 'no-store',
       }
     );
 
     if (!response || !response.ok || response.status >= 400) {
-      console.log("login fail here ---- ");
+      console.log('login fail here ---- ');
       console.log(response);
       return {
-        error: "유효하지 않는 이메일 또는 비밀번호입니다.",
+        error: '유효하지 않는 이메일 또는 비밀번호입니다.',
         status: 401,
       };
     }
@@ -45,18 +47,18 @@ export const check_auth = async (formData: FormData) => {
     const data: DefaultResponseType<LoginResponseType> = await response.json();
 
     if (!data?.data || !data.data.access_token) {
-      console.log("login fail");
+      console.log('login fail');
       return {
-        error: "Invalid",
+        error: 'Invalid',
         status: 400,
       };
     }
 
-    console.log("login success = ", data.data?.access_token);
+    console.log('login success = ', data.data?.access_token);
     const cookieStore = await cookies();
 
     cookieStore.set({
-      name: "refreshToken",
+      name: 'refreshToken',
       value: data.data.refresh_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
@@ -64,7 +66,7 @@ export const check_auth = async (formData: FormData) => {
     });
 
     cookieStore.set({
-      name: "accessToken",
+      name: 'accessToken',
       value: data.data.access_token,
       httpOnly: true,
       path: process.env.NEXT_PUBLIC_FRONTEND_URL,
@@ -80,9 +82,9 @@ export const check_auth = async (formData: FormData) => {
       },
     };
   } catch (error) {
-    console.error("Login failed:", error);
+    console.error('Login failed:', error);
     return {
-      error: "Something went wrong",
+      error: 'Something went wrong',
       status: 500,
     };
   }
@@ -95,12 +97,12 @@ export const verifyAccessToken = async (accessToken: string) => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/profile`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        cache: "no-store",
+        cache: 'no-store',
       }
     );
     if (!response.ok) {
@@ -108,7 +110,7 @@ export const verifyAccessToken = async (accessToken: string) => {
     }
     return true;
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error('Token verification failed:', error);
     return false;
   }
 };
@@ -117,83 +119,69 @@ export const verifyAccessToken = async (accessToken: string) => {
 // 새로운 accessToken을 반환하며, refreshToken이 유효하지 않은 경우 null을 반환
 // refreshToken이 유효하지 않은 경우, 쿠키에서 refreshToken과 accessToken을 삭제
 // 새로운 accessToken을 발급받은 경우, 쿠키에 새로운 accessToken과 refreshToken을 저장
-export const refreshAccessToken = async (): Promise<string | null> => {
-  const cookieStore = cookies();
-  const refreshToken = cookieStore.get("refreshToken");
-  if (!refreshToken) return null;
+export const refreshAccessToken = async (
+  refreshAccessToken: string
+): Promise<string | null> => {
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${refreshToken.value}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${refreshAccessToken}`,
         },
       }
     );
 
-    if (!response.ok) {
-      cookieStore.delete("refreshToken");
-      cookieStore.delete("accessToken");
-      return null;
+    const data: DefaultResponseType<RefreshResponseType> =
+      await response.json();
+    console.log('Refresh 결과', data.data);
+
+    if (!data?.data) {
+      throw new Error('Failed to refresh token');
     }
 
-    const data: RefreshResponseType = await response.json();
-
-    cookieStore.set({
-      name: "accessToken",
-      value: data.access_token,
-      httpOnly: true,
-      maxAge: accessTokenDuration,
-    });
-    cookieStore.set({
-      name: "refreshToken",
-      value: data.refresh_token,
+    cookies().set({
+      name: 'refreshToken',
+      value: data.data.refresh_token,
       httpOnly: true,
       maxAge: refreshTokenDuration,
     });
-    return data.access_token;
+
+    cookies().set({
+      name: 'accessToken',
+      value: data.data.access_token,
+      httpOnly: true,
+      maxAge: accessTokenDuration,
+    });
+
+    return data.data.access_token;
   } catch (error) {
-    console.error("Token refresh failed:", error);
-    cookieStore.delete("refreshToken");
-    cookieStore.delete("accessToken");
+    console.error('Token refresh failed:', error);
     return null;
   }
 };
 
 export const logout = async () => {
   try {
+    cookies().delete('refreshToken');
+    const accessToken = cookies().get('accessToken');
+
     await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken?.value}`,
       },
-      cache: "no-store",
+      cache: 'no-store',
     });
   } catch (error) {
-    console.error("Logout failed:", error);
+    console.error('Logout failed:', error);
   } finally {
-    cookies().delete("refreshToken");
-    cookies().delete("accessToken");
+    cookies().delete('refreshToken');
+    cookies().delete('accessToken');
     return null;
-  }
-};
-
-export const getAccessToken = async () => {
-  const cookieStore = cookies();
-  const accessToken = cookieStore.get("accessToken");
-  const refreshToken = cookieStore.get("refreshToken");
-
-  if (accessToken) {
-    return accessToken.value;
-  } else {
-    if (refreshToken) {
-      const result = await refreshAccessToken();
-      return result;
-    } else {
-      return null;
-    }
   }
 };
 
@@ -202,14 +190,14 @@ export const getAccessToken = async () => {
 export const getUserProfile = async () => {
   try {
     const response = await customFetch<DefaultResponseType<UserType>>({
-      endpoint: "/user/profile",
-      method: "GET",
+      endpoint: '/user/profile',
+      method: 'GET',
     });
 
     if (!response.data) {
       return {
         status: response.status,
-        error: response.error || "Failed to fetch profile",
+        error: response.error || 'Failed to fetch profile',
       };
     } else {
       return {
@@ -218,10 +206,10 @@ export const getUserProfile = async () => {
       };
     }
   } catch (error) {
-    console.error("Token verification failed:", error);
+    console.error('Token verification failed:', error);
     return {
       status: 500,
-      error: "Failed to fetch profile",
+      error: 'Failed to fetch profile',
     };
   }
 };
