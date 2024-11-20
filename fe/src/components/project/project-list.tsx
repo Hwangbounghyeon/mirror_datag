@@ -71,14 +71,16 @@ const ProjectList = () => {
   if (!data || !data.data) return <div>No projects found</div>;
 
   return (
-    <div className="w-full flex flex-col items-center justify-between overflow-y-scroll pb-2">
-      <div className="w-[95%] flex flex-col items-center justify-center">
+    <div className="w-full h-full flex flex-col items-center justify-between  pb-2">
+      <div className="w-full overflow-y-auto flex flex-col items-center justify-center">
         {data.data.map((project) => (
           <ProjectItem key={project.project_id} project={project} />
         ))}
       </div>
       <div className="flex flex-col mt-2">
         <Pagination
+          showControls
+          size="lg"
           onChange={handlePageChange}
           total={data.total_pages}
           initialPage={page}
