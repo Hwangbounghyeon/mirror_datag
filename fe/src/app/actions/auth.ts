@@ -139,6 +139,8 @@ export const refreshAccessToken = async (
     console.log("Refresh 결과", data.data);
 
     if (!data?.data) {
+      cookies().delete("refreshToken");
+      cookies().delete("accessToken");
       throw new Error("Failed to refresh token");
     }
 
