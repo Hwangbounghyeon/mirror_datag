@@ -31,7 +31,7 @@ const ProjectList = () => {
   });
   if (model_name) searchParams_Input.set("model_name", model_name);
 
-  const { data, isPending, isError, error } = useQuery<
+  const { data, isPending, isLoading, isError, error } = useQuery<
     PaginationType<ProjectType[]>,
     string,
     PaginationType<ProjectType[]>,
@@ -61,7 +61,7 @@ const ProjectList = () => {
     },
   });
 
-  if (isPending)
+  if (isPending || isLoading)
     return (
       <div>
         <Spinner size="lg" />
@@ -71,17 +71,19 @@ const ProjectList = () => {
   if (!data || !data.data) return <div>No projects found</div>;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-between">
+    <div className="w-full flex flex-col items-center justify-between overflow-y-scroll pb-2">
       <div className="w-[95%] flex flex-col items-center justify-center">
         {data.data.map((project) => (
           <ProjectItem key={project.project_id} project={project} />
         ))}
       </div>
-      <Pagination
-        onChange={handlePageChange}
-        total={data.total_pages}
-        initialPage={page}
-      />
+      <div className="flex flex-col mt-2">
+        <Pagination
+          onChange={handlePageChange}
+          total={data.total_pages}
+          initialPage={page}
+        />
+      </div>
     </div>
   );
 };
