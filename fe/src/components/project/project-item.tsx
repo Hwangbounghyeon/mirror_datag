@@ -29,7 +29,7 @@ export function ProjectItem({ project }: ProjectCardProps) {
       onClick={() => router.push(`/project/${project.project_id}`)}
       className="
       hover:shadow-md cursor-pointer hover:scale-[101%] transition-all active:scale-[99%] duration-100
-      rounded-lg w-full bg-gray-200 dark:bg-gray-900 my-3 p-6 shadow-sm "
+      rounded-lg w-[95%] bg-gray-200 dark:bg-gray-900 my-3 p-6 shadow-sm "
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
