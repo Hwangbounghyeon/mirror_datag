@@ -8,7 +8,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import ProjectItem from "./project-item";
-import { relativeTime } from "dayjs/plugin/relativeTime";
 
 const ProjectList = () => {
   const queryclient = useQueryClient();
